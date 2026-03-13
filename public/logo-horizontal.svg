@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF7E5F" />
+      <stop offset="100%" stop-color="#FEB47B" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Logo Icon -->
+  <g transform="scale(0.35) translate(40, 25)">
+    <rect width="400" height="400" x="56" y="56" rx="90" fill="url(#bg)" />
+    <path d="M256 360 c-45 0-75-30-75-65 c0-25 25-45 45-55 c15-7.5 45-7.5 60 0 c20 10 45 30 45 55 c0 35-30 65-75 65 z" fill="#FFFFFF" />
+    <circle cx="160" cy="220" r="28" fill="#FFFFFF" />
+    <circle cx="205" cy="155" r="32" fill="#FFFFFF" />
+    <circle cx="307" cy="155" r="32" fill="#FFFFFF" />
+    <circle cx="352" cy="220" r="28" fill="#FFFFFF" />
+    <circle cx="350" cy="330" r="48" fill="#FF7E5F" stroke="#FFFFFF" stroke-width="8"/>
+    <path d="M328 330 l15 15 l30 -30" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  
+  <!-- Typography -->
+  <text x="210" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="80" fill="#2d3748" letter-spacing="-2">Petroutine</text>
+  <text x="590" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="80" fill="#FF7E5F" letter-spacing="-2">.</text>
+</svg>
