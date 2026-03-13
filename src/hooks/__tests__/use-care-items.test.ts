@@ -49,6 +49,9 @@ vi.mock('@/lib/utils', () => ({
 import {
   collection,
   doc,
+  getDocs,
+  query,
+  where,
   updateDoc,
   writeBatch,
 } from 'firebase/firestore';
@@ -333,24 +336,39 @@ describe('useUpdateCareItem', () => {
 // useDeleteCareItem
 // ============================================================
 describe('useDeleteCareItem', () => {
+  let mockBatch: { set: Mock; update: Mock; commit: Mock };
+
   beforeEach(() => {
     vi.clearAllMocks();
     (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
     (doc as Mock).mockReturnValue('mock-doc-ref');
-    (updateDoc as Mock).mockResolvedValue(undefined);
+
+    mockBatch = {
+      set: vi.fn(),
+      update: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+    (writeBatch as Mock).mockReturnValue(mockBatch);
+    (collection as Mock).mockReturnValue('mock-collection-ref');
+    (query as Mock).mockReturnValue('mock-query-ref');
+    (where as Mock).mockReturnValue('mock-where-ref');
+
+    // 기본: 열린 스케줄 없음
+    (getDocs as Mock).mockResolvedValue({ docs: [] });
   });
 
-  it('isActive를 false로 설정하여 소프트 삭제한다', async () => {
+  it('batch로 isActive를 false로 설정하여 소프트 삭제한다', async () => {
     const { result } = renderHook(() => useDeleteCareItem(), { wrapper: makeWrapper() });
 
     await result.current.mutateAsync('care-item-1');
 
-    expect(updateDoc).toHaveBeenCalledWith(
+    expect(mockBatch.update).toHaveBeenCalledWith(
       'mock-doc-ref',
       expect.objectContaining({
         isActive: false,
       }),
     );
+    expect(mockBatch.commit).toHaveBeenCalledTimes(1);
   });
 
   it('소프트 삭제 시 updatedAt 타임스탬프를 설정한다', async () => {
@@ -360,10 +378,47 @@ describe('useDeleteCareItem', () => {
     await result.current.mutateAsync('care-item-1');
     const after = new Date().toISOString();
 
-    const callArgs = (updateDoc as Mock).mock.calls[0][1] as Record<string, unknown>;
+    const callArgs = mockBatch.update.mock.calls[0][1] as Record<string, unknown>;
     expect(typeof callArgs.updatedAt).toBe('string');
     expect(callArgs.updatedAt >= before).toBe(true);
     expect(callArgs.updatedAt <= after).toBe(true);
+  });
+
+  it('관련 pending/due/overdue 스케줄을 cancelled로 변경한다', async () => {
+    const mockScheduleDocs = [
+      { ref: 'schedule-ref-1' },
+      { ref: 'schedule-ref-2' },
+    ];
+    (getDocs as Mock).mockResolvedValue({ docs: mockScheduleDocs });
+
+    const { result } = renderHook(() => useDeleteCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync('care-item-1');
+
+    // care item soft delete + 2 schedule cancellations = 3 batch.update calls
+    expect(mockBatch.update).toHaveBeenCalledTimes(3);
+
+    // 스케줄 취소 확인
+    expect(mockBatch.update).toHaveBeenCalledWith(
+      'schedule-ref-1',
+      expect.objectContaining({ status: 'cancelled' }),
+    );
+    expect(mockBatch.update).toHaveBeenCalledWith(
+      'schedule-ref-2',
+      expect.objectContaining({ status: 'cancelled' }),
+    );
+  });
+
+  it('열린 스케줄이 없으면 care item만 업데이트한다', async () => {
+    (getDocs as Mock).mockResolvedValue({ docs: [] });
+
+    const { result } = renderHook(() => useDeleteCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync('care-item-1');
+
+    // care item soft delete만 = 1 batch.update call
+    expect(mockBatch.update).toHaveBeenCalledTimes(1);
+    expect(mockBatch.commit).toHaveBeenCalledTimes(1);
   });
 
   it('인증되지 않은 경우 Not authenticated 에러를 던진다', async () => {
@@ -376,24 +431,15 @@ describe('useDeleteCareItem', () => {
     );
   });
 
-  it('올바른 컬렉션 경로로 doc을 참조한다', async () => {
-    const { result } = renderHook(() => useDeleteCareItem(), { wrapper: makeWrapper() });
+  it('모든 작업이 단일 batch로 원자적 처리된다', async () => {
+    const mockScheduleDocs = [{ ref: 'schedule-ref-1' }];
+    (getDocs as Mock).mockResolvedValue({ docs: mockScheduleDocs });
 
-    await result.current.mutateAsync('care-item-99');
-
-    expect(doc).toHaveBeenCalledWith(expect.anything(), 'careItems', 'care-item-99');
-  });
-
-  it('실제 데이터를 삭제하지 않고 isActive만 변경한다', async () => {
     const { result } = renderHook(() => useDeleteCareItem(), { wrapper: makeWrapper() });
 
     await result.current.mutateAsync('care-item-1');
 
-    // updateDoc만 호출되고, deleteDoc 같은 함수는 호출되지 않아야 함
-    expect(updateDoc).toHaveBeenCalledTimes(1);
-
-    const callArgs = (updateDoc as Mock).mock.calls[0][1] as Record<string, unknown>;
-    // 업데이트 데이터는 isActive와 updatedAt만 포함
-    expect(Object.keys(callArgs).sort()).toEqual(['isActive', 'updatedAt']);
+    expect(writeBatch).toHaveBeenCalledTimes(1);
+    expect(mockBatch.commit).toHaveBeenCalledTimes(1);
   });
 });

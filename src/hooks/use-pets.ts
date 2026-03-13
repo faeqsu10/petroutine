@@ -76,14 +76,31 @@ export function useUpdatePet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...data }: Partial<Pet> & { id: string }) => {
+    mutationFn: async ({
+      id,
+      name,
+      species,
+      breed,
+      birthDate,
+      gender,
+      neutered,
+      weightKg,
+    }: Partial<Pet> & { id: string }) => {
       const uid = auth.currentUser?.uid;
       if (!uid) throw new Error('Not authenticated');
 
-      await updateDoc(doc(db, 'pets', id), {
-        ...data,
+      const updateData: Record<string, unknown> = {
         updatedAt: new Date().toISOString(),
-      });
+      };
+      if (name !== undefined) updateData.name = name;
+      if (species !== undefined) updateData.species = species;
+      if (breed !== undefined) updateData.breed = breed;
+      if (birthDate !== undefined) updateData.birthDate = birthDate;
+      if (gender !== undefined) updateData.gender = gender;
+      if (neutered !== undefined) updateData.neutered = neutered;
+      if (weightKg !== undefined) updateData.weightKg = weightKg;
+
+      await updateDoc(doc(db, 'pets', id), updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PETS_KEY] });

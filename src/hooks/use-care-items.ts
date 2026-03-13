@@ -140,11 +140,31 @@ export function useDeleteCareItem() {
       const uid = auth.currentUser?.uid;
       if (!uid) throw new Error('Not authenticated');
 
-      // Soft delete: isActive = false
-      await updateDoc(doc(db, 'careItems', careItemId), {
+      const nowIso = new Date().toISOString();
+      const batch = writeBatch(db);
+
+      // 1) Soft delete: isActive = false
+      batch.update(doc(db, 'careItems', careItemId), {
         isActive: false,
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso,
       });
+
+      // 2) 관련 pending/due/overdue 스케줄 취소
+      const openSchedules = await getDocs(
+        query(
+          collection(db, 'careSchedules'),
+          where('careItemId', '==', careItemId),
+          where('status', 'in', ['pending', 'due', 'overdue']),
+        ),
+      );
+      for (const scheduleDoc of openSchedules.docs) {
+        batch.update(scheduleDoc.ref, {
+          status: 'cancelled',
+          updatedAt: nowIso,
+        });
+      }
+
+      await batch.commit();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CARE_ITEMS_KEY] });
