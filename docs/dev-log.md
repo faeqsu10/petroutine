@@ -55,6 +55,25 @@
   - MEDIUM 이슈 3건 수정 완료 (에러 바운더리, 날짜 범위 버그, pet auto-select)
 - **비고**: 총 13개 라우트 빌드 성공. Supabase 연결 시 즉시 사용 가능 상태.
 
+## Phase 3.5: CRUD 완성 + 카테고리 시딩
+- **날짜**: 2026-03-13
+- **커밋**: `30cebdd`
+- **작업**: Update/Delete CRUD 훅, 수정/삭제 UI, 기본 지출 카테고리 시딩
+- **산출물**:
+  - `scripts/seed-categories.ts` — 6개 기본 지출 카테고리 시딩 스크립트
+  - `src/hooks/use-pets.ts` — +useUpdatePet, +useDeletePet (소프트 삭제: archivedAt)
+  - `src/hooks/use-care-items.ts` — +useUpdateCareItem, +useDeleteCareItem (소프트 삭제: isActive=false)
+  - `src/hooks/use-expenses.ts` — +useUpdateExpense, +useDeleteExpense (하드 삭제)
+  - `src/app/(main)/pets/[id]/edit/page.tsx` — 반려동물 수정 페이지
+  - `src/components/care/edit-sheet.tsx` — 케어 항목 수정 Sheet (이름, 주기, 아이콘, 색상)
+  - `src/components/expenses/edit-sheet.tsx` — 지출 수정 Sheet (금액, 내용, 카테고리, 날짜)
+  - `src/components/shared/confirm-dialog.tsx` — 삭제 확인 재사용 컴포넌트
+- **기존 페이지 수정**:
+  - `settings/page.tsx` — 반려동물 클릭 → `/pets/[id]/edit` 링크 추가
+  - `care/page.tsx` — 케어 항목 클릭 → 수정 Sheet 열기
+  - `expenses/page.tsx` — 지출 항목 클릭 → 수정 Sheet 열기
+- **검증**: 빌드 성공, 70개 기존 테스트 통과, 카테고리 시딩 실행 완료
+
 ## Phase 4: Supabase → Firebase 마이그레이션
 - **날짜**: 2026-03-13
 - **커밋**: (pending)

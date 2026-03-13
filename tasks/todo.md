@@ -41,8 +41,21 @@
 - [x] Firestore 보안 규칙 + 인덱스 정의
 - [ ] 푸시 알림 (FCM) — Phase 2로 이관
 
+## Phase 3.5: CRUD 완성 + 카테고리 시딩
+- [x] 기본 지출 카테고리 시딩 스크립트 (scripts/seed-categories.ts)
+- [x] useUpdatePet, useDeletePet 훅 추가
+- [x] useUpdateCareItem, useDeleteCareItem 훅 추가
+- [x] useUpdateExpense, useDeleteExpense 훅 추가
+- [x] 반려동물 수정 페이지 (pets/[id]/edit)
+- [x] 케어 항목 수정 Sheet (edit-sheet.tsx)
+- [x] 지출 수정 Sheet (edit-sheet.tsx)
+- [x] 삭제 확인 다이얼로그 (confirm-dialog.tsx)
+- [x] 설정 페이지 반려동물 링크 연결
+- [x] 케어 페이지 수정/삭제 UI 연결
+- [x] 가계부 페이지 수정/삭제 UI 연결
+
 ## Phase 4: 검증
-- [ ] 단위 테스트 (QA 에이전트)
-- [ ] 통합 테스트 (QA 에이전트)
-- [ ] 보안 점검 (QA 에이전트)
-- [ ] 성능 검증 (QA 에이전트)
+- [x] P1 훅 단위 테스트 (use-care-items, use-expenses, use-pets) — 52개 테스트 추가, 총 122개
+- [ ] P2 UI 컴포넌트 테스트
+- [ ] 보안 점검
+- [ ] 성능 검증
