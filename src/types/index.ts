@@ -1,4 +1,4 @@
-export type { Database, CareCategory, CycleUnit, ScheduleStatus, Species, Gender } from './database';
+export type { CareCategory, CycleUnit, ScheduleStatus, Species, Gender } from './database';
 
 // 도메인 타입 (UI에서 사용)
 export interface Pet {

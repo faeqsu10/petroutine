@@ -1,68 +1,70 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
+import { collection, query, where, orderBy, getDocs, addDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase/client';
 import type { Pet } from '@/types';
-import type { PetsRow } from '@/types/database';
 
 const PETS_KEY = 'pets';
 
 export function usePets() {
-  const supabase = createClient();
-
   return useQuery({
     queryKey: [PETS_KEY],
     queryFn: async (): Promise<Pet[]> => {
-      const { data, error } = await supabase
-        .from('pets')
-        .select('*')
-        .is('archived_at', null)
-        .order('created_at', { ascending: true });
+      const uid = auth.currentUser?.uid;
+      if (!uid) return [];
 
-      if (error) throw error;
+      const q = query(
+        collection(db, 'pets'),
+        where('userId', '==', uid),
+        where('archivedAt', '==', null),
+        orderBy('createdAt'),
+      );
+      const snapshot = await getDocs(q);
 
-      return ((data ?? []) as PetsRow[]).map((pet) => ({
-        id: pet.id,
-        name: pet.name,
-        species: pet.species,
-        breed: pet.breed,
-        birthDate: pet.birth_date,
-        gender: pet.gender,
-        neutered: pet.neutered,
-        weightKg: pet.weight_kg,
-        avatarUrl: pet.avatar_url,
-      }));
+      return snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          name: data.name,
+          species: data.species,
+          breed: data.breed,
+          birthDate: data.birthDate,
+          gender: data.gender,
+          neutered: data.neutered,
+          weightKg: data.weightKg,
+          avatarUrl: data.avatarUrl,
+        } as Pet;
+      });
     },
   });
 }
 
 export function useCreatePet() {
-  const supabase = createClient();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (pet: Omit<Pet, 'id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase
-        .from('pets')
-        .insert({
-          user_id: user.id,
-          name: pet.name,
-          species: pet.species,
-          breed: pet.breed,
-          birth_date: pet.birthDate,
-          gender: pet.gender,
-          neutered: pet.neutered,
-          weight_kg: pet.weightKg,
-          avatar_url: pet.avatarUrl,
-        } as never)
-        .select()
-        .single();
+      const now = new Date().toISOString();
+      const docRef = await addDoc(collection(db, 'pets'), {
+        userId: uid,
+        name: pet.name,
+        species: pet.species,
+        breed: pet.breed ?? null,
+        birthDate: pet.birthDate ?? null,
+        gender: pet.gender ?? null,
+        neutered: pet.neutered,
+        weightKg: pet.weightKg ?? null,
+        avatarUrl: pet.avatarUrl ?? null,
+        createdAt: now,
+        updatedAt: now,
+        archivedAt: null,
+      });
 
-      if (error) throw error;
-      return data;
+      return { id: docRef.id, ...pet };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PETS_KEY] });

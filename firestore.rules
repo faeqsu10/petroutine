@@ -1,0 +1,88 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: request is from authenticated user
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: resource belongs to the requesting user
+    function isOwner() {
+      return resource.data.userId == request.auth.uid;
+    }
+
+    // Helper: new document will belong to the requesting user
+    function isNewOwner() {
+      return request.resource.data.userId == request.auth.uid;
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read, update: if isAuth() && request.auth.uid == userId;
+      allow create: if isAuth() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Pets
+    match /pets/{petId} {
+      allow read: if isAuth() && isOwner();
+      allow create: if isAuth() && isNewOwner();
+      allow update: if isAuth() && isOwner();
+      allow delete: if false; // soft-delete via archivedAt
+    }
+
+    // Care Items
+    match /careItems/{itemId} {
+      allow read: if isAuth() && isOwner();
+      allow create: if isAuth() && isNewOwner();
+      allow update: if isAuth() && isOwner();
+      allow delete: if isAuth() && isOwner();
+    }
+
+    // Care Schedules
+    match /careSchedules/{scheduleId} {
+      allow read: if isAuth() && isOwner();
+      allow create: if isAuth() && isNewOwner();
+      allow update: if isAuth() && isOwner();
+      allow delete: if false;
+    }
+
+    // Care Logs
+    match /careLogs/{logId} {
+      allow read: if isAuth() && isOwner();
+      allow create: if isAuth() && isNewOwner();
+      allow update: if false; // logs are immutable
+      allow delete: if false;
+    }
+
+    // Expenses
+    match /expenses/{expenseId} {
+      allow read: if isAuth() && isOwner();
+      allow create: if isAuth() && isNewOwner();
+      allow update: if isAuth() && isOwner();
+      allow delete: if isAuth() && isOwner();
+    }
+
+    // Expense Categories
+    match /expenseCategories/{categoryId} {
+      // Default categories (userId == null) are readable by all auth users
+      // User-specific categories are only readable by owner
+      allow read: if isAuth() && (resource.data.userId == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuth() && isNewOwner();
+      allow update: if isAuth() && isOwner();
+      allow delete: if isAuth() && isOwner();
+    }
+
+    // Notification Settings (subcollection under users)
+    match /users/{userId}/notificationSettings/{settingId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,84 +1,101 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
+import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase/client';
+import { calculateNextDueDate } from '@/lib/utils';
 import type { CareItem } from '@/types';
-import type { CareItemsRow, CareSchedulesRow, CareLogsRow } from '@/types/database';
 
 const CARE_ITEMS_KEY = 'care-items';
 
 export function useCareItems(petId: string | null) {
-  const supabase = createClient();
-
   return useQuery({
     queryKey: [CARE_ITEMS_KEY, petId],
     queryFn: async (): Promise<CareItem[]> => {
       if (!petId) return [];
 
-      const { data, error } = await supabase
-        .from('care_items')
-        .select('*')
-        .eq('pet_id', petId)
-        .eq('is_active', true)
-        .order('category')
-        .order('name');
+      const uid = auth.currentUser?.uid;
+      if (!uid) return [];
 
-      if (error) throw error;
+      const itemsSnap = await getDocs(
+        query(
+          collection(db, 'careItems'),
+          where('petId', '==', petId),
+          where('isActive', '==', true),
+        ),
+      );
 
-      const items = (data ?? []) as CareItemsRow[];
+      const items = itemsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (items.length === 0) return [];
+
       const itemIds = items.map((i) => i.id);
-      if (itemIds.length === 0) return [];
 
-      const [schedulesRes, logsRes] = await Promise.all([
-        supabase
-          .from('care_schedules')
-          .select('*')
-          .in('care_item_id', itemIds)
-          .in('status', ['pending', 'due', 'overdue']),
-        supabase
-          .from('care_logs')
-          .select('*')
-          .in('care_item_id', itemIds)
-          .order('completed_at', { ascending: false }),
+      const [schedulesSnap, logsSnap] = await Promise.all([
+        getDocs(
+          query(
+            collection(db, 'careSchedules'),
+            where('careItemId', 'in', itemIds),
+            where('status', 'in', ['pending', 'due', 'overdue']),
+          ),
+        ),
+        getDocs(
+          query(
+            collection(db, 'careLogs'),
+            where('careItemId', 'in', itemIds),
+            orderBy('completedAt', 'desc'),
+          ),
+        ),
       ]);
 
-      const schedules = (schedulesRes.data ?? []) as CareSchedulesRow[];
-      const logs = (logsRes.data ?? []) as CareLogsRow[];
+      const scheduleMap = new Map<string, { id: string; careItemId: string; nextDueDate: string; status: string }>();
+      for (const d of schedulesSnap.docs) {
+        const data = d.data();
+        if (!scheduleMap.has(data.careItemId)) {
+          scheduleMap.set(data.careItemId, { id: d.id, ...data } as { id: string; careItemId: string; nextDueDate: string; status: string });
+        }
+      }
 
-      const scheduleMap = new Map(schedules.map((s) => [s.care_item_id, s]));
-      const logMap = new Map<string, CareLogsRow>();
-      for (const log of logs) {
-        if (!logMap.has(log.care_item_id)) logMap.set(log.care_item_id, log);
+      const logMap = new Map<string, { id: string; careItemId: string; completedAt: string; scheduledDate: string | null; memo: string | null }>();
+      for (const d of logsSnap.docs) {
+        const data = d.data();
+        if (!logMap.has(data.careItemId)) {
+          logMap.set(data.careItemId, { id: d.id, ...data } as { id: string; careItemId: string; completedAt: string; scheduledDate: string | null; memo: string | null });
+        }
       }
 
       return items.map((item) => {
+        const data = item as Record<string, unknown>;
         const schedule = scheduleMap.get(item.id);
         const lastLog = logMap.get(item.id);
         return {
           id: item.id,
-          petId: item.pet_id,
-          category: item.category,
-          name: item.name,
-          cycleValue: item.cycle_value,
-          cycleUnit: item.cycle_unit,
-          icon: item.icon,
-          color: item.color,
-          isActive: item.is_active,
-          notifyEnabled: item.notify_enabled,
-          schedule: schedule ? {
-            id: schedule.id,
-            careItemId: item.id,
-            nextDueDate: schedule.next_due_date,
-            status: schedule.status,
-          } : null,
-          lastLog: lastLog ? {
-            id: lastLog.id,
-            careItemId: item.id,
-            completedAt: lastLog.completed_at,
-            scheduledDate: lastLog.scheduled_date,
-            memo: lastLog.memo,
-          } : null,
-        };
+          petId: data.petId as string,
+          category: data.category as CareItem['category'],
+          name: data.name as string,
+          cycleValue: data.cycleValue as number,
+          cycleUnit: data.cycleUnit as CareItem['cycleUnit'],
+          icon: data.icon as string,
+          color: data.color as string,
+          isActive: data.isActive as boolean,
+          notifyEnabled: data.notifyEnabled as boolean,
+          schedule: schedule
+            ? {
+                id: schedule.id,
+                careItemId: item.id,
+                nextDueDate: schedule.nextDueDate,
+                status: schedule.status as CareItem['schedule'] extends { status: infer S } ? S : never,
+              }
+            : null,
+          lastLog: lastLog
+            ? {
+                id: lastLog.id,
+                careItemId: item.id,
+                completedAt: lastLog.completedAt,
+                scheduledDate: lastLog.scheduledDate,
+                memo: lastLog.memo,
+              }
+            : null,
+        } as CareItem;
       });
     },
     enabled: !!petId,
@@ -86,16 +103,59 @@ export function useCareItems(petId: string | null) {
 }
 
 export function useCompleteCare() {
-  const supabase = createClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ careItemId, memo }: { careItemId: string; memo?: string }) => {
-      const { data, error } = await supabase.functions.invoke('complete-care', {
-        body: { care_item_id: careItemId, memo },
+    mutationFn: async ({
+      careItemId,
+      scheduleId,
+      cycleValue,
+      cycleUnit,
+      memo,
+    }: {
+      careItemId: string;
+      scheduleId: string;
+      cycleValue: number;
+      cycleUnit: 'day' | 'week' | 'month';
+      memo?: string;
+    }) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+
+      const now = new Date();
+      const nowIso = now.toISOString();
+      const batch = writeBatch(db);
+
+      // 1) care log 생성
+      const logRef = doc(collection(db, 'careLogs'));
+      batch.set(logRef, {
+        careItemId,
+        userId: uid,
+        completedAt: nowIso,
+        scheduledDate: null,
+        memo: memo ?? null,
+        createdAt: nowIso,
       });
-      if (error) throw error;
-      return data;
+
+      // 2) 현재 스케줄 완료 처리
+      batch.update(doc(db, 'careSchedules', scheduleId), {
+        status: 'completed',
+        updatedAt: nowIso,
+      });
+
+      // 3) 다음 스케줄 생성
+      const nextDue = calculateNextDueDate(now, cycleValue, cycleUnit);
+      const nextScheduleRef = doc(collection(db, 'careSchedules'));
+      batch.set(nextScheduleRef, {
+        careItemId,
+        userId: uid,
+        nextDueDate: nextDue.toISOString().split('T')[0],
+        status: 'pending',
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+
+      await batch.commit();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CARE_ITEMS_KEY] });

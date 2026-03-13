@@ -1,111 +1,132 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
+import { collection, query, where, orderBy, getDocs, addDoc, limit } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase/client';
 import { endOfMonth, format } from 'date-fns';
 import type { Expense, MonthlyStats } from '@/types';
-import type { ExpensesRow } from '@/types/database';
 
 const EXPENSES_KEY = 'expenses';
 const STATS_KEY = 'expense-stats';
 
 export function useExpenses(petId: string | null, month?: string) {
-  const supabase = createClient();
-
   return useQuery({
     queryKey: [EXPENSES_KEY, petId, month],
     queryFn: async (): Promise<Expense[]> => {
-      let query = supabase
-        .from('expenses')
-        .select('*')
-        .order('expense_date', { ascending: false })
-        .limit(50);
+      const uid = auth.currentUser?.uid;
+      if (!uid) return [];
 
-      if (petId) query = query.eq('pet_id', petId);
+      // Firestore requires: equality filters → inequality filters → orderBy on the inequality field
+      const constraints: Parameters<typeof query>[1][] = [
+        where('userId', '==', uid),
+      ];
+
+      if (petId) constraints.push(where('petId', '==', petId));
+
       if (month) {
         const start = `${month}-01`;
         const end = format(endOfMonth(new Date(`${month}-01`)), 'yyyy-MM-dd');
-        query = query.gte('expense_date', start).lte('expense_date', end);
+        constraints.push(where('expenseDate', '>=', start));
+        constraints.push(where('expenseDate', '<=', end));
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      constraints.push(orderBy('expenseDate', 'desc'));
+      constraints.push(limit(50));
 
-      return ((data ?? []) as ExpensesRow[]).map((e) => ({
-        id: e.id,
-        petId: e.pet_id,
-        categoryId: e.category_id,
-        amount: e.amount,
-        description: e.description,
-        expenseDate: e.expense_date,
-        memo: e.memo,
-      }));
+      const q = query(collection(db, 'expenses'), ...constraints);
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          petId: data.petId,
+          categoryId: data.categoryId,
+          amount: data.amount,
+          description: data.description,
+          expenseDate: data.expenseDate,
+          memo: data.memo ?? null,
+        } as Expense;
+      });
     },
   });
 }
 
 export function useMonthlyStats(month: string) {
-  const supabase = createClient();
-
   return useQuery({
     queryKey: [STATS_KEY, month],
     queryFn: async (): Promise<MonthlyStats> => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return { month, totalAmount: 0, byCategory: [], byPet: [] };
+
       const start = `${month}-01`;
-      const end = `${month}-31`;
+      const end = format(endOfMonth(new Date(`${month}-01`)), 'yyyy-MM-dd');
 
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .gte('expense_date', start)
-        .lte('expense_date', end);
+      const expensesSnap = await getDocs(
+        query(
+          collection(db, 'expenses'),
+          where('userId', '==', uid),
+          where('expenseDate', '>=', start),
+          where('expenseDate', '<=', end),
+        ),
+      );
 
-      if (error) throw error;
+      const items = expensesSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Record<string, unknown> & { id: string }));
 
-      const items = (data ?? []) as ExpensesRow[];
+      if (items.length === 0) {
+        return { month, totalAmount: 0, byCategory: [], byPet: [] };
+      }
 
-      // 별도로 카테고리 조회
-      const categoryIds = [...new Set(items.map((i) => i.category_id))];
-      const { data: categories } = await supabase
-        .from('expense_categories')
-        .select('*')
-        .in('id', categoryIds.length > 0 ? categoryIds : ['__none__']);
+      const categoryIds = [...new Set(items.map((i) => i.categoryId as string))];
+      const petIds = [...new Set(items.map((i) => i.petId as string))];
+
+      const [catsSnap, petsSnap] = await Promise.all([
+        getDocs(
+          query(
+            collection(db, 'expenseCategories'),
+            where('__name__', 'in', categoryIds.length > 0 ? categoryIds : ['__none__']),
+          ),
+        ),
+        getDocs(
+          query(
+            collection(db, 'pets'),
+            where('__name__', 'in', petIds.length > 0 ? petIds : ['__none__']),
+          ),
+        ),
+      ]);
 
       const catMap = new Map(
-        ((categories ?? []) as { id: string; name: string; icon: string; color: string }[])
-          .map((c) => [c.id, c]),
+        catsSnap.docs.map((d) => [d.id, d.data() as { name: string; icon: string; color: string }]),
       );
-
-      const petIds = [...new Set(items.map((i) => i.pet_id))];
-      const { data: pets } = await supabase
-        .from('pets')
-        .select('id, name')
-        .in('id', petIds.length > 0 ? petIds : ['__none__']);
-
       const petMap = new Map(
-        ((pets ?? []) as { id: string; name: string }[]).map((p) => [p.id, p]),
+        petsSnap.docs.map((d) => [d.id, d.data() as { name: string }]),
       );
 
-      const totalAmount = items.reduce((sum, e) => sum + e.amount, 0);
+      const totalAmount = items.reduce((sum, e) => sum + (e.amount as number), 0);
 
       const byCategoryMap = new Map<string, { name: string; amount: number; icon: string; color: string }>();
       const byPetMap = new Map<string, { name: string; amount: number }>();
 
       for (const item of items) {
-        const cat = byCategoryMap.get(item.category_id) ?? {
-          name: catMap.get(item.category_id)?.name ?? '',
-          amount: 0,
-          icon: catMap.get(item.category_id)?.icon ?? '',
-          color: catMap.get(item.category_id)?.color ?? '',
-        };
-        cat.amount += item.amount;
-        byCategoryMap.set(item.category_id, cat);
+        const catId = item.categoryId as string;
+        const petId = item.petId as string;
+        const amount = item.amount as number;
 
-        const pet = byPetMap.get(item.pet_id) ?? {
-          name: petMap.get(item.pet_id)?.name ?? '',
+        const cat = byCategoryMap.get(catId) ?? {
+          name: catMap.get(catId)?.name ?? '',
+          amount: 0,
+          icon: catMap.get(catId)?.icon ?? '',
+          color: catMap.get(catId)?.color ?? '',
+        };
+        cat.amount += amount;
+        byCategoryMap.set(catId, cat);
+
+        const pet = byPetMap.get(petId) ?? {
+          name: petMap.get(petId)?.name ?? '',
           amount: 0,
         };
-        pet.amount += item.amount;
-        byPetMap.set(item.pet_id, pet);
+        pet.amount += amount;
+        byPetMap.set(petId, pet);
       }
 
       return {
@@ -119,26 +140,28 @@ export function useMonthlyStats(month: string) {
 }
 
 export function useCreateExpense() {
-  const supabase = createClient();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (expense: Omit<Expense, 'id'>) => {
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert({
-          pet_id: expense.petId,
-          category_id: expense.categoryId,
-          amount: expense.amount,
-          description: expense.description,
-          expense_date: expense.expenseDate,
-          memo: expense.memo,
-        } as never)
-        .select()
-        .single();
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
 
-      if (error) throw error;
-      return data;
+      const now = new Date().toISOString();
+      const docRef = await addDoc(collection(db, 'expenses'), {
+        userId: uid,
+        petId: expense.petId,
+        categoryId: expense.categoryId,
+        amount: expense.amount,
+        description: expense.description,
+        expenseDate: expense.expenseDate,
+        receiptUrl: null,
+        memo: expense.memo ?? null,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      return { id: docRef.id, ...expense };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });

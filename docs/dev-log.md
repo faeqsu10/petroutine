@@ -54,3 +54,34 @@
   - 구조/타입/데이터레이어/UI/보안 모두 통과
   - MEDIUM 이슈 3건 수정 완료 (에러 바운더리, 날짜 범위 버그, pet auto-select)
 - **비고**: 총 13개 라우트 빌드 성공. Supabase 연결 시 즉시 사용 가능 상태.
+
+## Phase 4: Supabase → Firebase 마이그레이션
+- **날짜**: 2026-03-13
+- **커밋**: (pending)
+- **작업**: 전체 백엔드를 Supabase에서 Firebase(Firestore + Firebase Auth)로 마이그레이션
+- **산출물**:
+  - `src/lib/firebase/config.ts` — Firebase 클라이언트 설정
+  - `src/lib/firebase/client.ts` — Firebase 클라이언트 싱글턴 (auth, db)
+  - `src/lib/firebase/admin.ts` — Firebase Admin SDK (Proxy 기반 lazy init)
+  - `src/app/api/auth/session/route.ts` — 세션 쿠키 생성/삭제 API
+  - `src/types/database.ts` — Firestore 문서 타입 (camelCase)
+  - `firestore.rules` — Firestore 보안 규칙 (userId 기반 소유권 검증)
+  - `firestore.indexes.json` — 복합 인덱스 정의 (7개)
+  - `.env.local` / `.env.local.example` — Firebase 환경변수
+- **변경 사항**:
+  - 5개 데이터 훅 Firestore 쿼리로 전환 (use-pets, use-care-items, use-expenses, use-expense-categories, use-create-care-item)
+  - 로그인: `signInWithPopup` + `GoogleAuthProvider` → 세션 쿠키 방식
+  - 미들웨어: `__session` 쿠키 존재 확인
+  - 케어 완료/생성: `writeBatch` 원자적 쓰기
+  - Supabase 의존성 제거 (`@supabase/supabase-js`, `@supabase/ssr`)
+  - `src/lib/supabase/` 디렉토리 삭제
+- **Architect 검증**: CONDITIONAL PASS → 3건 수정 후 빌드 PASS
+  - [CRITICAL] 로그인 에러 핸들링 (`response.ok` 체크 추가)
+  - [HIGH] 지출 쿼리 constraint 순서 수정 (Firestore 인덱스 요구사항)
+  - [MEDIUM] 케어 쓰기 원자성 (`writeBatch` 적용)
+- **기술 결정**:
+  - Firebase Auth (Google OAuth, 카카오는 추후 Custom Auth로)
+  - Firestore NoSQL (top-level 컬렉션 + userId 필드)
+  - 세션 쿠키 방식 SSR 인증 (5일 만료)
+  - Admin SDK Proxy lazy init (빌드 시점 에러 방지)
+- **비고**: 14개 라우트 빌드 성공. Supabase 참조 완전 제거.

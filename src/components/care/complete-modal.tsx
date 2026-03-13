@@ -25,9 +25,15 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
   const { mutate: completeCare, isPending } = useCompleteCare();
 
   function handleComplete() {
-    if (!careItem) return;
+    if (!careItem || !careItem.schedule) return;
     completeCare(
-      { careItemId: careItem.id, memo: memo.trim() || undefined },
+      {
+        careItemId: careItem.id,
+        scheduleId: careItem.schedule.id,
+        cycleValue: careItem.cycleValue,
+        cycleUnit: careItem.cycleUnit,
+        memo: memo.trim() || undefined,
+      },
       {
         onSuccess: () => {
           setMemo('');

@@ -1,6 +1,7 @@
 'use client';
 
-import { createClient } from '@/lib/supabase/client';
+import { auth } from '@/lib/firebase/client';
+import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { usePets } from '@/hooks/use-pets';
 import Link from 'next/link';
@@ -11,11 +12,11 @@ import { Separator } from '@/components/ui/separator';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const supabase = createClient();
   const { data: pets } = usePets();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
     router.push('/login');
   };
 
