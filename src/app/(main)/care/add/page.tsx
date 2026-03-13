@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
+import { usePets } from '@/hooks/use-pets';
 import { useCareStore } from '@/stores/care-store';
 import { useCreateCareItem } from '@/hooks/use-create-care-item';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function AddCareItemPage() {
   const router = useRouter();
+  const { data: pets } = usePets();
   const { selectedPetId } = useCareStore();
+  const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
   const { mutate: createCareItem, isPending } = useCreateCareItem();
 
   const form = useForm<FormValues>({
@@ -73,14 +76,14 @@ export default function AddCareItemPage() {
   });
 
   function onSubmit(values: FormValues) {
-    if (!selectedPetId) {
-      alert('반려동물을 먼저 선택해주세요.');
+    if (!activePetId) {
+      router.push('/pets/add');
       return;
     }
 
     createCareItem(
       {
-        petId: selectedPetId,
+        petId: activePetId,
         category: values.category,
         name: values.name,
         cycleValue: values.cycleValue,

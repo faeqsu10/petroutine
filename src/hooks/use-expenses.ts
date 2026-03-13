@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
+import { endOfMonth, format } from 'date-fns';
 import type { Expense, MonthlyStats } from '@/types';
 import type { ExpensesRow } from '@/types/database';
 
@@ -23,7 +24,7 @@ export function useExpenses(petId: string | null, month?: string) {
       if (petId) query = query.eq('pet_id', petId);
       if (month) {
         const start = `${month}-01`;
-        const end = `${month}-31`;
+        const end = format(endOfMonth(new Date(`${month}-01`)), 'yyyy-MM-dd');
         query = query.gte('expense_date', start).lte('expense_date', end);
       }
 
