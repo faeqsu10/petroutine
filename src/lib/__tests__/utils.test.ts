@@ -9,6 +9,14 @@ import {
   cn,
 } from '@/lib/utils';
 
+/** 로컬 타임존 기준 YYYY-MM-DD 문자열 생성 (toISOString은 UTC 기준이라 timezone 차이로 날짜가 밀림) */
+function toLocalDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // ============================================================
 // calculateNextDueDate: 주기 기반 다음 예정일 계산 (핵심 비즈니스 로직)
 // ============================================================
@@ -229,34 +237,29 @@ describe('getScheduleUrgency', () => {
   it('과거 날짜는 overdue를 반환한다', () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const dateStr = yesterday.toISOString().split('T')[0];
-    expect(getScheduleUrgency(dateStr)).toBe('overdue');
+    expect(getScheduleUrgency(toLocalDateStr(yesterday))).toBe('overdue');
   });
 
   it('오늘 날짜는 due를 반환한다', () => {
-    const today = new Date().toISOString().split('T')[0];
-    expect(getScheduleUrgency(today)).toBe('due');
+    expect(getScheduleUrgency(toLocalDateStr(new Date()))).toBe('due');
   });
 
   it('미래 날짜는 pending을 반환한다', () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toISOString().split('T')[0];
-    expect(getScheduleUrgency(dateStr)).toBe('pending');
+    expect(getScheduleUrgency(toLocalDateStr(tomorrow))).toBe('pending');
   });
 
   it('7일 전 날짜는 overdue를 반환한다', () => {
     const past = new Date();
     past.setDate(past.getDate() - 7);
-    const dateStr = past.toISOString().split('T')[0];
-    expect(getScheduleUrgency(dateStr)).toBe('overdue');
+    expect(getScheduleUrgency(toLocalDateStr(past))).toBe('overdue');
   });
 
   it('30일 후 날짜는 pending을 반환한다', () => {
     const future = new Date();
     future.setDate(future.getDate() + 30);
-    const dateStr = future.toISOString().split('T')[0];
-    expect(getScheduleUrgency(dateStr)).toBe('pending');
+    expect(getScheduleUrgency(toLocalDateStr(future))).toBe('pending');
   });
 });
 
@@ -314,36 +317,43 @@ describe('formatDate', () => {
 // ============================================================
 describe('getDdayText', () => {
   it('오늘 날짜는 "오늘"을 반환한다', () => {
-    const today = new Date().toISOString().split('T')[0];
-    expect(getDdayText(today)).toBe('오늘');
+    expect(getDdayText(toLocalDateStr(new Date()))).toBe('오늘');
   });
 
   it('과거 날짜는 "N일 지남"을 반환한다', () => {
     const past = new Date();
     past.setDate(past.getDate() - 3);
-    const dateStr = past.toISOString().split('T')[0];
-    expect(getDdayText(dateStr)).toBe('3일 지남');
+    expect(getDdayText(toLocalDateStr(past))).toBe('3일 지남');
   });
 
   it('미래 날짜는 "D-N"을 반환한다', () => {
     const future = new Date();
     future.setDate(future.getDate() + 5);
-    const dateStr = future.toISOString().split('T')[0];
-    expect(getDdayText(dateStr)).toBe('D-5');
+    expect(getDdayText(toLocalDateStr(future))).toBe('D-5');
   });
 
   it('1일 전은 "1일 지남"을 반환한다', () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const dateStr = yesterday.toISOString().split('T')[0];
-    expect(getDdayText(dateStr)).toBe('1일 지남');
+    expect(getDdayText(toLocalDateStr(yesterday))).toBe('1일 지남');
   });
 
   it('내일은 "D-1"을 반환한다', () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toISOString().split('T')[0];
-    expect(getDdayText(dateStr)).toBe('D-1');
+    expect(getDdayText(toLocalDateStr(tomorrow))).toBe('D-1');
+  });
+
+  it('100일 후 미래 날짜는 "D-100"을 반환한다', () => {
+    const far = new Date();
+    far.setDate(far.getDate() + 100);
+    expect(getDdayText(toLocalDateStr(far))).toBe('D-100');
+  });
+
+  it('365일 전 과거 날짜는 "365일 지남"을 반환한다', () => {
+    const longAgo = new Date();
+    longAgo.setDate(longAgo.getDate() - 365);
+    expect(getDdayText(toLocalDateStr(longAgo))).toBe('365일 지남');
   });
 });
 
@@ -369,6 +379,20 @@ describe('formatCurrency', () => {
 
   it('천원 단위 금액을 올바르게 포맷한다', () => {
     expect(formatCurrency(1000)).toBe('1,000원');
+  });
+
+  it('음수 금액을 올바르게 포맷한다', () => {
+    expect(formatCurrency(-5000)).toBe('-5,000원');
+  });
+
+  it('소수점 금액을 처리한다', () => {
+    const result = formatCurrency(1234.56);
+    expect(result).toContain('1,234');
+    expect(result).toContain('원');
+  });
+
+  it('매우 큰 금액(억 단위)을 포맷한다', () => {
+    expect(formatCurrency(100000000)).toBe('100,000,000원');
   });
 });
 

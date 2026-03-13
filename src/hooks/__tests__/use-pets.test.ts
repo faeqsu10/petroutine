@@ -438,3 +438,155 @@ describe('useDeletePet', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['pets'] });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge cases: useCreatePet
+// ---------------------------------------------------------------------------
+describe('useCreatePet — edge cases', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.currentUser = { uid: 'test-user' };
+    mockAddDoc.mockResolvedValue({ id: 'new-pet-id' });
+    mockCollection.mockReturnValue('pets-collection-ref');
+  });
+
+  it('Firestore addDoc 실패 시 에러를 전파한다', async () => {
+    mockAddDoc.mockRejectedValueOnce(new Error('Firestore write failed'));
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreatePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync(basePet).catch(() => {});
+    });
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+    expect((result.current.error as Error).message).toBe('Firestore write failed');
+  });
+
+  it('한국어 이름을 올바르게 저장한다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreatePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ...basePet, name: '멍멍이🐶' });
+    });
+
+    const [, docData] = mockAddDoc.mock.calls[0];
+    expect(docData.name).toBe('멍멍이🐶');
+  });
+
+  it('weightKg에 소수점 값을 저장할 수 있다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreatePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ...basePet, weightKg: 3.75 });
+    });
+
+    const [, docData] = mockAddDoc.mock.calls[0];
+    expect(docData.weightKg).toBe(3.75);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Edge cases: useUpdatePet
+// ---------------------------------------------------------------------------
+describe('useUpdatePet — edge cases', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.currentUser = { uid: 'test-user' };
+    mockUpdateDoc.mockResolvedValue(undefined);
+    mockDoc.mockReturnValue('pet-doc-ref');
+  });
+
+  it('Firestore updateDoc 실패 시 에러를 전파한다', async () => {
+    mockUpdateDoc.mockRejectedValueOnce(new Error('Permission denied'));
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useUpdatePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({ id: 'pet-1', name: 'test' }).catch(() => {});
+    });
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+    expect((result.current.error as Error).message).toBe('Permission denied');
+  });
+
+  it('모든 필드를 동시에 업데이트할 수 있다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useUpdatePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        id: 'pet-1',
+        name: '새이름',
+        species: 'cat',
+        breed: 'Persian',
+        birthDate: '2020-01-01',
+        gender: 'male',
+        neutered: true,
+        weightKg: 5.5,
+      });
+    });
+
+    const [, updateData] = mockUpdateDoc.mock.calls[0];
+    expect(updateData.name).toBe('새이름');
+    expect(updateData.species).toBe('cat');
+    expect(updateData.breed).toBe('Persian');
+    expect(updateData.birthDate).toBe('2020-01-01');
+    expect(updateData.gender).toBe('male');
+    expect(updateData.neutered).toBe(true);
+    expect(updateData.weightKg).toBe(5.5);
+    expect(updateData.id).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Edge cases: useDeletePet
+// ---------------------------------------------------------------------------
+describe('useDeletePet — edge cases', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.currentUser = { uid: 'test-user' };
+    mockUpdateDoc.mockResolvedValue(undefined);
+    mockDoc.mockReturnValue('pet-doc-ref');
+  });
+
+  it('Firestore updateDoc 실패 시 에러를 전파한다', async () => {
+    mockUpdateDoc.mockRejectedValueOnce(new Error('Network timeout'));
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useDeletePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync('pet-1').catch(() => {});
+    });
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+    expect((result.current.error as Error).message).toBe('Network timeout');
+  });
+
+  it('archivedAt과 updatedAt이 동일한 시점에 설정된다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useDeletePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync('pet-1');
+    });
+
+    const [, updateData] = mockUpdateDoc.mock.calls[0];
+    // 두 타임스탬프는 각각 new Date().toISOString()으로 생성되므로
+    // 같은 밀리초 내에 있어야 함
+    const archived = new Date(updateData.archivedAt).getTime();
+    const updated = new Date(updateData.updatedAt).getTime();
+    expect(Math.abs(archived - updated)).toBeLessThanOrEqual(1);
+  });
+});

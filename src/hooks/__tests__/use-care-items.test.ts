@@ -442,4 +442,159 @@ describe('useDeleteCareItem', () => {
     expect(writeBatch).toHaveBeenCalledTimes(1);
     expect(mockBatch.commit).toHaveBeenCalledTimes(1);
   });
+
+  it('batch.commit 실패 시 에러를 전파한다', async () => {
+    mockBatch.commit.mockRejectedValueOnce(new Error('Firestore batch error'));
+
+    const { result } = renderHook(() => useDeleteCareItem(), { wrapper: makeWrapper() });
+
+    await expect(result.current.mutateAsync('care-item-1')).rejects.toThrow(
+      'Firestore batch error',
+    );
+  });
+
+  it('다수의 열린 스케줄(10개)도 모두 취소한다', async () => {
+    const manyDocs = Array.from({ length: 10 }, (_, i) => ({ ref: `schedule-ref-${i}` }));
+    (getDocs as Mock).mockResolvedValue({ docs: manyDocs });
+
+    const { result } = renderHook(() => useDeleteCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync('care-item-1');
+
+    // 1 (care item soft delete) + 10 (schedule cancellations)
+    expect(mockBatch.update).toHaveBeenCalledTimes(11);
+    expect(mockBatch.commit).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ============================================================
+// useCompleteCare — 엣지 케이스
+// ============================================================
+describe('useCompleteCare — edge cases', () => {
+  let mockBatch: { set: Mock; update: Mock; commit: Mock };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
+
+    mockBatch = {
+      set: vi.fn(),
+      update: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+    (writeBatch as Mock).mockReturnValue(mockBatch);
+    (collection as Mock).mockReturnValue('mock-collection-ref');
+    (doc as Mock).mockReturnValue('mock-doc-ref');
+
+    const nextDate = new Date('2026-04-13T00:00:00.000Z');
+    (calculateNextDueDate as Mock).mockReturnValue(nextDate);
+  });
+
+  it('batch.commit 실패 시 에러를 전파한다', async () => {
+    mockBatch.commit.mockRejectedValueOnce(new Error('Network error'));
+
+    const { result } = renderHook(() => useCompleteCare(), { wrapper: makeWrapper() });
+
+    await expect(
+      result.current.mutateAsync({
+        careItemId: 'care-item-1',
+        scheduleId: 'schedule-1',
+        cycleValue: 7,
+        cycleUnit: 'day',
+      }),
+    ).rejects.toThrow('Network error');
+  });
+
+  it('cycleUnit이 month일 때 calculateNextDueDate에 올바른 인수를 전달한다', async () => {
+    const { result } = renderHook(() => useCompleteCare(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      careItemId: 'care-item-1',
+      scheduleId: 'schedule-1',
+      cycleValue: 3,
+      cycleUnit: 'month',
+    });
+
+    expect(calculateNextDueDate).toHaveBeenCalledWith(
+      expect.any(Date),
+      3,
+      'month',
+    );
+  });
+
+  it('cycleUnit이 week일 때 calculateNextDueDate에 올바른 인수를 전달한다', async () => {
+    const { result } = renderHook(() => useCompleteCare(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      careItemId: 'care-item-1',
+      scheduleId: 'schedule-1',
+      cycleValue: 2,
+      cycleUnit: 'week',
+    });
+
+    expect(calculateNextDueDate).toHaveBeenCalledWith(
+      expect.any(Date),
+      2,
+      'week',
+    );
+  });
+});
+
+// ============================================================
+// useUpdateCareItem — 엣지 케이스
+// ============================================================
+describe('useUpdateCareItem — edge cases', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
+    (doc as Mock).mockReturnValue('mock-doc-ref');
+    (updateDoc as Mock).mockResolvedValue(undefined);
+  });
+
+  it('Firestore updateDoc 실패 시 에러를 전파한다', async () => {
+    (updateDoc as Mock).mockRejectedValueOnce(new Error('Permission denied'));
+
+    const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
+
+    await expect(
+      result.current.mutateAsync({ id: 'care-item-1', name: 'test' }),
+    ).rejects.toThrow('Permission denied');
+  });
+
+  it('notifyEnabled 필드를 업데이트할 수 있다', async () => {
+    const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      id: 'care-item-1',
+      notifyEnabled: false,
+    });
+
+    expect(updateDoc).toHaveBeenCalledWith(
+      'mock-doc-ref',
+      expect.objectContaining({ notifyEnabled: false }),
+    );
+  });
+
+  it('모든 필드를 동시에 업데이트할 수 있다', async () => {
+    const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      id: 'care-item-1',
+      name: '새 이름',
+      cycleValue: 14,
+      cycleUnit: 'week',
+      icon: '🐕',
+      color: '#000000',
+      notifyEnabled: true,
+    });
+
+    const callArgs = (updateDoc as Mock).mock.calls[0][1] as Record<string, unknown>;
+    expect(callArgs.name).toBe('새 이름');
+    expect(callArgs.cycleValue).toBe(14);
+    expect(callArgs.cycleUnit).toBe('week');
+    expect(callArgs.icon).toBe('🐕');
+    expect(callArgs.color).toBe('#000000');
+    expect(callArgs.notifyEnabled).toBe(true);
+    expect(callArgs.updatedAt).toBeDefined();
+  });
 });

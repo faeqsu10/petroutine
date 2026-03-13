@@ -320,4 +320,152 @@ describe('useDeleteExpense', () => {
     expect(updateDoc).not.toHaveBeenCalled();
     expect(deleteDoc).toHaveBeenCalledTimes(1);
   });
+
+  it('Firestore deleteDoc 실패 시 에러를 전파한다', async () => {
+    (deleteDoc as Mock).mockRejectedValueOnce(new Error('Firestore delete failed'));
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useDeleteExpense(), { wrapper });
+
+    result.current.mutate('expense-1');
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe('Firestore delete failed');
+  });
+});
+
+// ============================================================
+// Edge cases: useCreateExpense
+// ============================================================
+describe('useCreateExpense — edge cases', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
+    (addDoc as Mock).mockResolvedValue({ id: 'new-expense-id' });
+  });
+
+  it('금액이 0인 지출을 생성할 수 있다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpense(), { wrapper });
+
+    result.current.mutate({
+      petId: 'pet-1',
+      categoryId: 'cat-1',
+      amount: 0,
+      description: '무료 샘플',
+      expenseDate: '2026-03-13',
+      memo: null,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const calledWith = (addDoc as Mock).mock.calls[0][1];
+    expect(calledWith.amount).toBe(0);
+  });
+
+  it('매우 큰 금액도 정상적으로 저장한다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpense(), { wrapper });
+
+    result.current.mutate({
+      petId: 'pet-1',
+      categoryId: 'cat-1',
+      amount: 99999999,
+      description: '고가 수술',
+      expenseDate: '2026-03-13',
+      memo: null,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const calledWith = (addDoc as Mock).mock.calls[0][1];
+    expect(calledWith.amount).toBe(99999999);
+  });
+
+  it('Firestore addDoc 실패 시 에러를 전파한다', async () => {
+    (addDoc as Mock).mockRejectedValueOnce(new Error('Quota exceeded'));
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpense(), { wrapper });
+
+    result.current.mutate({
+      petId: 'pet-1',
+      categoryId: 'cat-1',
+      amount: 5000,
+      description: '간식',
+      expenseDate: '2026-03-13',
+      memo: null,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe('Quota exceeded');
+  });
+
+  it('빈 문자열 description도 저장한다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpense(), { wrapper });
+
+    result.current.mutate({
+      petId: 'pet-1',
+      categoryId: 'cat-1',
+      amount: 1000,
+      description: '',
+      expenseDate: '2026-03-13',
+      memo: null,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const calledWith = (addDoc as Mock).mock.calls[0][1];
+    expect(calledWith.description).toBe('');
+  });
+});
+
+// ============================================================
+// Edge cases: useUpdateExpense
+// ============================================================
+describe('useUpdateExpense — edge cases', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
+    (updateDoc as Mock).mockResolvedValue(undefined);
+    (doc as Mock).mockReturnValue('mock-expense-doc-ref');
+  });
+
+  it('Firestore updateDoc 실패 시 에러를 전파한다', async () => {
+    (updateDoc as Mock).mockRejectedValueOnce(new Error('Permission denied'));
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useUpdateExpense(), { wrapper });
+
+    result.current.mutate({ id: 'expense-1', amount: 5000 });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe('Permission denied');
+  });
+
+  it('모든 필드를 동시에 업데이트할 수 있다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useUpdateExpense(), { wrapper });
+
+    result.current.mutate({
+      id: 'expense-1',
+      amount: 25000,
+      description: '수정됨',
+      categoryId: 'cat-2',
+      expenseDate: '2026-04-01',
+      memo: '수정 메모',
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const calledWith = (updateDoc as Mock).mock.calls[0][1] as Record<string, unknown>;
+    expect(calledWith.amount).toBe(25000);
+    expect(calledWith.description).toBe('수정됨');
+    expect(calledWith.categoryId).toBe('cat-2');
+    expect(calledWith.expenseDate).toBe('2026-04-01');
+    expect(calledWith.memo).toBe('수정 메모');
+    expect(calledWith.updatedAt).toBeDefined();
+    expect(calledWith.id).toBeUndefined();
+  });
 });
