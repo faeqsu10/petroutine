@@ -34,3 +34,23 @@
   - TanStack Query + Zustand
   - PWA + FCM
 - **비고**: 빌드 성공 확인 완료. Supabase placeholder 환경변수 사용 중.
+
+## Phase 3: MVP UI 구현
+- **날짜**: 2026-03-13
+- **커밋**: `96093ba`, `0190c90`
+- **작업**: shadcn/ui 초기화, CRUD 폼 구현, 완료 모달, 에러 바운더리
+- **산출물**:
+  - `components.json` + `src/components/ui/` — shadcn/ui 12개 컴포넌트 (button, card, dialog, input, label, select, sheet, badge, skeleton, separator, textarea, form)
+  - `src/app/(main)/pets/add/page.tsx` — 반려동물 등록 폼 (react-hook-form + zod)
+  - `src/app/(main)/care/add/page.tsx` — 케어 항목 추가 폼 (카테고리/주기/아이콘/색상 선택)
+  - `src/components/care/complete-modal.tsx` — 케어 완료 다이얼로그 (메모 입력)
+  - `src/app/(main)/expenses/add/page.tsx` — 지출 등록 폼 (카테고리 그리드 선택)
+  - `src/hooks/use-create-care-item.ts` — 케어 항목 생성 mutation
+  - `src/hooks/use-expense-categories.ts` — 지출 카테고리 조회 hook
+  - `src/app/auth/callback/route.ts` — OAuth 콜백 핸들러
+  - `src/app/error.tsx`, `src/app/(main)/error.tsx` — 에러 바운더리
+  - `public/manifest.json` — PWA 매니페스트
+- **Architect 검증**: 전체 PASS
+  - 구조/타입/데이터레이어/UI/보안 모두 통과
+  - MEDIUM 이슈 3건 수정 완료 (에러 바운더리, 날짜 범위 버그, pet auto-select)
+- **비고**: 총 13개 라우트 빌드 성공. Supabase 연결 시 즉시 사용 가능 상태.
