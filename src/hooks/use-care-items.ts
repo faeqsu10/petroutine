@@ -20,6 +20,7 @@ export function useCareItems(petId: string | null) {
       const itemsSnap = await getDocs(
         query(
           collection(db, 'careItems'),
+          where('userId', '==', uid),
           where('petId', '==', petId),
           where('isActive', '==', true),
         ),
@@ -34,6 +35,7 @@ export function useCareItems(petId: string | null) {
         getDocs(
           query(
             collection(db, 'careSchedules'),
+            where('userId', '==', uid),
             where('careItemId', 'in', itemIds),
             where('status', 'in', ['pending', 'due', 'overdue']),
           ),
@@ -41,6 +43,7 @@ export function useCareItems(petId: string | null) {
         getDocs(
           query(
             collection(db, 'careLogs'),
+            where('userId', '==', uid),
             where('careItemId', 'in', itemIds),
             orderBy('completedAt', 'desc'),
           ),
@@ -153,6 +156,7 @@ export function useDeleteCareItem() {
       const openSchedules = await getDocs(
         query(
           collection(db, 'careSchedules'),
+          where('userId', '==', uid),
           where('careItemId', '==', careItemId),
           where('status', 'in', ['pending', 'due', 'overdue']),
         ),
