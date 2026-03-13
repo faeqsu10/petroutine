@@ -1,17 +1,23 @@
 'use client';
 
+import { useState } from 'react';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { usePets } from '@/hooks/use-pets';
 import { useCareItems } from '@/hooks/use-care-items';
 import { useCareStore } from '@/stores/care-store';
-import { getScheduleUrgency, getDdayText, getUrgencyColor, formatCurrency } from '@/lib/utils';
-import { format } from 'date-fns';
+import { getScheduleUrgency, getDdayText, getUrgencyColor } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { CompleteModal } from '@/components/care/complete-modal';
+import type { CareItem } from '@/types';
 
 export default function HomePage() {
   const { data: pets, isLoading: petsLoading } = usePets();
   const { selectedPetId, setSelectedPetId } = useCareStore();
+  const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
 
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
-  const { data: careItems, isLoading: careLoading } = useCareItems(activePetId);
+  const { data: careItems } = useCareItems(activePetId);
 
   if (petsLoading) {
     return <div className="flex min-h-dvh items-center justify-center text-gray-400">로딩 중...</div>;
@@ -23,6 +29,11 @@ export default function HomePage() {
         <p className="text-5xl">🐾</p>
         <h2 className="text-xl font-bold text-gray-800">반려동물을 등록해주세요</h2>
         <p className="text-sm text-gray-500">우리 아이의 케어를 시작해볼까요?</p>
+        <Link href="/pets/add">
+          <Button className="mt-2 rounded-2xl bg-indigo-600 px-8 py-5 text-base font-semibold text-white hover:bg-indigo-700 active:scale-[0.98]">
+            반려동물 등록하기
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -37,8 +48,6 @@ export default function HomePage() {
     if (!item.schedule) return false;
     return getScheduleUrgency(item.schedule.nextDueDate) === 'pending';
   }).slice(0, 5);
-
-  const currentMonth = format(new Date(), 'yyyy-MM');
 
   return (
     <div className="space-y-6 px-4 pb-24 pt-6">
@@ -90,9 +99,12 @@ export default function HomePage() {
                     </p>
                   </div>
                 </div>
-                <button className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-transform active:scale-95">
+                <Button
+                  onClick={() => setCompletingItem(item)}
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 active:scale-95"
+                >
                   완료
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -123,6 +135,20 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* 플로팅 추가 버튼 */}
+      <Link href="/care/add" className="fixed bottom-24 right-4 z-40">
+        <button className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 shadow-lg transition-transform hover:bg-indigo-700 active:scale-95">
+          <Plus className="h-7 w-7 text-white" />
+        </button>
+      </Link>
+
+      {/* 케어 완료 모달 */}
+      <CompleteModal
+        open={!!completingItem}
+        onOpenChange={(open) => !open && setCompletingItem(null)}
+        careItem={completingItem}
+      />
     </div>
   );
 }

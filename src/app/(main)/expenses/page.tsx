@@ -1,12 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, addMonths, subMonths } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { useExpenses, useMonthlyStats } from '@/hooks/use-expenses';
 import { formatCurrency } from '@/lib/utils';
 
 export default function ExpensesPage() {
-  const [currentMonth] = useState(() => format(new Date(), 'yyyy-MM'));
+  const [currentMonthDate, setCurrentMonthDate] = useState(() => new Date());
+  const currentMonth = format(currentMonthDate, 'yyyy-MM');
+
+  const handlePrevMonth = () => setCurrentMonthDate((d) => subMonths(d, 1));
+  const handleNextMonth = () => setCurrentMonthDate((d) => addMonths(d, 1));
   const { data: stats } = useMonthlyStats(currentMonth);
   const { data: expenses } = useExpenses(null, currentMonth);
 
@@ -16,8 +24,28 @@ export default function ExpensesPage() {
 
       {/* 월별 총지출 */}
       <div className="rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 text-white shadow-lg">
-        <p className="text-sm opacity-80">{currentMonth.replace('-', '년 ')}월</p>
-        <p className="mt-1 text-3xl font-bold">{formatCurrency(stats?.totalAmount ?? 0)}</p>
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handlePrevMonth}
+            className="h-8 w-8 text-white hover:bg-white/20"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <p className="text-sm opacity-90">
+            {format(currentMonthDate, 'yyyy년 M월', { locale: ko })}
+          </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNextMonth}
+            className="h-8 w-8 text-white hover:bg-white/20"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+        <p className="mt-2 text-center text-3xl font-bold">{formatCurrency(stats?.totalAmount ?? 0)}</p>
       </div>
 
       {/* 카테고리별 지출 */}
@@ -67,6 +95,12 @@ export default function ExpensesPage() {
           </div>
         )}
       </section>
+      {/* 플로팅 추가 버튼 */}
+      <Link href="/expenses/add">
+        <button className="fixed bottom-24 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 shadow-lg hover:bg-indigo-700 active:scale-95 transition-transform">
+          <Plus className="h-7 w-7 text-white" />
+        </button>
+      </Link>
     </div>
   );
 }

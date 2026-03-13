@@ -3,31 +3,39 @@
 ## Phase 0: 프로젝트 셋업
 - [x] 에이전트 팀 구성 (agents/ 디렉토리)
 - [x] CLAUDE.md 작성
-- [ ] Git 레포 연결 및 초기 커밋
-- [ ] 기술 스택 결정
+- [x] Git 레포 초기 커밋
+- [x] 기술 스택 결정
 
 ## Phase 1: 기획
-- [ ] PRD 작성 (PM 에이전트)
-- [ ] 유저 스토리 정의 (PM 에이전트)
-- [ ] 유저 플로우 설계 (UX Designer 에이전트)
-- [ ] 와이어프레임 작성 (UX Designer 에이전트)
+- [x] PRD 작성 (docs/PRD.md)
+- [x] 유저 스토리 정의 (docs/PRD.md 내 포함)
+- [x] 유저 플로우 설계 (docs/user-flows.md)
+- [x] 와이어프레임 작성 (docs/wireframes.md)
 
 ## Phase 2: 설계
-- [ ] 기술 스택 결정 (Architect 에이전트)
-- [ ] DB 스키마 설계 - ERD (Architect 에이전트)
-- [ ] API 명세 작성 (Architect 에이전트)
-- [ ] 시스템 아키텍처 (Architect 에이전트)
+- [x] 기술 스택 결정 (docs/tech-stack.md)
+- [x] DB 스키마 설계 - ERD (docs/erd.md, supabase/migrations/)
+- [x] API 명세 작성 (docs/api-spec.md)
+- [x] 시스템 아키텍처 (.omc/autopilot/spec.md)
 
-## Phase 3: 구현 (MVP)
-- [ ] 프로젝트 초기화 + 보일러플레이트
-- [ ] 반려동물 프로필 CRUD
-- [ ] 케어 항목 관리 (추가/수정/삭제)
-- [ ] 주기 계산 엔진
-- [ ] 완료 체크 + 다음 일정 자동 생성
-- [ ] 홈 대시보드 (오늘 할 일)
-- [ ] 지출 기록 CRUD
-- [ ] 월별 지출 통계
-- [ ] 푸시 알림
+## Phase 3: 구현 (MVP) — 스캐폴드 완료, 기능 구현 진행 중
+- [x] 프로젝트 초기화 + 보일러플레이트
+- [x] 타입 시스템 (src/types/)
+- [x] Supabase 클라이언트 (src/lib/supabase/)
+- [x] 유틸리티 함수 (src/lib/utils.ts)
+- [x] TanStack Query 훅 (src/hooks/)
+- [x] Zustand 스토어 (src/stores/)
+- [x] 레이아웃 + 내비게이션 (src/components/layout/)
+- [x] 페이지 스캐폴드 (홈/케어/가계부/설정/로그인)
+- [ ] shadcn/ui 초기화 + UI 컴포넌트
+- [ ] 반려동물 프로필 CRUD UI
+- [ ] 케어 항목 관리 UI (추가/수정/삭제)
+- [ ] 완료 체크 모달 + 다음 일정 자동 생성
+- [ ] 홈 대시보드 완성 (실 데이터 연동)
+- [ ] 지출 기록 CRUD UI
+- [ ] 월별 지출 통계 차트
+- [ ] 온보딩 플로우
+- [ ] 푸시 알림 (FCM)
 
 ## Phase 4: 검증
 - [ ] 단위 테스트 (QA 에이전트)

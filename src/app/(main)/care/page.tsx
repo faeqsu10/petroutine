@@ -1,15 +1,22 @@
 'use client';
 
+import { useState } from 'react';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { usePets } from '@/hooks/use-pets';
 import { useCareItems } from '@/hooks/use-care-items';
 import { useCareStore } from '@/stores/care-store';
 import { getScheduleUrgency, getDdayText, getUrgencyColor, formatDate } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { CompleteModal } from '@/components/care/complete-modal';
+import type { CareItem } from '@/types';
 
 export default function CarePage() {
   const { data: pets } = usePets();
   const { selectedPetId, setSelectedPetId } = useCareStore();
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
   const { data: careItems, isLoading } = useCareItems(activePetId);
+  const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
 
   const grouped = (careItems ?? []).reduce(
     (acc, item) => {
@@ -30,7 +37,15 @@ export default function CarePage() {
 
   return (
     <div className="space-y-6 px-4 pb-24 pt-6">
-      <h1 className="text-xl font-bold text-gray-800">케어 관리</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-800">케어 관리</h1>
+        <Link href="/care/add">
+          <Button variant="outline" size="sm" className="gap-1">
+            <Plus className="h-4 w-4" />
+            항목 추가
+          </Button>
+        </Link>
+      </div>
 
       {/* 반려동물 선택 */}
       {pets && pets.length > 1 && (
@@ -53,6 +68,16 @@ export default function CarePage() {
 
       {isLoading ? (
         <p className="text-center text-gray-400">로딩 중...</p>
+      ) : Object.keys(grouped).length === 0 ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <p className="text-4xl">📋</p>
+          <p className="text-sm text-gray-500">등록된 케어 항목이 없어요</p>
+          <Link href="/care/add">
+            <Button className="mt-1 rounded-xl bg-indigo-600 hover:bg-indigo-700">
+              첫 케어 항목 추가하기
+            </Button>
+          </Link>
+        </div>
       ) : (
         Object.entries(grouped).map(([category, items]) => (
           <section key={category}>
@@ -85,9 +110,12 @@ export default function CarePage() {
                         </div>
                       </div>
                     </div>
-                    <button className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-transform active:scale-95">
+                    <Button
+                      onClick={() => setCompletingItem(item)}
+                      className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 active:scale-95"
+                    >
                       완료
-                    </button>
+                    </Button>
                   </div>
                 );
               })}
@@ -95,6 +123,13 @@ export default function CarePage() {
           </section>
         ))
       )}
+
+      {/* 케어 완료 모달 */}
+      <CompleteModal
+        open={!!completingItem}
+        onOpenChange={(open) => !open && setCompletingItem(null)}
+        careItem={completingItem}
+      />
     </div>
   );
 }
