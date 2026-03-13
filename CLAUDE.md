@@ -1,23 +1,27 @@
 # Petroutine - CLAUDE.md
 
-## Project Overview
+## 프로젝트 개요
 반려동물 케어 주기 관리 + 지출 관리 앱
 핵심 가치: "기억에 의존하지 않는 반려동물 관리 시스템" — 최소 입력으로 굴러가는 반자동 케어 루프
 
-## Service Concept
+## 서비스 컨셉
 - **버전 1 (MVP)**: 반려동물 케어 주기 관리 + 가계부
 - **버전 2**: + 사료/용품 추천 (제휴 수익)
 - **버전 3**: + 병원 연결/추천 (수수료 수익)
 
-## Core UX Principle
+## 핵심 UX 원칙
 - 알림 → 완료 버튼 1번 → 다음 일정 자동 생성
 - "무엇을 입력할까?"가 아니라 "지금 뭘 하면 되지?"를 보여주는 운영앱
 - 기록 피로 최소화: 최초 설정 이후 거의 자동
 
-## Tech Stack
-- 미정 (Architect 에이전트가 결정)
+## 기술 스택
+- Next.js 16 + React 19 + TypeScript 5
+- Firebase (Firestore + Auth)
+- TanStack React Query + Zustand
+- shadcn/ui + Tailwind CSS
+- Vitest + Testing Library
 
-## Project Structure
+## 프로젝트 구조
 ```
 agents/           # 전문가 에이전트 정의
 docs/             # 문서 (PRD, dev-log, API 등)
@@ -25,20 +29,20 @@ tasks/            # 할일, 교훈
 src/              # 소스코드 (구현 시 생성)
 ```
 
-## Agent Team
+## 에이전트 팀
 이 프로젝트는 6명의 전문가 에이전트로 구성된 팀이 협업합니다.
 각 에이전트의 상세 정의는 `agents/` 디렉토리를 참조하세요.
 
 | 역할 | 파일 | 담당 |
 |------|------|------|
 | PM | `agents/pm.md` | PRD, 유저스토리, 기능 우선순위 |
-| UX Designer | `agents/ux-designer.md` | 유저플로우, 와이어프레임, 인터랙션 |
-| System Architect | `agents/architect.md` | 기술 스택, DB, API, 아키텍처 |
-| Frontend Dev | `agents/frontend.md` | UI 구현, 상태관리, 컴포넌트 |
-| Backend Dev | `agents/backend.md` | API, 비즈니스 로직, 알림 시스템 |
-| QA Engineer | `agents/qa.md` | 테스트, 빌드 검증, 보안 점검 |
+| UX 디자이너 | `agents/ux-designer.md` | 유저플로우, 와이어프레임, 인터랙션 |
+| 시스템 아키텍트 | `agents/architect.md` | 기술 스택, DB, API, 아키텍처 |
+| 프론트엔드 개발자 | `agents/frontend.md` | UI 구현, 상태관리, 컴포넌트 |
+| 백엔드 개발자 | `agents/backend.md` | API, 비즈니스 로직, 알림 시스템 |
+| QA 엔지니어 | `agents/qa.md` | 테스트, 빌드 검증, 보안 점검 |
 
-### Agent Orchestration (OMC 활용)
+### 에이전트 오케스트레이션 (OMC 활용)
 ```
 [기획]  /plan        → PM + UX Designer
 [설계]  /pipeline    → Architect → UX Designer → Critic
@@ -49,60 +53,60 @@ src/              # 소스코드 (구현 시 생성)
 
 ---
 
-## Workflow Orchestration
+## 워크플로우 관리
 
-### 1. Plan Mode Default
+### 1. 계획 우선
 - 3단계 이상 또는 아키텍처 결정이 필요한 작업은 반드시 계획 먼저
 - 진행 중 문제 발생 시 즉시 멈추고 재계획 — 밀어붙이지 않기
 - 검증 단계도 계획에 포함
 - 사전에 상세 스펙을 작성하여 모호함 제거
 
-### 2. Subagent Strategy
+### 2. 서브에이전트 전략
 - 메인 컨텍스트 윈도우를 깨끗하게 유지하기 위해 서브에이전트 적극 활용
 - 리서치, 탐색, 병렬 분석은 서브에이전트에 위임
 - 복잡한 문제에는 서브에이전트로 더 많은 컴퓨팅 투입
 - 서브에이전트 1개당 작업 1개로 집중 실행
 
-### 3. Self-Improvement Loop
+### 3. 자기 개선 루프
 - 사용자로부터 수정 피드백 받으면 즉시 `tasks/lessons.md`에 패턴 기록
 - 같은 실수를 방지하는 규칙을 스스로 작성
 - 실수율이 낮아질 때까지 교훈을 반복적으로 개선
 - 세션 시작 시 관련 프로젝트의 교훈 리뷰
 
-### 4. Verification Before Done
+### 4. 완료 전 검증
 - 작동함을 증명하지 않고는 절대 완료 처리하지 않기
 - 변경 전후 동작 차이를 비교
 - "시니어 엔지니어가 승인할 수준인가?" 자문
 - 빌드, 테스트, 로그 확인으로 정확성 입증
 
-### 5. Demand Elegance (Balanced)
+### 5. 우아함 추구 (균형 있게)
 - 비사소한 변경: "더 우아한 방법이 있는가?" 잠시 멈춰서 생각
 - 임시방편 느낌이면: "지금 아는 모든 것을 바탕으로 우아한 솔루션 구현"
 - 단순하고 명확한 수정에는 과도한 엔지니어링 금지
 - 제출 전 자기 작업에 도전하기
 
-### 6. Autonomous Bug Fixing
+### 6. 자율적 버그 수정
 - 버그 리포트 받으면 질문 없이 바로 수정
 - 로그, 에러, 실패 테스트를 찾아서 해결
 - 사용자의 컨텍스트 스위칭 비용 제로
 - CI 실패도 지시 없이 스스로 수정
 
-## Task Management
-1. **Plan First**: `tasks/todo.md`에 체크 가능한 항목으로 계획 작성
-2. **Verify Plan**: 구현 시작 전 사용자와 확인
-3. **Track Progress**: 진행하면서 완료 항목 체크
-4. **Explain Changes**: 각 단계마다 고수준 요약 제공
-5. **Document Results**: `tasks/todo.md`에 리뷰 섹션 추가
-6. **Capture Lessons**: 수정 후 `tasks/lessons.md` 업데이트
-7. **Dev Log**: 기능 완료 시 `docs/dev-log.md`에 항목 추가 (Phase별, 커밋 해시, 날짜)
+## 작업 관리
+1. **계획 먼저**: `tasks/todo.md`에 체크 가능한 항목으로 계획 작성
+2. **계획 확인**: 구현 시작 전 사용자와 확인
+3. **진행 추적**: 진행하면서 완료 항목 체크
+4. **변경 설명**: 각 단계마다 고수준 요약 제공
+5. **결과 기록**: `tasks/todo.md`에 리뷰 섹션 추가
+6. **교훈 기록**: 수정 후 `tasks/lessons.md` 업데이트
+7. **개발 로그**: 기능 완료 시 `docs/dev-log.md`에 항목 추가 (Phase별, 커밋 해시, 날짜)
 
-## Core Principles
-- **Simplicity First**: 모든 변경을 최대한 단순하게. 최소 코드 영향.
-- **No Laziness**: 근본 원인 찾기. 임시 수정 금지. 시니어 개발자 기준.
-- **Minimal Impact**: 필요한 것만 건드리기. 버그 유발 방지.
+## 핵심 원칙
+- **단순함 우선**: 모든 변경을 최대한 단순하게. 최소 코드 영향.
+- **근본 해결**: 근본 원인 찾기. 임시 수정 금지. 시니어 개발자 기준.
+- **최소 영향**: 필요한 것만 건드리기. 버그 유발 방지.
 
-## Communication Preferences
+## 소통 규칙
 - 한국어로 모든 소통
 - 기술 용어와 코드 식별자는 원문 유지
-- 커밋 메시지는 영어
+- 커밋 메시지도 한국어 (접두사는 conventional commits 형식 유지: feat, fix, test 등)
 - 마일스톤마다 자동 커밋 + 푸시
