@@ -5,14 +5,14 @@ export function middleware(request: NextRequest) {
   const session = request.cookies.get('__session')?.value;
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ['/login', '/signup', '/api/auth'];
+  const publicPaths = ['/login', '/signup', '/api/auth', '/welcome'];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
   if (!session && !isPublic) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/welcome', request.url));
   }
 
-  if (session && pathname === '/login') {
+  if (session && (pathname === '/login' || pathname === '/welcome' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
