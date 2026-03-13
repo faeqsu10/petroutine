@@ -18,6 +18,7 @@ export function useExpenseCategories() {
         getDocs(
           query(
             collection(db, 'expenseCategories'),
+            where('userId', '==', null),
             where('isDefault', '==', true),
             orderBy('sortOrder'),
           ),
