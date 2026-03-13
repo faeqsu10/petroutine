@@ -79,6 +79,7 @@ export default function AddCareItemPage() {
 
   function onSubmit(values: FormValues) {
     if (!activePetId) {
+      alert('반려동물을 먼저 등록해주세요.');
       router.push('/pets/add');
       return;
     }
@@ -97,6 +98,9 @@ export default function AddCareItemPage() {
       {
         onSuccess: () => {
           router.push('/care');
+        },
+        onError: (error) => {
+          alert(`저장에 실패했어요: ${error.message}`);
         },
       },
     );
