@@ -15,6 +15,7 @@ import { useExpenseCategories } from '@/hooks/use-expense-categories';
 import { usePets } from '@/hooks/use-pets';
 import { useCreateExpense } from '@/hooks/use-expenses';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const schema = z.object({
   amount: z.number({ error: '금액을 입력해 주세요' }).positive('0보다 큰 금액을 입력해 주세요').max(99_999_999, '금액은 1억 미만이어야 합니다'),
@@ -63,66 +64,64 @@ export default function AddExpensePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
+    <div className="min-h-dvh px-5 pb-32 pt-8">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 flex items-center gap-2 bg-white px-4 py-3 shadow-sm">
+      <header className="mb-10">
         <Link href="/expenses">
-          <Button variant="ghost" size="icon" className="h-9 w-9">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+          <button
+            className="group mb-6 flex items-center gap-2 text-sm font-bold text-muted-foreground transition-colors hover:text-primary"
+          >
+            <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+            <span>뒤로가기</span>
+          </button>
         </Link>
-        <h1 className="text-base font-semibold text-gray-800">지출 추가</h1>
-      </div>
+        <h1 className="text-3xl font-black tracking-tight text-foreground/90">지출 추가</h1>
+        <p className="mt-2 text-sm font-medium text-muted-foreground">아이에게 사용한 비용을 기록하세요</p>
+      </header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 px-4 pt-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* 금액 */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <Label className="mb-2 block text-sm font-medium text-gray-500">금액</Label>
-          <div className="flex items-center gap-1">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bento-item bg-primary text-white p-8 shadow-lg shadow-primary/20"
+        >
+          <Label className="mb-4 block text-xs font-bold uppercase tracking-widest opacity-70">지출 금액</Label>
+          <div className="flex items-baseline justify-center gap-2">
             <input
               type="number"
               inputMode="numeric"
               placeholder="0"
+              autoFocus
               className={cn(
-                'w-full bg-transparent text-center text-4xl font-bold text-gray-800 outline-none placeholder:text-gray-300',
-                errors.amount && 'text-red-500',
+                'w-full bg-transparent text-center text-5xl font-black outline-none placeholder:text-white/30',
+                errors.amount && 'text-red-200',
               )}
               {...register('amount', { valueAsNumber: true })}
             />
-            <span className="text-2xl font-semibold text-gray-500">원</span>
+            <span className="text-2xl font-bold opacity-80">원</span>
           </div>
           {errors.amount && (
-            <p className="mt-1 text-center text-xs text-red-500">{errors.amount.message}</p>
+            <p className="mt-2 text-center text-xs font-bold text-red-200">{errors.amount.message}</p>
           )}
-        </div>
-
-        {/* 내용 */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <Label htmlFor="description" className="mb-2 block text-sm font-medium text-gray-500">
-            내용
-          </Label>
-          <Input
-            id="description"
-            placeholder="예: 정기 예방접종"
-            className="rounded-xl border-gray-200"
-            {...register('description')}
-          />
-          {errors.description && (
-            <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
-          )}
-        </div>
+        </motion.div>
 
         {/* 카테고리 */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <Label className="mb-3 block text-sm font-medium text-gray-500">카테고리</Label>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bento-item bg-card/60 glass p-6"
+        >
+          <Label className="mb-4 block text-xs font-bold uppercase tracking-widest text-muted-foreground/80">카테고리</Label>
           {categoriesLoading ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100" />
+                <div key={i} className="aspect-square animate-pulse rounded-2xl bg-background/50" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {categories.map((cat) => {
                 const isSelected = selectedCategoryId === cat.id;
                 return (
@@ -131,14 +130,14 @@ export default function AddExpensePage() {
                     type="button"
                     onClick={() => setValue('categoryId', cat.id, { shouldValidate: true })}
                     className={cn(
-                      'flex flex-col items-center justify-center gap-1 rounded-xl border-2 py-3 transition-all',
+                      'flex flex-col items-center justify-center gap-2 rounded-2xl border-2 py-4 transition-all active:scale-90',
                       isSelected
-                        ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
-                        : 'border-transparent bg-gray-50 hover:bg-gray-100',
+                        ? 'border-primary bg-primary/10 shadow-sm shadow-primary/10'
+                        : 'border-border/40 bg-background/50 hover:bg-background/80',
                     )}
                   >
-                    <span className="text-2xl">{cat.icon}</span>
-                    <span className={cn('text-xs font-medium', isSelected ? 'text-indigo-600' : 'text-gray-600')}>
+                    <span className="text-3xl">{cat.icon}</span>
+                    <span className={cn('text-[11px] font-bold', isSelected ? 'text-primary' : 'text-muted-foreground')}>
                       {cat.name}
                     </span>
                   </button>
@@ -147,82 +146,112 @@ export default function AddExpensePage() {
             </div>
           )}
           {errors.categoryId && (
-            <p className="mt-2 text-xs text-red-500">{errors.categoryId.message}</p>
+            <p className="mt-2 text-xs font-bold text-destructive">{errors.categoryId.message}</p>
           )}
-        </div>
+        </motion.div>
 
-        {/* 반려동물 */}
-        {pets.length > 0 && (
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <Label className="mb-3 block text-sm font-medium text-gray-500">반려동물</Label>
-            <div className="flex flex-wrap gap-2">
-              {petsLoading ? (
-                <div className="h-9 w-20 animate-pulse rounded-full bg-gray-100" />
-              ) : (
-                pets.map((pet) => {
-                  const isSelected = selectedPetId === pet.id;
-                  return (
-                    <button
-                      key={pet.id}
-                      type="button"
-                      onClick={() => setValue('petId', pet.id, { shouldValidate: true })}
-                      className={cn(
-                        'rounded-full border-2 px-4 py-1.5 text-sm font-medium transition-all',
-                        isSelected
-                          ? 'border-indigo-500 bg-indigo-500 text-white'
-                          : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300',
-                      )}
-                    >
-                      {pet.name}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-            {errors.petId && (
-              <p className="mt-2 text-xs text-red-500">{errors.petId.message}</p>
+        {/* 반려동물 및 날짜 정보 */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bento-item bg-card/60 glass p-6 space-y-8"
+        >
+          {/* 내용 */}
+          <div className="space-y-3">
+            <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+              지출 내용
+            </Label>
+            <Input
+              id="description"
+              placeholder="예: 정기 예방접종"
+              className="h-12 rounded-xl border-border/40 bg-background/50 focus-visible:ring-primary"
+              {...register('description')}
+            />
+            {errors.description && (
+              <p className="text-xs font-bold text-destructive">{errors.description.message}</p>
             )}
           </div>
-        )}
 
-        {/* 날짜 */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <Label htmlFor="expenseDate" className="mb-2 block text-sm font-medium text-gray-500">
-            날짜
-          </Label>
-          <Input
-            id="expenseDate"
-            type="date"
-            className="rounded-xl border-gray-200"
-            {...register('expenseDate')}
-          />
-          {errors.expenseDate && (
-            <p className="mt-1 text-xs text-red-500">{errors.expenseDate.message}</p>
+          {/* 반려동물 */}
+          {pets.length > 0 && (
+            <div className="space-y-4">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">반려동물</Label>
+              <div className="flex flex-wrap gap-2">
+                {petsLoading ? (
+                  <div className="h-10 w-24 animate-pulse rounded-2xl bg-background/50" />
+                ) : (
+                  pets.map((pet) => {
+                    const isSelected = selectedPetId === pet.id;
+                    return (
+                      <button
+                        key={pet.id}
+                        type="button"
+                        onClick={() => setValue('petId', pet.id, { shouldValidate: true })}
+                        className={cn(
+                          'rounded-2xl border-2 px-5 py-2.5 text-sm font-bold transition-all active:scale-95',
+                          isSelected
+                            ? 'border-primary bg-primary text-white shadow-md shadow-primary/20'
+                            : 'border-border/40 bg-background/50 text-muted-foreground/60 hover:border-primary/40',
+                        )}
+                      >
+                        {pet.name}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              {errors.petId && (
+                <p className="text-xs font-bold text-destructive">{errors.petId.message}</p>
+              )}
+            </div>
           )}
-        </div>
 
-        {/* 메모 */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <Label htmlFor="memo" className="mb-2 block text-sm font-medium text-gray-500">
-            메모 <span className="text-gray-400">(선택)</span>
-          </Label>
-          <Textarea
-            id="memo"
-            placeholder="추가 메모를 입력해 주세요"
-            rows={3}
-            className="resize-none rounded-xl border-gray-200"
-            {...register('memo')}
-          />
-        </div>
+          {/* 날짜 */}
+          <div className="space-y-3">
+            <Label htmlFor="expenseDate" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+              지출 날짜
+            </Label>
+            <Input
+              id="expenseDate"
+              type="date"
+              className="h-12 rounded-xl border-border/40 bg-background/50 focus-visible:ring-primary"
+              {...register('expenseDate')}
+            />
+            {errors.expenseDate && (
+              <p className="text-xs font-bold text-destructive">{errors.expenseDate.message}</p>
+            )}
+          </div>
+
+          {/* 메모 */}
+          <div className="space-y-3">
+            <Label htmlFor="memo" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+              상세 메모 <span className="text-[10px] opacity-40">(선택)</span>
+            </Label>
+            <Textarea
+              id="memo"
+              placeholder="추가적인 정보를 메모해 보세요"
+              rows={3}
+              className="resize-none rounded-xl border-border/40 bg-background/50 focus-visible:ring-primary"
+              {...register('memo')}
+            />
+          </div>
+        </motion.div>
 
         {/* 저장 버튼 */}
-        <Button
-          type="submit"
-          disabled={isSubmitting || createExpense.isPending}
-          className="w-full rounded-xl bg-indigo-600 py-4 text-base font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
         >
-          {isSubmitting || createExpense.isPending ? '저장 중...' : '저장하기'}
-        </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting || createExpense.isPending}
+            className="h-16 w-full rounded-2xl bg-primary text-lg font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50"
+          >
+            {isSubmitting || createExpense.isPending ? '기록하는 중...' : '지출 내역 저장하기'}
+          </Button>
+        </motion.div>
       </form>
     </div>
   );

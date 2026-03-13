@@ -11,6 +11,7 @@ import { useCreateCareItem } from '@/hooks/use-create-care-item';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ChevronLeft } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -26,8 +27,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { motion } from 'framer-motion';
 
-const PRESET_COLORS = ['#6366F1', '#EC4899', '#14B8A6', '#F59E0B', '#EF4444', '#8B5CF6'];
+const PRESET_COLORS = ['#FF7E5F', '#FFB347', '#48C6EF', '#6B8DD6', '#764BA2', '#6A11CB'];
 const PRESET_ICONS = ['🛁', '💊', '💉', '✂️', '🦷', '🐾', '🍖', '🏥', '🧴', '👁️', '🦴', '🚿'];
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -70,7 +72,7 @@ export default function AddCareItemPage() {
       cycleValue: 1,
       cycleUnit: 'week',
       icon: '🐾',
-      color: '#6366F1',
+      color: '#FF7E5F',
       notifyEnabled: true,
     },
   });
@@ -101,208 +103,229 @@ export default function AddCareItemPage() {
   }
 
   return (
-    <div className="min-h-dvh px-4 pb-24 pt-6">
-      <div className="mb-6 flex items-center gap-3">
+    <div className="min-h-dvh px-5 pb-32 pt-8">
+      <header className="mb-10">
         <button
           onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600"
+          className="group mb-6 flex items-center gap-2 text-sm font-bold text-muted-foreground transition-colors hover:text-primary"
         >
-          ←
+          <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+          <span>뒤로가기</span>
         </button>
-        <h1 className="text-xl font-bold text-gray-800">케어 항목 추가</h1>
-      </div>
+        <h1 className="text-3xl font-black tracking-tight text-foreground/90">케어 항목 추가</h1>
+        <p className="mt-2 text-sm font-medium text-muted-foreground">아이의 건강한 루틴을 만들어주세요</p>
+      </header>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* 항목 이름 */}
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">항목 이름</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="예: 목욕, 심장사상충 약"
-                    className="rounded-xl"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* 카테고리 */}
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">카테고리</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bento-item bg-card/60 glass p-6 space-y-8"
+          >
+            {/* 항목 이름 */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-bold text-foreground/70">항목 이름</FormLabel>
                   <FormControl>
-                    <SelectTrigger className="rounded-xl">
-                      <SelectValue placeholder="카테고리 선택" />
-                    </SelectTrigger>
+                    <Input
+                      placeholder="예: 목욕, 심장사상충 약"
+                      className="h-12 rounded-xl border-border/40 bg-background/50 focus-visible:ring-primary"
+                      {...field}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* 주기 */}
-          <div className="grid gap-2">
-            <Label className="text-sm font-semibold text-gray-700">주기</Label>
-            <div className="flex gap-2">
-              <FormField
-                control={form.control}
-                name="cycleValue"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
+            {/* 카테고리 */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-bold text-foreground/70">카테고리</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        className="rounded-xl"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      />
+                      <SelectTrigger className="h-12 rounded-xl border-border/40 bg-background/50">
+                        <SelectValue placeholder="카테고리 선택" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="cycleUnit"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.entries(CYCLE_UNIT_LABELS).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+                    <SelectContent className="rounded-xl border-border/40">
+                      {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* 아이콘 */}
-          <FormField
-            control={form.control}
-            name="icon"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">아이콘</FormLabel>
-                <div className="flex flex-wrap gap-2">
-                  {PRESET_ICONS.map((emoji) => (
+            {/* 주기 */}
+            <div className="space-y-3">
+              <Label className="text-sm font-bold text-foreground/70">실행 주기</Label>
+              <div className="flex gap-3">
+                <FormField
+                  control={form.control}
+                  name="cycleValue"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          className="h-12 rounded-xl border-border/40 bg-background/50 focus-visible:ring-primary"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cycleUnit"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl border-border/40 bg-background/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl border-border/40">
+                          {Object.entries(CYCLE_UNIT_LABELS).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label} 마다
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bento-item bg-card/60 glass p-6 space-y-8"
+          >
+            {/* 아이콘 */}
+            <FormField
+              control={form.control}
+              name="icon"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-bold text-foreground/70">대표 아이콘</FormLabel>
+                  <div className="grid grid-cols-6 gap-3 pt-2">
+                    {PRESET_ICONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => field.onChange(emoji)}
+                        className={cn(
+                          'flex aspect-square items-center justify-center rounded-2xl text-2xl transition-all active:scale-90',
+                          field.value === emoji
+                            ? 'bg-primary/10 ring-2 ring-primary shadow-sm shadow-primary/10'
+                            : 'bg-background/50 border border-border/40 text-muted-foreground/60 hover:bg-background/80',
+                        )}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 색상 */}
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-bold text-foreground/70">포인트 컬러</FormLabel>
+                  <div className="flex justify-between px-1 pt-2">
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => field.onChange(color)}
+                        className={cn(
+                          'h-9 w-9 rounded-full transition-all active:scale-90',
+                          field.value === color ? 'ring-2 ring-primary ring-offset-4 ring-offset-background' : 'hover:scale-110',
+                        )}
+                        style={{
+                          backgroundColor: color,
+                        }}
+                        aria-label={color}
+                      />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 알림 */}
+            <FormField
+              control={form.control}
+              name="notifyEnabled"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between rounded-2xl bg-primary/5 p-4.5 border border-primary/10">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-bold text-primary">스마트 알림</p>
+                      <p className="text-[11px] font-medium text-primary/60">당일 오전에 리마인더를 보내드려요</p>
+                    </div>
                     <button
-                      key={emoji}
                       type="button"
-                      onClick={() => field.onChange(emoji)}
+                      onClick={() => field.onChange(!field.value)}
                       className={cn(
-                        'flex h-11 w-11 items-center justify-center rounded-xl text-xl transition-all',
-                        field.value === emoji
-                          ? 'bg-indigo-100 ring-2 ring-indigo-600'
-                          : 'bg-gray-100',
+                        'relative h-7 w-12 rounded-full transition-colors',
+                        field.value ? 'bg-primary' : 'bg-muted-foreground/20',
                       )}
                     >
-                      {emoji}
+                      <span
+                        className={cn(
+                          'absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform',
+                          field.value ? 'right-1' : 'left-1',
+                        )}
+                      />
                     </button>
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* 색상 */}
-          <FormField
-            control={form.control}
-            name="color"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">색상</FormLabel>
-                <div className="flex gap-3">
-                  {PRESET_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => field.onChange(color)}
-                      className={cn(
-                        'h-9 w-9 rounded-full transition-all',
-                        field.value === color && 'ring-2 ring-offset-2',
-                      )}
-                      style={{
-                        backgroundColor: color,
-                      }}
-                      aria-label={color}
-                    />
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* 알림 */}
-          <FormField
-            control={form.control}
-            name="notifyEnabled"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm">
-                  <div>
-                    <p className="font-medium text-gray-800">알림</p>
-                    <p className="text-sm text-gray-500">케어 예정일에 알림을 받아요</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => field.onChange(!field.value)}
-                    className={cn(
-                      'relative h-6 w-11 rounded-full transition-colors',
-                      field.value ? 'bg-indigo-600' : 'bg-gray-300',
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform',
-                        field.value ? 'left-5 translate-x-0' : 'left-0.5',
-                      )}
-                    />
-                  </button>
-                </div>
-              </FormItem>
-            )}
-          />
+                </FormItem>
+              )}
+            />
+          </motion.div>
 
-          <Button
-            type="submit"
-            disabled={isPending}
-            className="w-full rounded-xl bg-indigo-600 py-6 text-base font-semibold text-white hover:bg-indigo-700 active:scale-95"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
           >
-            {isPending ? '저장 중...' : '저장하기'}
-          </Button>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="h-16 w-full rounded-2xl bg-primary text-lg font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 active:scale-[0.98] transition-all"
+            >
+              {isPending ? '저장하는 중...' : '케어 항목 저장하기'}
+            </Button>
+          </motion.div>
         </form>
       </Form>
     </div>

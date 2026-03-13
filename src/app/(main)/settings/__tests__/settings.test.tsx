@@ -32,6 +32,19 @@ vi.mock('next/link', () => ({
 }));
 
 // ============================================================
+// framer-motion 모킹
+// ============================================================
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, initial, animate, transition, variants, whileHover, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('div', props, children),
+    section: ({ children, initial, animate, transition, variants, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('div', props, children),
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// ============================================================
 // lucide-react 모킹
 // ============================================================
 vi.mock('lucide-react', () => ({
@@ -116,7 +129,7 @@ describe('SettingsPage', () => {
 
   it('반려동물 추가 버튼이 표시된다', () => {
     render(<SettingsPage />);
-    const addLink = screen.getByText('반려동물 추가').closest('a');
+    const addLink = screen.getByText('우리 아이 추가하기').closest('a');
     expect(addLink).toHaveAttribute('href', '/pets/add');
   });
 

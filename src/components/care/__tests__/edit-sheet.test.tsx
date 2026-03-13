@@ -98,12 +98,12 @@ describe('CareEditSheet', () => {
 
     it('careItem의 icon이 선택된 상태로 표시된다', () => {
       renderSheet({ careItem: makeCareItem({ icon: '💊' }) });
-      // 선택된 아이콘 버튼은 ring-indigo-600 클래스를 가짐
+      // 선택된 아이콘 버튼은 ring-primary 클래스를 가짐
       const selectedIconBtn = screen
         .getAllByRole('button')
         .find(
           (btn) =>
-            btn.textContent === '💊' && btn.className.includes('ring-indigo-600'),
+            btn.textContent === '💊' && btn.className.includes('ring-primary'),
         );
       expect(selectedIconBtn).toBeDefined();
     });

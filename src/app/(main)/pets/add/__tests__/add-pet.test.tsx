@@ -27,6 +27,17 @@ vi.mock('next/navigation', () => ({
 }));
 
 // ============================================================
+// framer-motion 모킹
+// ============================================================
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, initial, animate, transition, variants, whileHover, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('div', props, children),
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// ============================================================
 // lucide-react 모킹
 // ============================================================
 vi.mock('lucide-react', () => ({
@@ -141,7 +152,7 @@ describe('AddPetPage', () => {
   it('반려동물 등록 폼이 표시된다', () => {
     render(<AddPetPage />);
     expect(screen.getByText('반려동물 등록')).toBeInTheDocument();
-    expect(screen.getByText('우리 아이의 정보를 입력해주세요')).toBeInTheDocument();
+    expect(screen.getByText('우리 아이의 소중한 정보를 알려주세요')).toBeInTheDocument();
   });
 
   it('이름 필드가 존재한다', () => {
@@ -159,7 +170,7 @@ describe('AddPetPage', () => {
 
   it('등록하기 버튼이 표시된다', () => {
     render(<AddPetPage />);
-    expect(screen.getByRole('button', { name: '등록하기' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '아이 등록 완료하기' })).toBeInTheDocument();
   });
 
   it('isPending이 true일 때 버튼이 "등록 중..." 텍스트를 표시하며 비활성화된다', () => {

@@ -200,7 +200,7 @@ describe('ExpensesPage (가계부)', () => {
 
       render(<ExpensesPage />);
 
-      expect(screen.getByText('아직 지출 내역이 없어요')).toBeInTheDocument();
+      expect(screen.getByText('아직 기록된 지출이 없어요')).toBeInTheDocument();
     });
   });
 

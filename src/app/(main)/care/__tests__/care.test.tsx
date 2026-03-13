@@ -11,10 +11,26 @@ vi.mock('next/link', () => ({
 }));
 
 // ============================================================
+// framer-motion 모킹
+// ============================================================
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, initial, animate, transition, whileHover, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('div', props, children),
+    section: ({ children, initial, animate, transition, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('div', props, children),
+    button: ({ children, initial, animate, transition, whileHover, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('button', props, children),
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// ============================================================
 // lucide-react 아이콘 모킹
 // ============================================================
 vi.mock('lucide-react', () => ({
   Plus: ({ ...props }: Record<string, unknown>) => React.createElement('span', props, 'Plus'),
+  Check: ({ ...props }: Record<string, unknown>) => React.createElement('span', props, 'Check'),
 }));
 
 // ============================================================
@@ -131,7 +147,7 @@ describe('CarePage (케어 관리)', () => {
 
       render(<CarePage />);
 
-      expect(screen.getByText('항목 추가')).toBeInTheDocument();
+      expect(screen.getByText('추가')).toBeInTheDocument();
     });
 
     it('케어 항목 추가 버튼이 /care/add로 연결된다', () => {

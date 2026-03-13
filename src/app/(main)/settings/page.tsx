@@ -7,8 +7,23 @@ import { usePets } from '@/hooks/use-pets';
 import Link from 'next/link';
 import { ChevronRight, Bell, User, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { motion } from 'framer-motion';
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
+};
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -21,92 +36,116 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 px-4 pb-24 pt-6">
-      <h1 className="text-xl font-bold text-gray-800">설정</h1>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-8 px-5 pb-32 pt-10"
+    >
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-black tracking-tight text-foreground/90">설정</h1>
+        <p className="text-sm text-muted-foreground">앱 환경 및 반려동물을 관리하세요</p>
+      </header>
 
       {/* 반려동물 관리 */}
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-gray-500">반려동물</h2>
-        <Card className="divide-y divide-gray-100 overflow-hidden">
+      <motion.section variants={item} className="space-y-3">
+        <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+          반려동물
+        </h2>
+        <div className="bento-item divide-y divide-border/40 overflow-hidden bg-card/60 glass">
           {pets?.map((pet) => (
             <Link
               key={pet.id}
               href={`/pets/${pet.id}/edit`}
-              className="flex items-center justify-between p-4 transition-colors hover:bg-gray-50"
+              className="flex items-center justify-between p-4.5 transition-all hover:bg-primary/5 active:scale-[0.99]"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-lg">
-                  {pet.species === 'dog' ? '🐕' : pet.species === 'cat' ? '🐈' : '🐾'}
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-xl shadow-inner shadow-primary/5">
+                  {pet.species === 'dog' ? '🐶' : pet.species === 'cat' ? '🐱' : '🐾'}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800">{pet.name}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="font-bold text-foreground/80">{pet.name}</p>
+                  <p className="text-xs font-medium text-muted-foreground">
                     {pet.species === 'dog' ? '강아지' : pet.species === 'cat' ? '고양이' : '기타'}
                     {pet.breed ? ` · ${pet.breed}` : ''}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-gray-300" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
             </Link>
           ))}
           <Link
             href="/pets/add"
-            className="flex items-center gap-3 p-4 text-indigo-600 transition-colors hover:bg-gray-50"
+            className="group flex items-center gap-4 p-4.5 text-primary transition-all hover:bg-primary/5 active:scale-[0.99]"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed border-indigo-300">
-              <Plus className="h-5 w-5" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-dashed border-primary/20 transition-colors group-hover:bg-primary/5">
+              <Plus className="h-6 w-6" />
             </div>
-            <span className="text-sm font-medium">반려동물 추가</span>
+            <span className="text-sm font-bold">우리 아이 추가하기</span>
           </Link>
-        </Card>
-      </section>
+        </div>
+      </motion.section>
 
       {/* 앱 설정 */}
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-gray-500">앱 설정</h2>
-        <Card className="divide-y divide-gray-100 overflow-hidden">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-gray-400" />
+      <motion.section variants={item} className="space-y-3">
+        <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+          환경 설정
+        </h2>
+        <div className="bento-item divide-y divide-border/40 overflow-hidden bg-card/60 glass">
+          <div className="flex items-center justify-between p-4.5 transition-all hover:bg-primary/5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+                <Bell className="h-5 w-5" />
+              </div>
               <div>
-                <p className="font-medium text-gray-800">알림 설정</p>
-                <p className="text-xs text-gray-400">케어 알림, 방해금지 시간</p>
+                <p className="font-bold text-foreground/80">알림 설정</p>
+                <p className="text-xs font-medium text-muted-foreground">케어 리마인더, 서비스 소식</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
           </div>
-        </Card>
-      </section>
+        </div>
+      </motion.section>
 
       {/* 계정 */}
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-gray-500">계정</h2>
-        <Card className="divide-y divide-gray-100 overflow-hidden">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-gray-400" />
+      <motion.section variants={item} className="space-y-3">
+        <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+          계정 관리
+        </h2>
+        <div className="bento-item divide-y divide-border/40 overflow-hidden bg-card/60 glass">
+          <div className="flex items-center justify-between p-4.5 transition-all hover:bg-primary/5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+                <User className="h-5 w-5" />
+              </div>
               <div>
-                <p className="font-medium text-gray-800">계정 정보</p>
-                <p className="text-xs text-gray-400">프로필, 이메일</p>
+                <p className="font-bold text-foreground/80">프로필 편집</p>
+                <p className="text-xs font-medium text-muted-foreground">계정 연동 및 정보 수정</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
           </div>
-        </Card>
-      </section>
+        </div>
+      </motion.section>
 
-      <Separator />
+      <Separator className="bg-border/40" />
 
-      <Button
-        variant="outline"
-        onClick={handleLogout}
-        className="w-full border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
-      >
-        <LogOut className="mr-2 h-4 w-4" />
-        로그아웃
-      </Button>
+      <motion.div variants={item}>
+        <Button
+          variant="outline"
+          onClick={handleLogout}
+          className="h-14 w-full rounded-2xl border-destructive/20 text-destructive shadow-sm hover:bg-destructive/5 hover:text-destructive active:scale-[0.98] transition-all"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          로그아웃
+        </Button>
+      </motion.div>
 
-      <p className="text-center text-xs text-gray-300">Petroutine v0.1.0</p>
-    </div>
+      <motion.div variants={item} className="text-center">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+          Petroutine v0.1.0
+        </p>
+      </motion.div>
+    </motion.div>
   );
 }

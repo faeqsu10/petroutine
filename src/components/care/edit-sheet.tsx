@@ -128,7 +128,7 @@ export function CareEditSheet({ open, onOpenChange, careItem }: CareEditSheetPro
                     onClick={() => setIcon(emoji)}
                     className={cn(
                       'flex h-10 w-10 items-center justify-center rounded-xl text-lg transition-all',
-                      icon === emoji ? 'bg-indigo-100 ring-2 ring-indigo-600' : 'bg-gray-100',
+                      icon === emoji ? 'bg-primary/10 ring-2 ring-primary' : 'bg-secondary',
                     )}
                   >
                     {emoji}
@@ -168,7 +168,7 @@ export function CareEditSheet({ open, onOpenChange, careItem }: CareEditSheetPro
               <Button
                 onClick={handleSave}
                 disabled={isUpdating || !name.trim()}
-                className="flex-1 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+                className="flex-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {isUpdating ? '저장 중...' : '저장'}
               </Button>

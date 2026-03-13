@@ -14,10 +14,10 @@ const FEATURES = [
     color: 'bg-primary/8',
   },
   {
-    icon: <Wallet className="w-5 h-5 text-indigo-500" />,
+    icon: <Wallet className="w-5 h-5 text-primary" />,
     title: '지출도 한눈에',
     description: '병원비, 사료, 미용비까지 아이별로 얼마나 쓰는지 파악할 수 있어요.',
-    color: 'bg-indigo-50',
+    color: 'bg-primary/10',
   },
   {
     icon: <Users className="w-5 h-5 text-rose-500" />,

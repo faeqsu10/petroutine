@@ -119,12 +119,12 @@ export function ExpenseEditSheet({ open, onOpenChange, expense }: ExpenseEditShe
                     className={cn(
                       'flex flex-col items-center justify-center gap-1 rounded-xl border-2 py-2.5 transition-all',
                       categoryId === cat.id
-                        ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
+                        ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
                         : 'border-transparent bg-gray-50 hover:bg-gray-100',
                     )}
                   >
                     <span className="text-xl">{cat.icon}</span>
-                    <span className={cn('text-xs font-medium', categoryId === cat.id ? 'text-indigo-600' : 'text-gray-600')}>
+                    <span className={cn('text-xs font-medium', categoryId === cat.id ? 'text-primary' : 'text-muted-foreground')}>
                       {cat.name}
                     </span>
                   </button>
@@ -169,7 +169,7 @@ export function ExpenseEditSheet({ open, onOpenChange, expense }: ExpenseEditShe
               <Button
                 onClick={handleSave}
                 disabled={isUpdating || amount <= 0 || !description.trim()}
-                className="flex-1 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+                className="flex-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {isUpdating ? '저장 중...' : '저장'}
               </Button>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Bell, ChevronRight, TrendingUp } from 'lucide-react';
+import { Plus, Bell, ChevronRight, TrendingUp, Sparkles } from 'lucide-react';
 import { usePets } from '@/hooks/use-pets';
 import { useCareItems } from '@/hooks/use-care-items';
 import { useCareStore } from '@/stores/care-store';
@@ -23,32 +23,40 @@ export default function HomePage() {
 
   if (petsLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-          className="text-4xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 10, -10, 0]
+          }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="text-5xl"
         >
           🐾
         </motion.div>
+        <p className="text-sm font-bold text-primary/40 animate-pulse uppercase tracking-widest">Loading</p>
       </div>
     );
   }
 
   if (!pets?.length) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-8 text-center">
-        <div className="bg-primary/10 p-8 rounded-full">
-          <p className="text-6xl">🐾</p>
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-extrabold tracking-tight">아이를 처음 만났나요?</h2>
-          <p className="text-muted-foreground leading-relaxed">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-8 text-center bg-background">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-primary/5 p-10 rounded-[2.5rem] border border-primary/10"
+        >
+          <p className="text-7xl">🐾</p>
+        </motion.div>
+        <div className="space-y-3">
+          <h2 className="text-3xl font-black tracking-tight text-foreground/90">아이를 처음 만났나요?</h2>
+          <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-[240px] mx-auto">
             기억에 의존하지 않는 반려동물 관리,<br />프로필 등록부터 시작해보세요.
           </p>
         </div>
         <Link href="/pets/add">
-          <Button className="h-14 rounded-2xl bg-primary px-10 text-base font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95">
+          <Button className="h-16 rounded-2xl bg-primary px-12 text-base font-bold text-white shadow-xl shadow-primary/25 transition-all hover:bg-primary/90 active:scale-95">
             반려동물 등록하기
           </Button>
         </Link>
@@ -68,30 +76,30 @@ export default function HomePage() {
   }).slice(0, 3);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-background px-6 pb-32 pt-10">
+    <div className="max-w-md mx-auto min-h-screen px-5 pb-32 pt-10">
       {/* Header */}
-      <header className="flex items-center justify-between mb-8">
+      <header className="flex items-center justify-between mb-10">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-muted-foreground">Premium Pet Concierge</p>
-          <h1 className="text-2xl font-extrabold tracking-tight">반가워요, {pets[0]?.name} 보호자님!</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Pet Concierge</p>
+          <h1 className="text-2xl font-black tracking-tight text-foreground/90">반가워요, {pets[0]?.name} 보호자님!</h1>
         </div>
-        <button className="relative bg-card p-3 rounded-2xl shadow-bento border border-border">
-          <Bell className="w-5 h-5 text-foreground" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-4 ring-card" />
+        <button className="relative bg-card/60 glass p-3 rounded-2xl shadow-bento border border-border/40 active:scale-95 transition-transform">
+          <Bell className="w-5 h-5 text-foreground/70" />
+          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-primary rounded-full ring-4 ring-card/60" />
         </button>
       </header>
 
       {/* Pet Selector (Pills) */}
       {pets.length > 1 && (
-        <div className="flex gap-2 mb-8 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 mb-10 overflow-x-auto no-scrollbar pb-1">
           {pets.map((pet) => (
             <button
               key={pet.id}
               onClick={() => setSelectedPetId(pet.id)}
-              className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+              className={`shrink-0 rounded-2xl px-6 py-2.5 text-sm font-bold transition-all ${
                 activePetId === pet.id
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'bg-card text-muted-foreground border border-border'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
+                  : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
               }`}
             >
               {pet.name}
@@ -103,17 +111,17 @@ export default function HomePage() {
       {/* Bento Grid */}
       <div className="grid grid-cols-2 gap-4">
         {/* Today's Tasks Bento (Wide) */}
-        <section className="col-span-2 bento-item p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-extrabold text-lg flex items-center gap-2">
+        <section className="col-span-2 bento-item bg-card/60 glass p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-black text-lg tracking-tight flex items-center gap-2 text-foreground/80">
               오늘 할 일
               {todayItems.length > 0 && (
-                <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs">
+                <span className="bg-primary/10 text-primary px-3 py-0.5 rounded-full text-[10px] font-black">
                   {todayItems.length}
                 </span>
               )}
             </h2>
-            <Link href="/care" className="text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/care" className="text-muted-foreground/40 hover:text-primary transition-colors">
               <ChevronRight className="w-5 h-5" />
             </Link>
           </div>
@@ -121,14 +129,17 @@ export default function HomePage() {
           <AnimatePresence mode="popLayout">
             {todayItems.length === 0 ? (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center py-6 text-center space-y-3"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center py-8 text-center space-y-4"
               >
-                <div className="bg-green-50 p-4 rounded-full">
-                  <span className="text-2xl">✨</span>
+                <div className="bg-primary/5 p-5 rounded-[2rem]">
+                  <Sparkles className="w-8 h-8 text-primary/40" />
                 </div>
-                <p className="text-sm font-medium text-green-700">모든 케어를 완료했습니다!</p>
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-foreground/70">완벽한 하루예요!</p>
+                  <p className="text-[11px] font-medium text-muted-foreground/60">오늘의 모든 케어를 완료했습니다</p>
+                </div>
               </motion.div>
             ) : (
               <div className="space-y-3">
@@ -136,17 +147,17 @@ export default function HomePage() {
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex items-center justify-between bg-background/50 p-3 rounded-2xl border border-border"
+                    className="flex items-center justify-between bg-background/40 p-3.5 rounded-2xl border border-border/40"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl bg-white p-2 rounded-xl shadow-sm">{item.icon}</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl bg-white/80 shadow-inner p-2 rounded-xl">{item.icon}</span>
                       <div>
-                        <p className="text-sm font-bold">{item.name}</p>
+                        <p className="text-sm font-bold text-foreground/80">{item.name}</p>
                         <p
-                          className="text-[10px] font-bold"
+                          className="text-[10px] font-black uppercase tracking-tight"
                           style={{ color: getUrgencyColor(getScheduleUrgency(item.schedule!.nextDueDate)) }}
                         >
                           {getDdayText(item.schedule!.nextDueDate)}
@@ -155,7 +166,7 @@ export default function HomePage() {
                     </div>
                     <Button
                       onClick={() => setCompletingItem(item)}
-                      className="h-9 px-4 rounded-xl bg-primary text-xs font-bold text-white shadow-md shadow-primary/10"
+                      className="h-10 px-5 rounded-xl bg-primary text-[11px] font-black text-white shadow-lg shadow-primary/15 active:scale-95 transition-all"
                     >
                       완료
                     </Button>
@@ -167,43 +178,44 @@ export default function HomePage() {
         </section>
 
         {/* Expense Bento (Small) */}
-        <Link href="/expenses" className="bento-item p-5 flex flex-col justify-between">
+        <Link href="/expenses" className="bento-item bg-card/60 glass p-5 flex flex-col justify-between aspect-square group">
           <div className="flex items-center justify-between">
-            <div className="bg-indigo-50 p-2 rounded-xl">
-              <TrendingUp className="w-4 h-4 text-indigo-600" />
+            <div className="bg-primary/5 p-2.5 rounded-xl group-hover:bg-primary/10 transition-colors">
+              <TrendingUp className="w-5 h-5 text-primary" />
             </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
           </div>
           <div>
-            <p className="text-xs font-bold text-muted-foreground mb-1">이번 달 지출</p>
-            <p className="text-lg font-black tracking-tight">₩245,000</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">이번 달 지출</p>
+            <p className="text-xl font-black tracking-tighter text-foreground/80">₩245,000</p>
           </div>
         </Link>
 
         {/* Pet Condition Bento (Small) */}
-        <div className="bento-item p-5 flex flex-col justify-between bg-primary/5 border-primary/10">
+        <div className="bento-item bg-primary/5 glass border-primary/10 p-5 flex flex-col justify-between aspect-square">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 bg-primary rounded-full" />
-            <p className="text-[10px] font-bold text-primary">컨디션 맑음</p>
+            <span className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary">컨디션 맑음</p>
           </div>
           <div className="space-y-1">
-            <p className="text-xs font-bold text-muted-foreground">체중</p>
-            <p className="text-lg font-black tracking-tight">5.4kg</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">아이 체중</p>
+            <p className="text-xl font-black tracking-tighter text-foreground/80">5.4kg</p>
           </div>
         </div>
 
         {/* Upcoming Bento (Wide) */}
-        <section className="col-span-2 bento-item p-6">
-          <h2 className="font-extrabold text-sm text-muted-foreground mb-4">다가오는 주요 일정</h2>
-          <div className="space-y-4">
+        <section className="col-span-2 bento-item bg-card/60 glass p-6">
+          <h2 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 mb-6">다가오는 주요 일정</h2>
+          <div className="space-y-5">
             {upcomingItems.map((item) => (
               <div key={item.id} className="flex items-center gap-4 group">
-                <div className="w-1.5 h-1.5 rounded-full bg-border group-hover:bg-primary transition-colors" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-all duration-300" />
                 <div className="flex-1 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold">{item.name}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg opacity-80 group-hover:scale-125 transition-transform">{item.icon}</span>
+                    <span className="text-sm font-bold text-foreground/70 group-hover:text-foreground transition-colors">{item.name}</span>
                   </div>
-                  <p className="text-xs font-medium text-muted-foreground">
+                  <p className="text-[11px] font-black uppercase tracking-tight text-primary/60">
                     {getDdayText(item.schedule!.nextDueDate)}
                   </p>
                 </div>
@@ -214,11 +226,11 @@ export default function HomePage() {
       </div>
 
       {/* Floating Add Button */}
-      <Link href="/care/add" className="fixed bottom-24 right-6 z-40">
+      <Link href="/care/add" className="fixed bottom-28 right-6 z-40">
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-2xl shadow-primary/40 border-4 border-white"
+          whileHover={{ scale: 1.05, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
+          className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-2xl shadow-primary/30 border-4 border-white active:bg-primary/90 transition-colors"
         >
           <Plus className="h-8 w-8 text-white" />
         </motion.button>

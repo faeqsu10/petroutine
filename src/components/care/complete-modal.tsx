@@ -78,7 +78,7 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
           <Button
             onClick={handleComplete}
             disabled={isPending}
-            className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white hover:bg-indigo-700 active:scale-95"
+            className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 active:scale-95"
           >
             {isPending ? '처리 중...' : '완료하기'}
           </Button>

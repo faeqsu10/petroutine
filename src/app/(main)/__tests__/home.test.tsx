@@ -41,6 +41,7 @@ vi.mock('lucide-react', () => ({
   Bell: ({ ...props }: Record<string, unknown>) => React.createElement('span', props, 'Bell'),
   ChevronRight: ({ ...props }: Record<string, unknown>) => React.createElement('span', props, 'ChevronRight'),
   TrendingUp: ({ ...props }: Record<string, unknown>) => React.createElement('span', props, 'TrendingUp'),
+  Sparkles: ({ ...props }: Record<string, unknown>) => React.createElement('span', props, 'Sparkles'),
 }));
 
 // ============================================================
@@ -196,7 +197,7 @@ describe('HomePage (대시보드)', () => {
 
       render(<HomePage />);
 
-      expect(screen.getByText('모든 케어를 완료했습니다!')).toBeInTheDocument();
+      expect(screen.getByText('완벽한 하루예요!')).toBeInTheDocument();
     });
 
     it('오늘의 케어 항목(due/overdue)이 표시된다', () => {

@@ -16,7 +16,7 @@ export default function MainError({
       <p className="text-sm text-gray-500">잠시 후 다시 시도해주세요</p>
       <Button
         onClick={reset}
-        className="mt-2 rounded-xl bg-indigo-600 px-6 hover:bg-indigo-700"
+        className="mt-2 rounded-xl bg-primary px-6 hover:bg-primary/90"
       >
         다시 시도
       </Button>
