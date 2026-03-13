@@ -3,6 +3,10 @@
 > 작성일: 2026-03-13
 > 출처: `.omc/autopilot/spec.md` § 3.1 ~ 3.3
 > 상태: v1.0 — MVP 기준
+>
+> **[DEPRECATED]** 이 문서는 Supabase(PostgreSQL) 기반 초기 설계입니다.
+> 현재 프로젝트는 Firebase(Firestore)로 마이그레이션되었습니다.
+> 실제 데이터 구조는 `src/types/database.ts`와 `firestore.rules`를 참조하세요.
 
 ---
 

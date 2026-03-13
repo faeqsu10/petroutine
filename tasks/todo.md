@@ -14,14 +14,14 @@
 
 ## Phase 2: 설계
 - [x] 기술 스택 결정 (docs/tech-stack.md)
-- [x] DB 스키마 설계 - ERD (docs/erd.md, supabase/migrations/)
+- [x] DB 스키마 설계 - ERD (docs/erd.md)
 - [x] API 명세 작성 (docs/api-spec.md)
 - [x] 시스템 아키텍처 (.omc/autopilot/spec.md)
 
 ## Phase 3: 구현 (MVP) — UI 기능 구현 완료
 - [x] 프로젝트 초기화 + 보일러플레이트
 - [x] 타입 시스템 (src/types/)
-- [x] Supabase 클라이언트 (src/lib/supabase/)
+- [x] Firebase 클라이언트/Admin SDK (src/lib/firebase/)
 - [x] 유틸리티 함수 (src/lib/utils.ts)
 - [x] TanStack Query 훅 (src/hooks/)
 - [x] Zustand 스토어 (src/stores/)
@@ -37,6 +37,8 @@
 - [x] 설정 페이지 (반려동물 목록, 앱 설정)
 - [x] OAuth 콜백 라우트 (auth/callback)
 - [x] PWA manifest.json
+- [x] Supabase → Firebase 마이그레이션
+- [x] Firestore 보안 규칙 + 인덱스 정의
 - [ ] 푸시 알림 (FCM) — Phase 2로 이관
 
 ## Phase 4: 검증

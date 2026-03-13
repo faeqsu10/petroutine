@@ -18,12 +18,12 @@
 │  PWA (Serwist/next-pwa) + Service Worker             │
 ├─────────────────────────────────────────────────────┤
 │                     Backend                          │
-│  Supabase (PostgreSQL + Auth + RLS + Realtime)       │
-│  Supabase Edge Functions (Deno Runtime)              │
+│  Firebase (Firestore + Auth + Session Cookies)       │
+│  Firebase Admin SDK (Server-side verification)       │
 │  FCM + Web Push API (Push Notifications)             │
 ├─────────────────────────────────────────────────────┤
 │                    Deployment                        │
-│  Vercel (Frontend) + Supabase Cloud (Backend)        │
+│  Vercel (Frontend) + Firebase (Backend)              │
 │  GitHub Actions (CI/CD)                              │
 ├─────────────────────────────────────────────────────┤
 │                     Testing                          │
@@ -86,7 +86,7 @@
 **역할:** 타입 안전성 보장, 개발 생산성 향상
 
 **선정 근거:**
-- **Supabase CLI 타입 자동 생성**: `supabase gen types typescript` 명령으로 DB 스키마에서 TypeScript 타입을 자동 생성 → API 호출 시 타입 불일치 원천 차단
+- **Firestore 타입 정의**: `src/types/database.ts`에서 Firestore 문서 타입을 수동 정의 → API 호출 시 타입 안전성 보장
 - **strict mode**: `noImplicitAny`, `strictNullChecks` 등 활성화로 런타임 에러 사전 방지
 - **Zod 연동**: API 요청/응답 유효성 검증 스키마에서 TypeScript 타입 자동 추론
 - **IDE 지원**: 자동완성, 리팩토링, 에러 조기 발견
@@ -100,7 +100,7 @@
 
 **트레이드오프:**
 - 초기 설정 비용 있지만, 중장기적으로 디버깅/리팩토링 시간 절약이 훨씬 큼
-- Supabase 타입 자동 생성으로 DB ↔ 프론트 간 타입 동기화 자동화
+- Firestore 문서 타입 수동 관리 필요하나, 프로젝트 규모에서 충분히 관리 가능
 
 ---
 
@@ -131,49 +131,51 @@
 
 ---
 
-### 2.4 Supabase (Auth + PostgreSQL + Edge Functions + Realtime)
+### 2.4 Firebase (Firestore + Auth + Session Cookies)
 
 **역할:** Backend-as-a-Service (올인원 백엔드)
 
+> **변경 이력:** 초기 설계는 Supabase(PostgreSQL)였으나, 운영 편의성과 한국 리전 지원을 고려하여 Firebase로 마이그레이션함.
+
 **선정 근거:**
 
-| 기준 | Supabase | Firebase | Custom Node.js |
+| 기준 | Firebase | Supabase | Custom Node.js |
 |------|----------|----------|----------------|
 | 개발 속도 | ★★★★★ | ★★★★★ | ★★★ |
-| PostgreSQL (관계형) | ★★★★★ | ✗ | ★★★★ |
 | Auth 내장 | ★★★★★ | ★★★★★ | ✗ |
-| RLS (행 수준 보안) | ★★★★★ | ★★★ | ★★★ |
-| 관계형 쿼리 | ★★★★★ | ★★ | ★★★★★ |
-| 벤더 종속도 | 낮음 (표준 SQL) | 높음 | 없음 |
+| 보안 규칙 | ★★★★ | ★★★★★ | ★★★ |
+| 한국 리전 | ★★★★★ | ★★ | ★★★★ |
+| NoSQL 유연성 | ★★★★ | ★★ | ★★★★ |
 
-- **PostgreSQL 네이티브**: 반려동물 → 케어 항목 → 일정 → 지출의 관계형 데이터에 최적
-- **올인원**: Auth, DB, RLS, Storage, Edge Functions, Realtime을 하나의 서비스에서 제공 → 1인 개발에 이상적
-- **Row Level Security (RLS)**: DB 수준에서 사용자별 데이터 격리 자동 보장. `auth.uid()` 함수로 정책 작성
-- **표준 SQL 기반**: 벤더 종속 최소화. 추후 자체 PostgreSQL로 이관 용이
-- **무료 티어**: 500MB DB, 1GB Storage, 50K MAU, 500K Edge Function invocations/month → MVP 충분
-- **Kakao OAuth**: Supabase Auth에서 Kakao 소셜 로그인 공식 지원 (한국 시장 필수)
+- **Firestore**: top-level 컬렉션 + userId 필드로 소유권 관리. 클라이언트에서 SDK 직접 호출
+- **Firebase Auth**: Google OAuth (signInWithPopup) + 세션 쿠키 방식 SSR 인증
+- **보안 규칙**: `firestore.rules`에서 userId 기반 접근 제어
+- **무료 티어**: Spark plan — 50K reads/day, 20K writes/day, 1GB Storage → MVP 충분
+- **한국 리전**: asia-northeast3 (서울) 사용 가능
 
-**고려한 대안:**
+**데이터 모델:**
+- top-level 컬렉션: `users`, `pets`, `careItems`, `careLogs`, `careSchedules`, `expenses`, `expenseCategories`
+- 각 문서에 `userId` 필드로 소유권 표시
+- `writeBatch`로 원자적 쓰기 (케어 완료, 항목 생성)
 
-| 대안 | 선택하지 않은 이유 |
-|------|-------------------|
-| Firebase | Firestore(NoSQL)는 복잡한 JOIN 쿼리(월별 지출 집계, 카테고리별 통계)에 부적합. 벤더 종속 강함 |
-| Custom Node.js + PostgreSQL | Auth, ORM, 배포, 모니터링 모두 직접 구축 필요. 1인 개발에 비용 과다 |
-| PlanetScale | MySQL 기반, RLS 미지원, Supabase 대비 통합도 낮음 |
-| Convex | 생태계 작음, 관계형 쿼리 제한 |
+**인증 방식:**
+- 클라이언트: `signInWithPopup` → ID Token 획득
+- 서버: `/api/auth/session` → `adminAuth.createSessionCookie()` → `__session` 쿠키 설정 (5일 만료)
+- 미들웨어: `__session` 쿠키 존재 확인으로 라우트 보호
 
 **트레이드오프:**
 
 | 장점 | 단점 |
 |------|------|
-| 올인원으로 개발 속도 극대화 | 한국 리전 없음 (싱가포르 사용, ~50ms 지연) |
-| RLS로 보안 자동화 | Edge Functions Cold Start (~200ms) |
-| 표준 SQL로 이관 용이 | Supabase 서비스 장애 시 전체 영향 |
-| 무료 티어 넉넉 | 복잡한 비즈니스 로직은 Edge Functions 제한 |
+| 한국 리전 (서울) 지원 | NoSQL — 복잡한 JOIN 쿼리 클라이언트에서 처리 |
+| 올인원 (Auth + DB + Storage + FCM) | Firestore `in` 연산자 30개 제한 |
+| 무료 티어 넉넉 | 벤더 종속도 높음 |
+| FCM 네이티브 통합 | Kakao OAuth 미지원 (Custom Auth 필요) |
 
 **리스크 대응:**
-- 싱가포르 리전 지연 → 체감 불가 수준(50ms). Vercel Edge Network가 보완
-- Edge Functions Cold Start → 핵심 API(CRUD)는 Supabase Client 직접 호출, Edge Functions는 복합 로직(complete-care, dashboard)에만 사용
+- 복잡한 집계 쿼리 → 클라이언트에서 병렬 쿼리 + 메모리 집계 (MVP 데이터 규모에서 충분)
+- Kakao OAuth → v2에서 Firebase Custom Auth + Kakao SDK로 구현 예정
+- `in` 연산자 제한 → MVP 규모(반려동물 1~5마리)에서 30개 초과 불가능
 
 ---
 
@@ -215,7 +217,7 @@
 - **FCM (Firebase Cloud Messaging)**: 웹 + 모바일(v2 네이티브) 모두 커버하는 업계 표준
 - **Web Push API**: PWA에서 푸시 알림 수신을 위한 브라우저 표준 API
 - **무료**: 발송량 제한 없음
-- **Supabase Edge Function 연동**: Edge Function에서 FCM HTTP v1 API 호출로 알림 발송
+- **Firebase Cloud Functions 연동**: Cloud Functions에서 FCM HTTP v1 API 호출로 알림 발송
 - **v2 재사용**: React Native 전환 시 FCM 그대로 사용 가능
 
 **고려한 대안:**
@@ -227,7 +229,7 @@
 | Supabase Realtime | 앱이 열려있을 때만 동작, 진정한 Push 알림 아님 |
 
 **트레이드오프:**
-- Firebase 프로젝트 설정 필요 (FCM만 사용, 다른 Firebase 서비스 불필요)
+- Firebase 프로젝트에서 FCM + Firestore + Auth 통합 사용
 - Service Worker 구현 필요 → next-pwa(Serwist)가 기본 제공
 
 ---
@@ -254,7 +256,7 @@
 
 **트레이드오프:**
 - Vercel Pro 전환 시 월 $20 (트래픽 증가 시)
-- 서버리스 제한 (장시간 실행 불가) → 긴 작업은 Supabase Edge Functions에서 처리
+- 서버리스 제한 (장시간 실행 불가) → 긴 작업은 Firebase Cloud Functions에서 처리
 
 ---
 
@@ -290,7 +292,7 @@
 | 용도 | 라이브러리 | 선정 근거 |
 |------|-----------|-----------|
 | UI 컴포넌트 | shadcn/ui | 커스터마이징 자유도 높음, 접근성(a11y) 기본 준수, 복사-붙여넣기 방식으로 번들 최적화 |
-| 폼 관리 | React Hook Form + Zod | 타입 안전 유효성 검사, 최소 리렌더링, Supabase 타입과 Zod 스키마 연동 |
+| 폼 관리 | React Hook Form + Zod | 타입 안전 유효성 검사, 최소 리렌더링, Firestore 타입과 Zod 스키마 연동 |
 | 날짜 처리 | date-fns | 트리 셰이킹 지원(필요한 함수만 임포트), 한국어 locale 지원, 주기 계산에 필수 |
 | 차트 | Recharts | React 네이티브 차트 라이브러리, 지출 통계 파이/바 차트 구현 |
 | PWA | Serwist (next-pwa 후속) | Next.js App Router 공식 호환, Service Worker 자동 생성 |
@@ -304,7 +306,7 @@
 | 서비스 | 무료 티어 | 예상 사용량 (MVP) | 월 비용 |
 |--------|-----------|-------------------|---------|
 | Vercel | 100GB bandwidth, Serverless Functions | 10GB | $0 |
-| Supabase | 500MB DB, 1GB Storage, 50K MAU | 50MB DB, 100MB Storage, 1K MAU | $0 |
+| Firebase (Spark) | 1GB Firestore, 5GB Storage, 무제한 Auth | 50MB Firestore, 1K MAU | $0 |
 | Firebase (FCM) | 무제한 | ~1,000건/일 | $0 |
 | GitHub | 무료 (public/private) | CI/CD 2,000분/월 | $0 |
 | 도메인 | - | petroutine.app | ~$12/년 |

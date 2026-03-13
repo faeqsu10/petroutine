@@ -4,6 +4,10 @@
 > **작성일:** 2026-03-13
 > **기준:** Technical Specification v1.0 (MVP)
 > **상태:** Draft
+>
+> **[DEPRECATED]** 이 문서는 Supabase REST API + Edge Functions 기반 초기 설계입니다.
+> 현재 프로젝트는 Firebase(Firestore + Firebase Auth)로 마이그레이션되었습니다.
+> 실제 API는 클라이언트에서 Firestore SDK를 직접 호출합니다 (`src/hooks/` 참조).
 
 ---
 

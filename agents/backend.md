@@ -6,7 +6,7 @@
 ## Expertise
 - Node.js / Express / NestJS 개발
 - TypeScript
-- 데이터베이스 관리 (PostgreSQL, Supabase, Firestore)
+- 데이터베이스 관리 (Firestore, Firebase Admin SDK)
 - RESTful API 구현
 - 인증/인가 (JWT, OAuth, Session)
 - 푸시 알림 서버 (FCM, APNs)
