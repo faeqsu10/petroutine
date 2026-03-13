@@ -62,6 +62,14 @@ export function getDdayText(nextDueDate: string): string {
   return `D-${days}`;
 }
 
+/** Date → 'YYYY-MM-DD' (로컬 시간 기준, UTC 변환 방지) */
+export function toLocalDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 /** 금액 포맷 (원) */
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('ko-KR').format(amount) + '원';

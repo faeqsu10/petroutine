@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs, addDoc, limit, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, addDoc, limit, doc, updateDoc, deleteDoc, documentId } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import { endOfMonth, format } from 'date-fns';
 import type { Expense, MonthlyStats } from '@/types';
@@ -84,13 +84,13 @@ export function useMonthlyStats(month: string) {
         getDocs(
           query(
             collection(db, 'expenseCategories'),
-            where('__name__', 'in', categoryIds.length > 0 ? categoryIds : ['__none__']),
+            where(documentId(), 'in', categoryIds.length > 0 ? categoryIds : ['__none__']),
           ),
         ),
         getDocs(
           query(
             collection(db, 'pets'),
-            where('__name__', 'in', petIds.length > 0 ? petIds : ['__none__']),
+            where(documentId(), 'in', petIds.length > 0 ? petIds : ['__none__']),
           ),
         ),
       ]);
@@ -163,8 +163,9 @@ export function useCreateExpense() {
 
       return { id: docRef.id, ...expense };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
+    onSuccess: (_data, expense) => {
+      queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY, expense.petId] });
+      queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY, null] });
       queryClient.invalidateQueries({ queryKey: [STATS_KEY] });
     },
   });

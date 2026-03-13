@@ -56,6 +56,8 @@
 
 ## Phase 4: 검증
 - [x] P1 훅 단위 테스트 (use-care-items, use-expenses, use-pets) — 52개 테스트 추가, 총 122개
-- [ ] P2 UI 컴포넌트 테스트
-- [ ] 보안 점검
-- [ ] 성능 검증
+- [x] P1.5 엣지 케이스 테스트 + timezone 버그 수정 — 27개 추가, 총 150개
+- [x] P2 UI 컴포넌트 테스트 — 39개 추가 (confirm-dialog 12, care edit-sheet 12, expense edit-sheet 15)
+- [x] 보안 점검 — 입력 길이 제한 추가 (Zod max), Firestore rules 검증, XSS 점검 통과
+- [x] 성능 검증 — timezone 버그 수정, `documentId()` 전환, Zustand 셀렉터, invalidateQueries 범위 축소
+- [x] 보안/성능 발견사항 수정 — toLocalDateStr 유틸리티, 5개 새 테스트, 총 194개

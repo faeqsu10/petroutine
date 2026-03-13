@@ -35,6 +35,12 @@ vi.mock('@/lib/firebase/client', () => ({
 
 vi.mock('@/lib/utils', () => ({
   calculateNextDueDate: vi.fn(),
+  toLocalDateStr: (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  },
   getScheduleUrgency: vi.fn(),
   getUrgencyColor: vi.fn(),
   formatDate: vi.fn(),

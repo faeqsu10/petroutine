@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
-import { calculateNextDueDate } from '@/lib/utils';
+import { calculateNextDueDate, toLocalDateStr } from '@/lib/utils';
 import type { CareItem } from '@/types';
 
 const CARE_ITEMS_KEY = 'care-items';
@@ -219,7 +219,7 @@ export function useCompleteCare() {
       batch.set(nextScheduleRef, {
         careItemId,
         userId: uid,
-        nextDueDate: nextDue.toISOString().split('T')[0],
+        nextDueDate: toLocalDateStr(nextDue),
         status: 'pending',
         createdAt: nowIso,
         updatedAt: nowIso,

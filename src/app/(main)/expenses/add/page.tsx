@@ -17,12 +17,12 @@ import { useCreateExpense } from '@/hooks/use-expenses';
 import { cn } from '@/lib/utils';
 
 const schema = z.object({
-  amount: z.number({ error: '금액을 입력해 주세요' }).positive('0보다 큰 금액을 입력해 주세요'),
-  description: z.string().min(1, '내용을 입력해 주세요'),
+  amount: z.number({ error: '금액을 입력해 주세요' }).positive('0보다 큰 금액을 입력해 주세요').max(99_999_999, '금액은 1억 미만이어야 합니다'),
+  description: z.string().min(1, '내용을 입력해 주세요').max(100, '내용은 100자 이내로 입력해 주세요'),
   categoryId: z.string().min(1, '카테고리를 선택해 주세요'),
   petId: z.string().min(1, '반려동물을 선택해 주세요'),
-  expenseDate: z.string().min(1, '날짜를 선택해 주세요'),
-  memo: z.string().optional(),
+  expenseDate: z.string().min(1, '날짜를 선택해 주세요').regex(/^\d{4}-\d{2}-\d{2}$/, '날짜 형식이 올바르지 않습니다'),
+  memo: z.string().max(500, '메모는 500자 이내로 입력해 주세요').optional(),
 });
 
 type FormValues = z.infer<typeof schema>;

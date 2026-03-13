@@ -4,9 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
 // ---------------------------------------------------------------------------
-// Hoist mock functions so they are available inside vi.mock factory closures.
-// vi.mock calls are hoisted to the top of the compiled output; any variables
-// referenced inside the factory must be created with vi.hoisted().
+// vi.mock 팩토리 클로저 내에서 사용할 수 있도록 모킹 함수를 호이스팅한다.
 // ---------------------------------------------------------------------------
 const {
   mockAddDoc,
@@ -50,15 +48,15 @@ vi.mock('@/lib/firebase/client', () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Hook imports (after mocks are registered)
+// 훅 임포트 (모킹 등록 이후)
 // ---------------------------------------------------------------------------
 import { useCreatePet, useUpdatePet, useDeletePet } from '../use-pets';
 
 // ---------------------------------------------------------------------------
-// Test helpers
+// 테스트 헬퍼
 // ---------------------------------------------------------------------------
 
-/** Wraps a renderHook with a fresh QueryClient on every call. */
+/** 매 호출마다 새로운 QueryClient로 renderHook을 래핑한다. */
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -71,7 +69,7 @@ function createWrapper() {
   return { wrapper, queryClient };
 }
 
-/** Minimal valid pet payload (Omit<Pet, 'id'>). */
+/** 최소 유효 반려동물 페이로드 (Omit<Pet, 'id'>). */
 const basePet = {
   name: 'Coco',
   species: 'dog' as const,
@@ -94,7 +92,7 @@ describe('useCreatePet', () => {
     mockCollection.mockReturnValue('pets-collection-ref');
   });
 
-  it('creates a pet doc with userId, createdAt, updatedAt, and archivedAt=null', async () => {
+  it('userId, createdAt, updatedAt, archivedAt=null로 반려동물 문서를 생성한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useCreatePet(), { wrapper });
 
@@ -109,11 +107,11 @@ describe('useCreatePet', () => {
     expect(docData.archivedAt).toBeNull();
     expect(typeof docData.createdAt).toBe('string');
     expect(typeof docData.updatedAt).toBe('string');
-    // createdAt and updatedAt are set to the same 'now' string inside the hook
+    // createdAt과 updatedAt은 훅 내부에서 동일한 'now' 문자열로 설정됨
     expect(docData.createdAt).toBe(docData.updatedAt);
   });
 
-  it('stores a valid ISO 8601 timestamp for createdAt', async () => {
+  it('createdAt에 유효한 ISO 8601 타임스탬프를 저장한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useCreatePet(), { wrapper });
 
@@ -125,7 +123,7 @@ describe('useCreatePet', () => {
     expect(isNaN(Date.parse(docData.createdAt))).toBe(false);
   });
 
-  it('maps required pet fields (name, species, neutered) to the Firestore document', async () => {
+  it('필수 필드(name, species, neutered)를 Firestore 문서에 매핑한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useCreatePet(), { wrapper });
 
@@ -141,7 +139,7 @@ describe('useCreatePet', () => {
     expect(docData.neutered).toBe(true);
   });
 
-  it('sets optional fields to null when not provided', async () => {
+  it('선택 필드가 제공되지 않으면 null로 설정한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useCreatePet(), { wrapper });
 
@@ -157,7 +155,7 @@ describe('useCreatePet', () => {
     expect(docData.avatarUrl).toBeNull();
   });
 
-  it('stores provided optional field values when supplied', async () => {
+  it('제공된 선택 필드 값을 올바르게 저장한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useCreatePet(), { wrapper });
 
@@ -182,7 +180,7 @@ describe('useCreatePet', () => {
     expect(docData.avatarUrl).toBe('https://example.com/avatar.png');
   });
 
-  it('returns the created pet with the Firestore-generated id', async () => {
+  it('Firestore가 생성한 id와 함께 반려동물을 반환한다', async () => {
     mockAddDoc.mockResolvedValue({ id: 'generated-id-123' });
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useCreatePet(), { wrapper });
@@ -195,7 +193,7 @@ describe('useCreatePet', () => {
     expect((created as { id: string }).id).toBe('generated-id-123');
   });
 
-  it('throws "Not authenticated" when there is no current user', async () => {
+  it('인증되지 않은 경우 Not authenticated 에러를 던진다', async () => {
     mockAuth.currentUser = null;
 
     const { wrapper } = createWrapper();
@@ -211,7 +209,7 @@ describe('useCreatePet', () => {
     expect((result.current.error as Error).message).toBe('Not authenticated');
   });
 
-  it('invalidates the pets query cache on success', async () => {
+  it('성공 시 pets 쿼리 캐시를 무효화한다', async () => {
     const { wrapper, queryClient } = createWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -224,7 +222,7 @@ describe('useCreatePet', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['pets'] });
   });
 
-  it('calls collection with the Firestore db and "pets" path', async () => {
+  it('Firestore db와 "pets" 경로로 collection을 호출한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useCreatePet(), { wrapper });
 
@@ -247,7 +245,7 @@ describe('useUpdatePet', () => {
     mockDoc.mockReturnValue('pet-doc-ref');
   });
 
-  it('calls updateDoc with a valid ISO updatedAt timestamp', async () => {
+  it('유효한 ISO updatedAt 타임스탬프로 updateDoc을 호출한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useUpdatePet(), { wrapper });
 
@@ -261,7 +259,7 @@ describe('useUpdatePet', () => {
     expect(isNaN(Date.parse(updateData.updatedAt))).toBe(false);
   });
 
-  it('sends only the provided fields in the update payload', async () => {
+  it('제공된 필드만 업데이트 payload에 포함한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useUpdatePet(), { wrapper });
 
@@ -271,12 +269,12 @@ describe('useUpdatePet', () => {
 
     const [, updateData] = mockUpdateDoc.mock.calls[0];
     expect(updateData.name).toBe('Solo Update');
-    // Fields not passed should not be present (besides updatedAt which is always injected)
+    // 전달하지 않은 필드는 포함되지 않아야 함 (updatedAt은 항상 주입됨)
     expect(updateData.species).toBeUndefined();
     expect(updateData.breed).toBeUndefined();
   });
 
-  it('does not include id in the Firestore update payload', async () => {
+  it('Firestore 업데이트 payload에 id를 포함하지 않는다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useUpdatePet(), { wrapper });
 
@@ -288,7 +286,7 @@ describe('useUpdatePet', () => {
     expect(updateData.id).toBeUndefined();
   });
 
-  it('calls doc with the correct pet id to build the document reference', async () => {
+  it('올바른 pet id로 문서 참조를 생성한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useUpdatePet(), { wrapper });
 
@@ -299,7 +297,7 @@ describe('useUpdatePet', () => {
     expect(mockDoc).toHaveBeenCalledWith({}, 'pets', 'pet-abc');
   });
 
-  it('supports partial updates with multiple optional fields', async () => {
+  it('여러 선택 필드의 부분 업데이트를 지원한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useUpdatePet(), { wrapper });
 
@@ -312,7 +310,7 @@ describe('useUpdatePet', () => {
     expect(updateData.breed).toBe('Shih Tzu');
   });
 
-  it('throws "Not authenticated" when there is no current user', async () => {
+  it('인증되지 않은 경우 Not authenticated 에러를 던진다', async () => {
     mockAuth.currentUser = null;
 
     const { wrapper } = createWrapper();
@@ -328,7 +326,7 @@ describe('useUpdatePet', () => {
     expect((result.current.error as Error).message).toBe('Not authenticated');
   });
 
-  it('invalidates the pets query cache on success', async () => {
+  it('성공 시 pets 쿼리 캐시를 무효화한다', async () => {
     const { wrapper, queryClient } = createWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -353,7 +351,7 @@ describe('useDeletePet', () => {
     mockDoc.mockReturnValue('pet-doc-ref');
   });
 
-  it('soft-deletes by setting archivedAt to a current ISO timestamp', async () => {
+  it('archivedAt을 현재 ISO 타임스탬프로 설정하여 소프트 삭제한다', async () => {
     const beforeCall = new Date();
 
     const { wrapper } = createWrapper();
@@ -369,11 +367,11 @@ describe('useDeletePet', () => {
     expect(typeof updateData.archivedAt).toBe('string');
     const archivedDate = new Date(updateData.archivedAt);
     expect(isNaN(archivedDate.getTime())).toBe(false);
-    // archivedAt must be at or after the moment before the call
+    // archivedAt은 호출 전 시점 이후여야 함
     expect(archivedDate.getTime()).toBeGreaterThanOrEqual(beforeCall.getTime());
   });
 
-  it('sets updatedAt to a valid ISO timestamp at the time of deletion', async () => {
+  it('삭제 시점에 유효한 ISO updatedAt 타임스탬프를 설정한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useDeletePet(), { wrapper });
 
@@ -386,7 +384,7 @@ describe('useDeletePet', () => {
     expect(isNaN(Date.parse(updateData.updatedAt))).toBe(false);
   });
 
-  it('does not call addDoc — only calls updateDoc for the soft delete', async () => {
+  it('addDoc을 호출하지 않고 updateDoc만 호출한다 (소프트 삭제)', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useDeletePet(), { wrapper });
 
@@ -398,7 +396,7 @@ describe('useDeletePet', () => {
     expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
   });
 
-  it('targets the correct Firestore document by petId', async () => {
+  it('petId로 올바른 Firestore 문서를 타겟팅한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useDeletePet(), { wrapper });
 
@@ -409,7 +407,7 @@ describe('useDeletePet', () => {
     expect(mockDoc).toHaveBeenCalledWith({}, 'pets', 'my-specific-pet');
   });
 
-  it('throws "Not authenticated" when there is no current user', async () => {
+  it('인증되지 않은 경우 Not authenticated 에러를 던진다', async () => {
     mockAuth.currentUser = null;
 
     const { wrapper } = createWrapper();
@@ -425,7 +423,7 @@ describe('useDeletePet', () => {
     expect((result.current.error as Error).message).toBe('Not authenticated');
   });
 
-  it('invalidates the pets query cache on success', async () => {
+  it('성공 시 pets 쿼리 캐시를 무효화한다', async () => {
     const { wrapper, queryClient } = createWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -440,9 +438,9 @@ describe('useDeletePet', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Edge cases: useCreatePet
+// 엣지 케이스: useCreatePet
 // ---------------------------------------------------------------------------
-describe('useCreatePet — edge cases', () => {
+describe('useCreatePet — 엣지 케이스', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.currentUser = { uid: 'test-user' };
@@ -492,9 +490,9 @@ describe('useCreatePet — edge cases', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Edge cases: useUpdatePet
+// 엣지 케이스: useUpdatePet
 // ---------------------------------------------------------------------------
-describe('useUpdatePet — edge cases', () => {
+describe('useUpdatePet — 엣지 케이스', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.currentUser = { uid: 'test-user' };
@@ -548,9 +546,9 @@ describe('useUpdatePet — edge cases', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Edge cases: useDeletePet
+// 엣지 케이스: useDeletePet
 // ---------------------------------------------------------------------------
-describe('useDeletePet — edge cases', () => {
+describe('useDeletePet — 엣지 케이스', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.currentUser = { uid: 'test-user' };

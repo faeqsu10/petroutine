@@ -6,6 +6,7 @@ import {
   formatDate,
   getDdayText,
   formatCurrency,
+  toLocalDateStr,
   cn,
 } from '@/lib/utils';
 
@@ -393,6 +394,37 @@ describe('formatCurrency', () => {
 
   it('매우 큰 금액(억 단위)을 포맷한다', () => {
     expect(formatCurrency(100000000)).toBe('100,000,000원');
+  });
+});
+
+// ============================================================
+// toLocalDateStr: 로컬 날짜 문자열 변환
+// ============================================================
+describe('toLocalDateStr', () => {
+  it('Date를 YYYY-MM-DD 형식의 로컬 날짜 문자열로 변환한다', () => {
+    const date = new Date(2026, 2, 14); // 2026-03-14 로컬
+    expect(toLocalDateStr(date)).toBe('2026-03-14');
+  });
+
+  it('한 자리 월/일에 0을 패딩한다', () => {
+    const date = new Date(2026, 0, 5); // 2026-01-05
+    expect(toLocalDateStr(date)).toBe('2026-01-05');
+  });
+
+  it('12월 31일을 올바르게 처리한다', () => {
+    const date = new Date(2026, 11, 31); // 2026-12-31
+    expect(toLocalDateStr(date)).toBe('2026-12-31');
+  });
+
+  it('자정 근처에서도 UTC 변환 없이 로컬 날짜를 반환한다', () => {
+    // 00:05 로컬 시간 — toISOString()이면 전날로 밀릴 수 있음
+    const date = new Date(2026, 2, 14, 0, 5, 0);
+    expect(toLocalDateStr(date)).toBe('2026-03-14');
+  });
+
+  it('1월 1일을 올바르게 처리한다', () => {
+    const date = new Date(2026, 0, 1);
+    expect(toLocalDateStr(date)).toBe('2026-01-01');
   });
 });
 

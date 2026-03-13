@@ -44,9 +44,9 @@ const CYCLE_UNIT_LABELS: Record<string, string> = {
 };
 
 const formSchema = z.object({
-  name: z.string().min(1, '항목 이름을 입력해주세요'),
+  name: z.string().min(1, '항목 이름을 입력해주세요').max(30, '이름은 30자 이내로 입력해주세요'),
   category: z.enum(['hygiene', 'health', 'daily', 'custom']),
-  cycleValue: z.number().int().min(1, '주기는 1 이상이어야 합니다'),
+  cycleValue: z.number().int().min(1, '주기는 1 이상이어야 합니다').max(365, '주기는 365 이하여야 합니다'),
   cycleUnit: z.enum(['day', 'week', 'month']),
   icon: z.string().min(1, '아이콘을 선택해주세요'),
   color: z.string().min(1, '색상을 선택해주세요'),
@@ -58,7 +58,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function AddCareItemPage() {
   const router = useRouter();
   const { data: pets } = usePets();
-  const { selectedPetId } = useCareStore();
+  const selectedPetId = useCareStore((s) => s.selectedPetId);
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
   const { mutate: createCareItem, isPending } = useCreateCareItem();
 

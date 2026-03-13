@@ -14,7 +14,8 @@ import type { CareItem } from '@/types';
 
 export default function CarePage() {
   const { data: pets } = usePets();
-  const { selectedPetId, setSelectedPetId } = useCareStore();
+  const selectedPetId = useCareStore((s) => s.selectedPetId);
+  const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
   const { data: careItems, isLoading } = useCareItems(activePetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);

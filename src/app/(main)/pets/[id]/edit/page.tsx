@@ -27,9 +27,9 @@ import {
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 
 const petSchema = z.object({
-  name: z.string().min(1, '이름을 입력해주세요'),
+  name: z.string().min(1, '이름을 입력해주세요').max(30, '이름은 30자 이내로 입력해주세요'),
   species: z.enum(['dog', 'cat', 'other']),
-  breed: z.string().optional(),
+  breed: z.string().max(30, '품종은 30자 이내로 입력해주세요').optional(),
   birthDate: z.string().optional(),
   gender: z.enum(['male', 'female', 'unknown']).optional(),
   neutered: z.boolean(),
