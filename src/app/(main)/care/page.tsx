@@ -9,6 +9,7 @@ import { useCareStore } from '@/stores/care-store';
 import { getScheduleUrgency, getDdayText, getUrgencyColor, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CompleteModal } from '@/components/care/complete-modal';
+import { CareEditSheet } from '@/components/care/edit-sheet';
 import type { CareItem } from '@/types';
 
 export default function CarePage() {
@@ -17,6 +18,7 @@ export default function CarePage() {
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
   const { data: careItems, isLoading } = useCareItems(activePetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
+  const [editingItem, setEditingItem] = useState<CareItem | null>(null);
 
   const grouped = (careItems ?? []).reduce(
     (acc, item) => {
@@ -94,7 +96,11 @@ export default function CarePage() {
                     key={item.id}
                     className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
                   >
-                    <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingItem(item)}
+                      className="flex flex-1 items-center gap-3 text-left"
+                    >
                       <span className="text-2xl">{item.icon}</span>
                       <div>
                         <p className="font-medium text-gray-800">{item.name}</p>
@@ -109,7 +115,7 @@ export default function CarePage() {
                           )}
                         </div>
                       </div>
-                    </div>
+                    </button>
                     <Button
                       onClick={() => setCompletingItem(item)}
                       className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 active:scale-95"
@@ -129,6 +135,13 @@ export default function CarePage() {
         open={!!completingItem}
         onOpenChange={(open) => !open && setCompletingItem(null)}
         careItem={completingItem}
+      />
+
+      {/* 케어 수정 시트 */}
+      <CareEditSheet
+        open={!!editingItem}
+        onOpenChange={(open) => !open && setEditingItem(null)}
+        careItem={editingItem}
       />
     </div>
   );

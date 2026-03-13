@@ -5,7 +5,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { usePets } from '@/hooks/use-pets';
 import Link from 'next/link';
-import { ChevronRight, Bell, PawPrint, User, LogOut, Plus } from 'lucide-react';
+import { ChevronRight, Bell, User, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -29,9 +29,10 @@ export default function SettingsPage() {
         <h2 className="mb-2 text-sm font-semibold text-gray-500">반려동물</h2>
         <Card className="divide-y divide-gray-100 overflow-hidden">
           {pets?.map((pet) => (
-            <div
+            <Link
               key={pet.id}
-              className="flex items-center justify-between p-4"
+              href={`/pets/${pet.id}/edit`}
+              className="flex items-center justify-between p-4 transition-colors hover:bg-gray-50"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-lg">
@@ -46,7 +47,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-gray-300" />
-            </div>
+            </Link>
           ))}
           <Link
             href="/pets/add"

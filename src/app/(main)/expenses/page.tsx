@@ -8,10 +8,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useExpenses, useMonthlyStats } from '@/hooks/use-expenses';
 import { formatCurrency } from '@/lib/utils';
+import { ExpenseEditSheet } from '@/components/expenses/edit-sheet';
+import type { Expense } from '@/types';
 
 export default function ExpensesPage() {
   const [currentMonthDate, setCurrentMonthDate] = useState(() => new Date());
   const currentMonth = format(currentMonthDate, 'yyyy-MM');
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   const handlePrevMonth = () => setCurrentMonthDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentMonthDate((d) => addMonths(d, 1));
@@ -79,9 +82,11 @@ export default function ExpensesPage() {
         ) : (
           <div className="space-y-2">
             {expenses?.map((expense) => (
-              <div
+              <button
                 key={expense.id}
-                className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm"
+                type="button"
+                onClick={() => setEditingExpense(expense)}
+                className="flex w-full items-center justify-between rounded-xl bg-white p-3 text-left shadow-sm transition-colors hover:bg-gray-50"
               >
                 <div>
                   <p className="text-sm font-medium text-gray-700">{expense.description || '지출'}</p>
@@ -90,7 +95,7 @@ export default function ExpensesPage() {
                 <span className="text-sm font-semibold text-gray-800">
                   {formatCurrency(expense.amount)}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -101,6 +106,13 @@ export default function ExpensesPage() {
           <Plus className="h-7 w-7 text-white" />
         </button>
       </Link>
+
+      {/* 지출 수정 시트 */}
+      <ExpenseEditSheet
+        open={!!editingExpense}
+        onOpenChange={(open) => !open && setEditingExpense(null)}
+        expense={editingExpense}
+      />
     </div>
   );
 }

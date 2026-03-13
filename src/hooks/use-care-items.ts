@@ -102,6 +102,56 @@ export function useCareItems(petId: string | null) {
   });
 }
 
+export function useUpdateCareItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...data
+    }: {
+      id: string;
+      name?: string;
+      cycleValue?: number;
+      cycleUnit?: 'day' | 'week' | 'month';
+      icon?: string;
+      color?: string;
+      notifyEnabled?: boolean;
+    }) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+
+      await updateDoc(doc(db, 'careItems', id), {
+        ...data,
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [CARE_ITEMS_KEY] });
+    },
+  });
+}
+
+export function useDeleteCareItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (careItemId: string) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+
+      // Soft delete: isActive = false
+      await updateDoc(doc(db, 'careItems', careItemId), {
+        isActive: false,
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [CARE_ITEMS_KEY] });
+    },
+  });
+}
+
 export function useCompleteCare() {
   const queryClient = useQueryClient();
 

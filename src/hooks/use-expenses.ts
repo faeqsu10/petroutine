@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs, addDoc, limit } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, addDoc, limit, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import { endOfMonth, format } from 'date-fns';
 import type { Expense, MonthlyStats } from '@/types';
@@ -162,6 +162,47 @@ export function useCreateExpense() {
       });
 
       return { id: docRef.id, ...expense };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
+      queryClient.invalidateQueries({ queryKey: [STATS_KEY] });
+    },
+  });
+}
+
+export function useUpdateExpense() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...data
+    }: Partial<Expense> & { id: string }) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+
+      await updateDoc(doc(db, 'expenses', id), {
+        ...data,
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
+      queryClient.invalidateQueries({ queryKey: [STATS_KEY] });
+    },
+  });
+}
+
+export function useDeleteExpense() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (expenseId: string) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+
+      // Hard delete: 지출은 복구 필요 없음
+      await deleteDoc(doc(db, 'expenses', expenseId));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });

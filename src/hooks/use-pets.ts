@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import type { Pet } from '@/types';
 
@@ -65,6 +65,45 @@ export function useCreatePet() {
       });
 
       return { id: docRef.id, ...pet };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [PETS_KEY] });
+    },
+  });
+}
+
+export function useUpdatePet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...data }: Partial<Pet> & { id: string }) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+
+      await updateDoc(doc(db, 'pets', id), {
+        ...data,
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [PETS_KEY] });
+    },
+  });
+}
+
+export function useDeletePet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (petId: string) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+
+      // Soft delete: archivedAt 설정
+      await updateDoc(doc(db, 'pets', petId), {
+        archivedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PETS_KEY] });
