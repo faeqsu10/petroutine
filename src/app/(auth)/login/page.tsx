@@ -1,47 +1,64 @@
 'use client';
 
 import { auth } from '@/lib/firebase/client';
-import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+
+async function createSession(idToken: string) {
+  const res = await fetch('/api/auth/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!res.ok) throw new Error('세션 생성 실패');
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
+  // 이미 로그인된 상태면 세션 생성 후 홈으로
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // 세션 쿠키 생성 완료까지 기다린 후 이동
         try {
           const idToken = await user.getIdToken();
-          const res = await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-          });
-          if (res.ok) {
-            router.replace('/');
-            return;
-          }
+          await createSession(idToken);
+          router.replace('/');
+          return;
         } catch (e) {
-          console.error('Session creation failed:', e);
+          console.error('Session error:', e);
         }
-        setIsLoading(false);
-      } else {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     });
     return unsubscribe;
   }, [router]);
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider);
+    try {
+      // 팝업 먼저 시도 (일반 브라우저에서 가장 안정적)
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      await createSession(idToken);
+      router.push('/');
+    } catch (error: unknown) {
+      const code = (error as { code?: string })?.code;
+      if (code === 'auth/popup-blocked' || code === 'auth/unauthorized-domain' || code === 'auth/operation-not-supported-in-this-environment') {
+        // 인앱 브라우저 등 팝업 안 되는 환경 → 리다이렉트 폴백
+        signInWithRedirect(auth, provider);
+      } else {
+        console.error('Login error:', error);
+        toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
+      }
+    }
   };
 
   return (
