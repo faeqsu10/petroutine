@@ -8,7 +8,7 @@ import { collection, doc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import { calculateNextDueDate, toLocalDateStr } from '@/lib/utils';
 import { useCreatePet } from '@/hooks/use-pets';
-import { CARE_TEMPLATES } from '@/lib/constants';
+import { BOTTOM_NAV_PADDING, CARE_TEMPLATES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -136,7 +136,7 @@ export default function OnboardingPage() {
   const categories = ['hygiene', 'health', 'daily'] as const;
 
   return (
-    <div className="min-h-dvh bg-background flex flex-col items-center justify-center px-5 pb-16 pt-10">
+    <div className={`min-h-dvh bg-background flex flex-col items-center justify-center px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
       <div className="w-full max-w-md">
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-10">

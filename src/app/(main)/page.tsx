@@ -11,6 +11,7 @@ import { useCareItems } from '@/hooks/use-care-items';
 import { useMonthlyStats } from '@/hooks/use-expenses';
 import { useCareStore } from '@/stores/care-store';
 import { getScheduleUrgency, getDdayText, getUrgencyColor } from '@/lib/utils';
+import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { CompleteModal } from '@/components/care/complete-modal';
 import type { CareItem } from '@/types';
@@ -120,7 +121,7 @@ export default function HomePage() {
   });
 
   return (
-    <div className="max-w-md mx-auto min-h-screen px-5 pb-32 pt-10">
+    <div className={`max-w-md mx-auto min-h-screen px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
       {/* Header */}
       <header className="mb-10">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Pet Concierge</p>

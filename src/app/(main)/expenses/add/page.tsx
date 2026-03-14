@@ -23,11 +23,9 @@ import { useExpenseCategories, useCreateExpenseCategory } from '@/hooks/use-expe
 import { usePets } from '@/hooks/use-pets';
 import { useCreateExpense } from '@/hooks/use-expenses';
 import { cn } from '@/lib/utils';
+import { BOTTOM_NAV_PADDING, EXPENSE_PRESET_ICONS, EXPENSE_PRESET_COLORS } from '@/lib/constants';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-
-const PRESET_ICONS = ['🐾', '💊', '🏥', '✂️', '🛁', '🧸', '🎀', '🍖', '🦮', '🐠', '🌿', '🚗'];
-const PRESET_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ec4899', '#14b8a6', '#f59e0b'];
 
 const schema = z.object({
   amount: z.number({ error: '금액을 입력해 주세요' }).positive('0보다 큰 금액을 입력해 주세요').max(99_999_999, '금액은 1억 미만이어야 합니다'),
@@ -100,7 +98,7 @@ export default function AddExpensePage() {
   };
 
   return (
-    <div className="min-h-dvh px-5 pb-32 pt-8">
+    <div className={`min-h-dvh px-5 ${BOTTOM_NAV_PADDING} pt-8`}>
       {/* 헤더 */}
       <header className="mb-10">
         <Link href="/expenses">
@@ -209,7 +207,7 @@ export default function AddExpensePage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">아이콘</Label>
                   <div className="grid grid-cols-6 gap-2">
-                    {PRESET_ICONS.map((icon) => (
+                    {EXPENSE_PRESET_ICONS.map((icon) => (
                       <button
                         key={icon}
                         type="button"
@@ -227,7 +225,7 @@ export default function AddExpensePage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">색상</Label>
                   <div className="flex gap-2">
-                    {PRESET_COLORS.map((color) => (
+                    {EXPENSE_PRESET_COLORS.map((color) => (
                       <button
                         key={color}
                         type="button"

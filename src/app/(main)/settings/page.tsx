@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { ChevronRight, Bell, User, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { motion } from 'framer-motion';
 
 const container = {
@@ -59,7 +60,7 @@ export default function SettingsPage() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-8 px-5 pb-32 pt-10"
+      className={`space-y-8 px-5 ${BOTTOM_NAV_PADDING} pt-10`}
     >
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-black tracking-tight text-foreground/90">설정</h1>

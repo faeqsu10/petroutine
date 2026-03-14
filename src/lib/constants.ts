@@ -1,5 +1,12 @@
+// 하단 플로팅 네비 영역을 위한 콘텐츠 패딩
+export const BOTTOM_NAV_PADDING = 'pb-32'; // 128px — 플로팅 네비(~90px) + 여유
+
 export const PRESET_COLORS = ['#FF7E5F', '#FFB347', '#48C6EF', '#6B8DD6', '#764BA2', '#6A11CB'];
 export const PRESET_ICONS = ['🛁', '💊', '💉', '✂️', '🦷', '🐾', '🍖', '🏥', '🧴', '👁️', '🦴', '🚿'];
+
+// 지출 카테고리용 프리셋 (케어 프리셋과 별도 도메인)
+export const EXPENSE_PRESET_ICONS = ['🐾', '💊', '🏥', '✂️', '🛁', '🧸', '🎀', '🍖', '🦮', '🐠', '🌿', '🚗'];
+export const EXPENSE_PRESET_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ec4899', '#14b8a6', '#f59e0b'];
 
 export const CARE_TEMPLATES = [
   // 위생

@@ -8,6 +8,7 @@ import { usePets } from '@/hooks/use-pets';
 import { useCareItems } from '@/hooks/use-care-items';
 import { useCareStore } from '@/stores/care-store';
 import { getScheduleUrgency, getDdayText, getUrgencyColor, formatDate } from '@/lib/utils';
+import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { CompleteModal } from '@/components/care/complete-modal';
 import { CareEditSheet } from '@/components/care/edit-sheet';
@@ -42,7 +43,7 @@ export default function CarePage() {
   };
 
   return (
-    <div className="space-y-8 px-5 pb-32 pt-10">
+    <div className={`space-y-8 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
       <header className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-black tracking-tight text-foreground/90">케어 관리</h1>

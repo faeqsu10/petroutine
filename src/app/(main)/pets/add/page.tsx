@@ -10,6 +10,7 @@ import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useCreatePet, uploadAvatar } from '@/hooks/use-pets';
 import { cn } from '@/lib/utils';
+import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { ChevronLeft, Camera } from 'lucide-react';
 import {
   Form,
@@ -125,7 +126,7 @@ export default function AddPetPage() {
   }
 
   return (
-    <div className="min-h-dvh px-5 pb-32 pt-8">
+    <div className={`min-h-dvh px-5 ${BOTTOM_NAV_PADDING} pt-8`}>
       <div className="mx-auto max-w-lg">
         {/* Header */}
         <header className="mb-10">

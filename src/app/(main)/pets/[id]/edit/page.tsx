@@ -8,6 +8,7 @@ import { z } from 'zod';
 import Image from 'next/image';
 import { usePets, useUpdatePet, useDeletePet, uploadAvatar } from '@/hooks/use-pets';
 import { cn } from '@/lib/utils';
+import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { ChevronLeft, Trash2, Camera } from 'lucide-react';
 import {
   Form,
@@ -170,7 +171,7 @@ export default function EditPetPage() {
   }
 
   return (
-    <div className="min-h-dvh px-5 pb-32 pt-8">
+    <div className={`min-h-dvh px-5 ${BOTTOM_NAV_PADDING} pt-8`}>
       <div className="mx-auto max-w-lg">
         {/* Header */}
         <header className="mb-10">

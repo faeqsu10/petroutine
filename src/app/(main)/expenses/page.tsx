@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useExpenses, useMonthlyStats } from '@/hooks/use-expenses';
 import { usePets } from '@/hooks/use-pets';
 import { formatCurrency } from '@/lib/utils';
+import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { ExpenseEditSheet } from '@/components/expenses/edit-sheet';
 import type { Expense } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,7 +41,7 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="space-y-8 px-5 pb-32 pt-10">
+    <div className={`space-y-8 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-black tracking-tight text-foreground/90">가계부</h1>
         <p className="text-sm text-muted-foreground">우리 아이를 위한 지출을 관리하세요</p>

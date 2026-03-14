@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/form';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { PRESET_COLORS, PRESET_ICONS, CARE_TEMPLATES } from '@/lib/constants';
+import { BOTTOM_NAV_PADDING, PRESET_COLORS, PRESET_ICONS, CARE_TEMPLATES } from '@/lib/constants';
 import type { CareTemplate } from '@/lib/constants';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -123,7 +123,7 @@ export default function AddCareItemPage() {
   }
 
   return (
-    <div className="min-h-dvh px-5 pb-32 pt-8">
+    <div className={`min-h-dvh px-5 ${BOTTOM_NAV_PADDING} pt-8`}>
       <header className="mb-10">
         <button
           onClick={() => router.back()}
