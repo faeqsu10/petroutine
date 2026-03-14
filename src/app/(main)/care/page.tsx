@@ -18,7 +18,7 @@ export default function CarePage() {
   const selectedPetId = useCareStore((s) => s.selectedPetId);
   const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
-  const { data: careItems, isLoading } = useCareItems(activePetId);
+  const { data: careItems, isLoading, isError } = useCareItems(activePetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
   const [editingItem, setEditingItem] = useState<CareItem | null>(null);
 
@@ -81,6 +81,16 @@ export default function CarePage() {
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
           <p className="text-sm font-medium text-muted-foreground/60">로딩 중…</p>
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4 px-5">
+          <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했어요</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm font-bold text-primary"
+          >
+            다시 시도하기
+          </button>
         </div>
       ) : Object.keys(grouped).length === 0 ? (
         <motion.div 

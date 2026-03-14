@@ -74,3 +74,12 @@ export function toLocalDateStr(date: Date): string {
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('ko-KR').format(amount) + '원';
 }
+
+/** Firestore `in` 쿼리 30개 제한 대응 — 배열을 지정 크기 청크로 분할 */
+export function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}

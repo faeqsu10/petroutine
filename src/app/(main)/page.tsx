@@ -15,7 +15,7 @@ import type { CareItem } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function HomePage() {
-  const { data: pets, isLoading: petsLoading } = usePets();
+  const { data: pets, isLoading: petsLoading, isError: petsError } = usePets();
   const selectedPetId = useCareStore((s) => s.selectedPetId);
   const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
@@ -33,7 +33,7 @@ export default function HomePage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <motion.div
-          animate={{ 
+          animate={{
             scale: [1, 1.2, 1],
             rotate: [0, 10, -10, 0]
           }}
@@ -43,6 +43,20 @@ export default function HomePage() {
           🐾
         </motion.div>
         <p className="text-sm font-bold text-primary/40 animate-pulse uppercase tracking-widest">Loading</p>
+      </div>
+    );
+  }
+
+  if (petsError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 px-5">
+        <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했어요</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-sm font-bold text-primary"
+        >
+          다시 시도하기
+        </button>
       </div>
     );
   }
@@ -88,7 +102,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="mb-10">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Pet Concierge</p>
-        <h1 className="text-2xl font-black tracking-tight text-foreground/90">반가워요, {pets[0]?.name} 보호자님!</h1>
+        <h1 className="text-2xl font-black tracking-tight text-foreground/90">반가워요, {activePet?.name} 보호자님!</h1>
       </header>
 
       {/* Pet Selector (Pills) */}

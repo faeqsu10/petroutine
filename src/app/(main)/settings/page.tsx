@@ -27,13 +27,31 @@ const item = {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { data: pets } = usePets();
+  const { data: pets, isError: petsError } = usePets();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    await fetch('/api/auth/session', { method: 'DELETE' });
+    try {
+      await signOut(auth);
+      await fetch('/api/auth/session', { method: 'DELETE' });
+    } catch {
+      // 실패해도 로그인 페이지로 이동
+    }
     router.push('/login');
   };
+
+  if (petsError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 px-5">
+        <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했어요</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-sm font-bold text-primary"
+        >
+          다시 시도하기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div

@@ -67,18 +67,22 @@ export default function AddPetPage() {
         ? parseFloat(values.weightKg)
         : null;
 
-    await createPet.mutateAsync({
-      name: values.name,
-      species: values.species,
-      breed: values.breed && values.breed.trim() !== '' ? values.breed : null,
-      birthDate:
-        values.birthDate && values.birthDate.trim() !== '' ? values.birthDate : null,
-      gender: values.gender ?? null,
-      neutered: values.neutered,
-      weightKg,
-      avatarUrl: null,
-    });
-    router.push('/');
+    try {
+      await createPet.mutateAsync({
+        name: values.name,
+        species: values.species,
+        breed: values.breed && values.breed.trim() !== '' ? values.breed : null,
+        birthDate:
+          values.birthDate && values.birthDate.trim() !== '' ? values.birthDate : null,
+        gender: values.gender ?? null,
+        neutered: values.neutered,
+        weightKg,
+        avatarUrl: null,
+      });
+      router.push('/');
+    } catch {
+      alert('저장에 실패했어요. 다시 시도해주세요.');
+    }
   }
 
   return (

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
-import { calculateNextDueDate, toLocalDateStr } from '@/lib/utils';
+import { calculateNextDueDate, toLocalDateStr, chunkArray } from '@/lib/utils';
 import type { CareItem } from '@/types';
 
 const CARE_ITEMS_KEY = 'care-items';
@@ -31,24 +31,37 @@ export function useCareItems(petId: string | null) {
 
       const itemIds = items.map((i) => i.id);
 
-      const [schedulesSnap, logsSnap] = await Promise.all([
-        getDocs(
-          query(
-            collection(db, 'careSchedules'),
-            where('userId', '==', uid),
-            where('careItemId', 'in', itemIds),
-            where('status', 'in', ['pending', 'due', 'overdue']),
+      const idChunks = chunkArray(itemIds, 30);
+
+      const [schedulesSnaps, logsSnaps] = await Promise.all([
+        Promise.all(
+          idChunks.map((chunk) =>
+            getDocs(
+              query(
+                collection(db, 'careSchedules'),
+                where('userId', '==', uid),
+                where('careItemId', 'in', chunk),
+                where('status', 'in', ['pending', 'due', 'overdue']),
+              ),
+            ),
           ),
         ),
-        getDocs(
-          query(
-            collection(db, 'careLogs'),
-            where('userId', '==', uid),
-            where('careItemId', 'in', itemIds),
-            orderBy('completedAt', 'desc'),
+        Promise.all(
+          idChunks.map((chunk) =>
+            getDocs(
+              query(
+                collection(db, 'careLogs'),
+                where('userId', '==', uid),
+                where('careItemId', 'in', chunk),
+                orderBy('completedAt', 'desc'),
+              ),
+            ),
           ),
         ),
       ]);
+
+      const schedulesSnap = { docs: schedulesSnaps.flatMap((s) => s.docs) };
+      const logsSnap = { docs: logsSnaps.flatMap((s) => s.docs) };
 
       const scheduleMap = new Map<string, { id: string; careItemId: string; nextDueDate: string; status: string }>();
       for (const d of schedulesSnap.docs) {

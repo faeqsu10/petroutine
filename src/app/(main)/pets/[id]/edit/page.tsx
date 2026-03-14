@@ -90,17 +90,21 @@ export default function EditPetPage() {
         ? parseFloat(values.weightKg)
         : null;
 
-    await updatePet.mutateAsync({
-      id: petId,
-      name: values.name,
-      species: values.species,
-      breed: values.breed && values.breed.trim() !== '' ? values.breed : null,
-      birthDate: values.birthDate && values.birthDate.trim() !== '' ? values.birthDate : null,
-      gender: values.gender ?? null,
-      neutered: values.neutered,
-      weightKg,
-    });
-    router.push('/settings');
+    try {
+      await updatePet.mutateAsync({
+        id: petId,
+        name: values.name,
+        species: values.species,
+        breed: values.breed && values.breed.trim() !== '' ? values.breed : null,
+        birthDate: values.birthDate && values.birthDate.trim() !== '' ? values.birthDate : null,
+        gender: values.gender ?? null,
+        neutered: values.neutered,
+        weightKg,
+      });
+      router.push('/settings');
+    } catch {
+      alert('저장에 실패했어요. 다시 시도해주세요.');
+    }
   }
 
   function handleDelete() {
@@ -108,6 +112,9 @@ export default function EditPetPage() {
       onSuccess: () => {
         setShowDeleteConfirm(false);
         router.push('/settings');
+      },
+      onError: () => {
+        alert('삭제에 실패했어요. 다시 시도해주세요.');
       },
     });
   }

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query, where, orderBy, getDocs, addDoc, limit, doc, updateDoc, deleteDoc, documentId } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import { endOfMonth, format } from 'date-fns';
+import { chunkArray } from '@/lib/utils';
 import type { Expense, MonthlyStats } from '@/types';
 
 const EXPENSES_KEY = 'expenses';
@@ -80,20 +81,34 @@ export function useMonthlyStats(month: string) {
       const categoryIds = [...new Set(items.map((i) => i.categoryId as string))];
       const petIds = [...new Set(items.map((i) => i.petId as string))];
 
-      const [catsSnap, petsSnap] = await Promise.all([
-        getDocs(
-          query(
-            collection(db, 'expenseCategories'),
-            where(documentId(), 'in', categoryIds.length > 0 ? categoryIds : ['__none__']),
+      const catChunks = chunkArray(categoryIds.length > 0 ? categoryIds : ['__none__'], 30);
+      const petChunks = chunkArray(petIds.length > 0 ? petIds : ['__none__'], 30);
+
+      const [catsSnaps, petsSnaps] = await Promise.all([
+        Promise.all(
+          catChunks.map((chunk) =>
+            getDocs(
+              query(
+                collection(db, 'expenseCategories'),
+                where(documentId(), 'in', chunk),
+              ),
+            ),
           ),
         ),
-        getDocs(
-          query(
-            collection(db, 'pets'),
-            where(documentId(), 'in', petIds.length > 0 ? petIds : ['__none__']),
+        Promise.all(
+          petChunks.map((chunk) =>
+            getDocs(
+              query(
+                collection(db, 'pets'),
+                where(documentId(), 'in', chunk),
+              ),
+            ),
           ),
         ),
       ]);
+
+      const catsSnap = { docs: catsSnaps.flatMap((s) => s.docs) };
+      const petsSnap = { docs: petsSnaps.flatMap((s) => s.docs) };
 
       const catMap = new Map(
         catsSnap.docs.map((d) => [d.id, d.data() as { name: string; icon: string; color: string }]),

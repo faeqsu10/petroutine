@@ -19,8 +19,22 @@ export default function ExpensesPage() {
 
   const handlePrevMonth = () => setCurrentMonthDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentMonthDate((d) => addMonths(d, 1));
-  const { data: stats } = useMonthlyStats(currentMonth);
-  const { data: expenses } = useExpenses(null, currentMonth);
+  const { data: stats, isError: statsError } = useMonthlyStats(currentMonth);
+  const { data: expenses, isError: expensesError } = useExpenses(null, currentMonth);
+
+  if (statsError || expensesError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 px-5">
+        <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했어요</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-sm font-bold text-primary"
+        >
+          다시 시도하기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 px-5 pb-32 pt-10">
