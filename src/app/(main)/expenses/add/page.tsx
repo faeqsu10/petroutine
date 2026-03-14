@@ -98,7 +98,7 @@ export default function AddExpensePage() {
               placeholder="0"
               autoFocus
               className={cn(
-                'w-full bg-transparent text-center text-5xl font-black outline-none placeholder:text-white/30',
+                'w-full bg-transparent text-center text-5xl font-black text-white caret-white outline-none placeholder:text-white/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
                 errors.amount && 'text-red-200',
               )}
               {...register('amount', { valueAsNumber: true })}
