@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import { calculateNextDueDate, toLocalDateStr } from '@/lib/utils';
-import { useCreatePet } from '@/hooks/use-pets';
+import { useCreatePet, usePets } from '@/hooks/use-pets';
 import { BOTTOM_NAV_PADDING, CARE_TEMPLATES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,14 @@ const PRESET_COLOR = '#6B8DD6';
 export default function OnboardingPage() {
   const router = useRouter();
   const createPet = useCreatePet();
+  const { data: existingPets, isLoading: petsLoading } = usePets();
+
+  // 이미 반려동물이 있으면 대시보드로 리다이렉트 (중복 온보딩 방지)
+  useEffect(() => {
+    if (!petsLoading && existingPets && existingPets.length > 0) {
+      router.replace('/');
+    }
+  }, [existingPets, petsLoading, router]);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [petName, setPetName] = useState('');
