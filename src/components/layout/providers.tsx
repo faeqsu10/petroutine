@@ -1,7 +1,9 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase/client';
+import { useState, useEffect, type ReactNode } from 'react';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -16,9 +18,24 @@ export function Providers({ children }: { children: ReactNode }) {
       }),
   );
 
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, () => {
+      if (!authReady) setAuthReady(true);
+      // auth 상태 변경 시 모든 쿼리 재실행
+      queryClient.invalidateQueries();
+    });
+    return unsubscribe;
+  }, [queryClient, authReady]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      {authReady ? children : (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+        </div>
+      )}
     </QueryClientProvider>
   );
 }
