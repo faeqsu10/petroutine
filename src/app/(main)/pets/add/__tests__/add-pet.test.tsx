@@ -14,6 +14,36 @@ vi.mock('@/hooks/use-pets', () => ({
     isPending: false,
     isError: false,
   })),
+  uploadAvatar: vi.fn().mockResolvedValue('https://example.com/avatar.jpg'),
+}));
+
+// ============================================================
+// Firebase 모킹
+// ============================================================
+vi.mock('@/lib/firebase/client', () => ({
+  auth: { currentUser: { uid: 'test-uid' } },
+  db: {},
+  storage: {},
+}));
+
+vi.mock('firebase/firestore', () => ({
+  updateDoc: vi.fn().mockResolvedValue(undefined),
+  doc: vi.fn(() => ({})),
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  orderBy: vi.fn(),
+  getDocs: vi.fn(),
+  addDoc: vi.fn(),
+  writeBatch: vi.fn(),
+}));
+
+// ============================================================
+// next/image 모킹
+// ============================================================
+vi.mock('next/image', () => ({
+  default: ({ src, alt, ...props }: { src: string; alt: string; [key: string]: unknown }) =>
+    React.createElement('img', { src, alt, ...props }),
 }));
 
 // ============================================================
@@ -42,6 +72,7 @@ vi.mock('framer-motion', () => ({
 // ============================================================
 vi.mock('lucide-react', () => ({
   ChevronLeft: () => React.createElement('span', { 'data-testid': 'icon-chevron-left' }),
+  Camera: () => React.createElement('span', { 'data-testid': 'icon-camera' }),
 }));
 
 // ============================================================

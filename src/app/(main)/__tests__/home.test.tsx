@@ -3,6 +3,15 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 
 // ============================================================
+// next/navigation 모킹
+// ============================================================
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+// ============================================================
 // next/link 모킹
 // ============================================================
 vi.mock('next/link', () => ({

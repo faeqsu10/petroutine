@@ -171,8 +171,8 @@ describe('CarePage (케어 관리)', () => {
 
       render(<CarePage />);
 
-      expect(screen.getByRole('button', { name: '초코' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '몽이' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /초코/, exact: false })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /몽이/, exact: false })).toBeInTheDocument();
     });
 
     it('반려동물이 1마리이면 해당 펫 탭과 전체 탭이 표시된다', () => {
@@ -181,7 +181,7 @@ describe('CarePage (케어 관리)', () => {
 
       render(<CarePage />);
 
-      expect(screen.getByRole('button', { name: '초코' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /초코/, exact: false })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '전체' })).toBeInTheDocument();
     });
   });

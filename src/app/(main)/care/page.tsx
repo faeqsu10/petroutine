@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Plus, Check } from 'lucide-react';
 import { usePets } from '@/hooks/use-pets';
@@ -75,12 +76,25 @@ export default function CarePage() {
           <button
             key={pet.id}
             onClick={() => setSelectedPetId(pet.id)}
-            className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+            className={`shrink-0 flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-bold transition-all ${
               activePetId === pet.id
                 ? 'bg-primary text-white shadow-lg shadow-primary/25'
                 : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
             }`}
           >
+            {pet.avatarUrl ? (
+              <Image
+                src={pet.avatarUrl}
+                alt={pet.name}
+                width={20}
+                height={20}
+                className="h-5 w-5 rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-base leading-none">
+                {pet.species === 'dog' ? '🐶' : pet.species === 'cat' ? '🐱' : '🐾'}
+              </span>
+            )}
             {pet.name}
           </button>
         ))}

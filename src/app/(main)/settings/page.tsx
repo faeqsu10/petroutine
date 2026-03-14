@@ -4,6 +4,7 @@ import { auth } from '@/lib/firebase/client';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { usePets } from '@/hooks/use-pets';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, Bell, User, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -78,8 +79,18 @@ export default function SettingsPage() {
               className="flex items-center justify-between p-4.5 transition-all hover:bg-primary/5 active:scale-[0.99]"
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-xl shadow-inner shadow-primary/5">
-                  {pet.species === 'dog' ? '🐶' : pet.species === 'cat' ? '🐱' : '🐾'}
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-xl shadow-inner shadow-primary/5 overflow-hidden">
+                  {pet.avatarUrl ? (
+                    <Image
+                      src={pet.avatarUrl}
+                      alt={pet.name}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    pet.species === 'dog' ? '🐶' : pet.species === 'cat' ? '🐱' : '🐾'
+                  )}
                 </div>
                 <div>
                   <p className="font-bold text-foreground/80">{pet.name}</p>

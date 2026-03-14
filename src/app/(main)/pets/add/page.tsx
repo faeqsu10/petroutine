@@ -6,8 +6,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Image from 'next/image';
-import { useCreatePet } from '@/hooks/use-pets';
-import { uploadAvatar } from '@/hooks/use-pets';
+import { updateDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/client';
+import { useCreatePet, uploadAvatar } from '@/hooks/use-pets';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, Camera } from 'lucide-react';
 import {
@@ -94,7 +95,6 @@ export default function AddPetPage() {
         : null;
 
     try {
-      // 먼저 pet을 생성하여 id 확보
       const newPet = await createPet.mutateAsync({
         name: values.name,
         species: values.species,
@@ -107,18 +107,13 @@ export default function AddPetPage() {
         avatarUrl: null,
       });
 
-      // 아바타 파일이 있으면 업로드 후 avatarUrl 업데이트
+      // 아바타 파일이 있으면 업로드 후 Firestore 업데이트
       if (avatarFile && newPet.id) {
         try {
-          const { useUpdatePet: _useUpdatePet } = await import('@/hooks/use-pets');
-          void _useUpdatePet; // 직접 Firestore 업데이트
           const avatarUrl = await uploadAvatar(avatarFile, newPet.id);
-          const { updateDoc, doc } = await import('firebase/firestore');
-          const { db } = await import('@/lib/firebase/client');
           await updateDoc(doc(db, 'pets', newPet.id), { avatarUrl });
         } catch {
-          // 아바타 업로드 실패는 경고만 표시 (pet 등록은 성공)
-          toast.warning('프로필 사진 업로드에 실패했어요. 나중에 수정 페이지에서 다시 시도해주세요.');
+          toast.warning('프로필 사진 업로드에 실패했어요. 수정 페이지에서 다시 시도해주세요.');
         }
       }
 

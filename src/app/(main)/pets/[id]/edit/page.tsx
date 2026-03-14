@@ -1,13 +1,14 @@
 'use client';
 
+import { useRef, useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState, useEffect } from 'react';
-import { usePets, useUpdatePet, useDeletePet } from '@/hooks/use-pets';
+import Image from 'next/image';
+import { usePets, useUpdatePet, useDeletePet, uploadAvatar } from '@/hooks/use-pets';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, Trash2 } from 'lucide-react';
+import { ChevronLeft, Trash2, Camera } from 'lucide-react';
 import {
   Form,
   FormField,
@@ -55,6 +56,9 @@ export default function EditPetPage() {
   const updatePet = useUpdatePet();
   const deletePet = useDeletePet();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const pet = pets?.find((p) => p.id === petId);
 
@@ -85,6 +89,28 @@ export default function EditPetPage() {
     }
   }, [pet, form]);
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('이미지는 5MB 이하만 업로드할 수 있어요');
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
+  const speciesValue = form.watch('species');
+
+  function getDefaultEmoji(species: string) {
+    if (species === 'dog') return '🐶';
+    if (species === 'cat') return '🐱';
+    return '🐾';
+  }
+
+  // 현재 표시할 아바타: 새로 선택한 파일 미리보기 > 기존 avatarUrl > 이모지
+  const currentAvatarSrc = avatarPreview ?? pet?.avatarUrl ?? null;
+
   async function onSubmit(values: PetFormValues) {
     const weightKg =
       values.weightKg && values.weightKg.trim() !== ''
@@ -92,6 +118,17 @@ export default function EditPetPage() {
         : null;
 
     try {
+      let avatarUrl: string | null | undefined = undefined;
+
+      // 새 파일이 선택된 경우 업로드
+      if (avatarFile) {
+        try {
+          avatarUrl = await uploadAvatar(avatarFile, petId);
+        } catch {
+          toast.warning('프로필 사진 업로드에 실패했어요. 다른 정보는 저장됩니다.');
+        }
+      }
+
       await updatePet.mutateAsync({
         id: petId,
         name: values.name,
@@ -101,6 +138,7 @@ export default function EditPetPage() {
         gender: values.gender ?? null,
         neutered: values.neutered,
         weightKg,
+        ...(avatarUrl !== undefined ? { avatarUrl } : {}),
       });
       toast.success('수정 완료');
       router.push('/settings');
@@ -150,10 +188,49 @@ export default function EditPetPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* 기본 정보 카드 */}
-            <motion.div 
+            {/* 아바타 업로드 */}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-3"
+            >
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="relative h-24 w-24 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {currentAvatarSrc ? (
+                  <Image
+                    src={currentAvatarSrc}
+                    alt="프로필 사진"
+                    width={96}
+                    height={96}
+                    className="h-24 w-24 rounded-full object-cover border-4 border-primary/20"
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 border-4 border-dashed border-primary/20 text-4xl">
+                    {getDefaultEmoji(speciesValue)}
+                  </div>
+                )}
+                <div className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary shadow-md">
+                  <Camera className="h-3.5 w-3.5 text-white" />
+                </div>
+              </button>
+              <p className="text-xs font-medium text-muted-foreground">프로필 사진 변경 (선택)</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </motion.div>
+
+            {/* 기본 정보 카드 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
               className="bento-item bg-card/60 glass p-6"
             >
               <h2 className="mb-6 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
@@ -229,7 +306,7 @@ export default function EditPetPage() {
             </motion.div>
 
             {/* 상세 정보 카드 */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
