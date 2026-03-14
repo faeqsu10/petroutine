@@ -12,6 +12,7 @@ vi.mock('firebase/firestore', () => ({
   where: vi.fn(),
   orderBy: vi.fn(),
   getDocs: vi.fn(),
+  addDoc: vi.fn(),
 }));
 
 vi.mock('@/lib/firebase/client', () => ({
@@ -24,9 +25,9 @@ vi.mock('@/lib/firebase/client', () => ({
 // ============================================================
 // 모킹된 모듈 임포트 (vi.mock 이후에 임포트해야 함)
 // ============================================================
-import { getDocs } from 'firebase/firestore';
+import { getDocs, addDoc, collection } from 'firebase/firestore';
 import { auth } from '@/lib/firebase/client';
-import { useExpenseCategories } from '@/hooks/use-expense-categories';
+import { useExpenseCategories, useCreateExpenseCategory } from '@/hooks/use-expense-categories';
 
 // ============================================================
 // 헬퍼: QueryClient 래퍼 생성
@@ -251,5 +252,84 @@ describe('useExpenseCategories — 엣지 케이스', () => {
     expect(result.current.data![1].id).toBe('custom-1');
     expect(result.current.data![2].id).toBe('custom-2');
     expect(result.current.data![3].id).toBe('custom-3');
+  });
+});
+
+// ============================================================
+// useCreateExpenseCategory
+// ============================================================
+describe('useCreateExpenseCategory', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
+    (collection as Mock).mockReturnValue('mock-collection-ref');
+    (addDoc as Mock).mockResolvedValue({ id: 'new-cat-id' });
+  });
+
+  it('인증된 사용자가 커스텀 카테고리를 생성할 수 있다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpenseCategory(), { wrapper });
+
+    await result.current.mutateAsync({ name: '간식', icon: '🍬', color: '#2ECC71' });
+
+    expect(addDoc).toHaveBeenCalledTimes(1);
+  });
+
+  it('isDefault: false, userId: uid로 저장된다', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpenseCategory(), { wrapper });
+
+    await result.current.mutateAsync({ name: '간식', icon: '🍬', color: '#2ECC71' });
+
+    expect(addDoc).toHaveBeenCalledWith(
+      'mock-collection-ref',
+      expect.objectContaining({
+        name: '간식',
+        icon: '🍬',
+        color: '#2ECC71',
+        userId: 'test-user',
+        isDefault: false,
+      }),
+    );
+  });
+
+  it('인증되지 않은 경우 에러를 던진다', async () => {
+    (auth as { currentUser: null }).currentUser = null;
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpenseCategory(), { wrapper });
+
+    await expect(
+      result.current.mutateAsync({ name: '간식', icon: '🍬', color: '#2ECC71' }),
+    ).rejects.toThrow('Not authenticated');
+  });
+
+  it('빈 이름이라도 저장된다 (프론트에서 검증)', async () => {
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateExpenseCategory(), { wrapper });
+
+    await result.current.mutateAsync({ name: '', icon: '🍬', color: '#2ECC71' });
+
+    expect(addDoc).toHaveBeenCalledWith(
+      'mock-collection-ref',
+      expect.objectContaining({ name: '' }),
+    );
+  });
+
+  it('성공 시 expense-categories 쿼리를 invalidate한다', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(QueryClientProvider, { client: queryClient }, children);
+
+    const { result } = renderHook(() => useCreateExpenseCategory(), { wrapper });
+
+    await result.current.mutateAsync({ name: '간식', icon: '🍬', color: '#2ECC71' });
+
+    expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['expense-categories'] }),
+    );
   });
 });

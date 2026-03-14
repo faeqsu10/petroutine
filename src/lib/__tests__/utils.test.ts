@@ -8,6 +8,7 @@ import {
   formatCurrency,
   toLocalDateStr,
   cn,
+  chunkArray,
 } from '@/lib/utils';
 
 /** 로컬 타임존 기준 YYYY-MM-DD 문자열 생성 (toISOString은 UTC 기준이라 timezone 차이로 날짜가 밀림) */
@@ -450,5 +451,53 @@ describe('cn', () => {
   it('빈 입력을 처리한다', () => {
     const result = cn();
     expect(result).toBe('');
+  });
+});
+
+// ============================================================
+// chunkArray: Firestore in 쿼리 30개 제한 대응 배열 분할
+// ============================================================
+describe('chunkArray', () => {
+  it('빈 배열이면 빈 배열을 반환한다', () => {
+    expect(chunkArray([], 30)).toEqual([]);
+  });
+
+  it('배열 크기가 chunk 크기보다 작으면 단일 청크를 반환한다', () => {
+    const arr = [1, 2, 3];
+    expect(chunkArray(arr, 30)).toEqual([[1, 2, 3]]);
+  });
+
+  it('정확히 chunk 크기와 같으면 단일 청크를 반환한다', () => {
+    const arr = Array.from({ length: 30 }, (_, i) => i);
+    const result = chunkArray(arr, 30);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toHaveLength(30);
+  });
+
+  it('chunk 크기보다 크면 여러 청크로 분할한다', () => {
+    const arr = Array.from({ length: 31 }, (_, i) => i);
+    const result = chunkArray(arr, 30);
+    expect(result).toHaveLength(2);
+  });
+
+  it('31개를 30개씩 분할하면 [30, 1] 청크를 반환한다', () => {
+    const arr = Array.from({ length: 31 }, (_, i) => i);
+    const result = chunkArray(arr, 30);
+    expect(result[0]).toHaveLength(30);
+    expect(result[1]).toHaveLength(1);
+  });
+
+  it('60개를 30개씩 분할하면 [30, 30] 청크를 반환한다', () => {
+    const arr = Array.from({ length: 60 }, (_, i) => i);
+    const result = chunkArray(arr, 30);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toHaveLength(30);
+    expect(result[1]).toHaveLength(30);
+  });
+
+  it('chunk 크기가 1이면 각 요소가 개별 청크가 된다', () => {
+    const arr = ['a', 'b', 'c'];
+    const result = chunkArray(arr, 1);
+    expect(result).toEqual([['a'], ['b'], ['c']]);
   });
 });

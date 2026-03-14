@@ -65,7 +65,7 @@ import {
 } from 'firebase/firestore';
 import { auth } from '@/lib/firebase/client';
 import { calculateNextDueDate } from '@/lib/utils';
-import { useCompleteCare, useUpdateCareItem, useDeleteCareItem } from '@/hooks/use-care-items';
+import { useCareItems, useCompleteCare, useUpdateCareItem, useDeleteCareItem } from '@/hooks/use-care-items';
 
 // ============================================================
 // 헬퍼: QueryClient 래퍼 생성
@@ -229,6 +229,58 @@ describe('useCompleteCare', () => {
         cycleUnit: 'day',
       }),
     ).rejects.toThrow('Not authenticated');
+  });
+
+  it('completedAt이 전달되면 해당 날짜로 careLog가 생성된다', async () => {
+    const { result } = renderHook(() => useCompleteCare(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      careItemId: 'care-item-1',
+      scheduleId: 'schedule-1',
+      cycleValue: 7,
+      cycleUnit: 'day',
+      completedAt: '2026-01-01T10:00:00.000Z',
+    });
+
+    expect(mockBatch.set).toHaveBeenCalledWith(
+      'mock-doc-ref',
+      expect.objectContaining({
+        completedAt: '2026-01-01T10:00:00.000Z',
+      }),
+    );
+    // calculateNextDueDate의 기준 날짜가 전달된 completedAt 날짜여야 함
+    expect(calculateNextDueDate).toHaveBeenCalledWith(
+      new Date('2026-01-01T10:00:00.000Z'),
+      7,
+      'day',
+    );
+  });
+
+  it('completedAt이 전달되지 않으면 현재 시간으로 careLog가 생성된다', async () => {
+    const before = new Date().toISOString();
+    const { result } = renderHook(() => useCompleteCare(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      careItemId: 'care-item-1',
+      scheduleId: 'schedule-1',
+      cycleValue: 7,
+      cycleUnit: 'day',
+      // completedAt 미전달
+    });
+    const after = new Date().toISOString();
+
+    const setCall = mockBatch.set.mock.calls.find(
+      (args) =>
+        typeof args[1] === 'object' &&
+        args[1] !== null &&
+        'careItemId' in args[1] &&
+        args[1].careItemId === 'care-item-1' &&
+        'completedAt' in args[1],
+    );
+    expect(setCall).toBeDefined();
+    const loggedAt = setCall![1].completedAt as string;
+    expect(loggedAt >= before).toBe(true);
+    expect(loggedAt <= after).toBe(true);
   });
 
   it('세 가지 작업(log 생성, 스케줄 완료, 다음 스케줄 생성)이 단일 batch로 처리된다', async () => {
@@ -565,6 +617,50 @@ describe('useCompleteCare — edge cases', () => {
 });
 
 // ============================================================
+// useCareItems
+// ============================================================
+describe('useCareItems', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
+    (collection as Mock).mockReturnValue('mock-collection-ref');
+    (query as Mock).mockReturnValue('mock-query-ref');
+    (where as Mock).mockReturnValue('mock-where-ref');
+  });
+
+  it('petId가 null이면 userId만으로 쿼리한다 (petId 필터 없음)', async () => {
+    // items 없음 → 빈 배열로 early return
+    (getDocs as Mock).mockResolvedValueOnce({ docs: [] });
+
+    const { result } = renderHook(() => useCareItems(null), { wrapper: makeWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    // where가 호출된 인수 목록
+    const whereCalls = (where as Mock).mock.calls;
+    // userId 필터는 존재해야 함
+    const hasUserIdFilter = whereCalls.some(
+      (args) => args[0] === 'userId' && args[1] === '==' && args[2] === 'test-user',
+    );
+    // petId 필터는 없어야 함
+    const hasPetIdFilter = whereCalls.some((args) => args[0] === 'petId');
+
+    expect(hasUserIdFilter).toBe(true);
+    expect(hasPetIdFilter).toBe(false);
+  });
+
+  it('petId가 null이고 케어 항목이 없으면 빈 배열을 반환한다', async () => {
+    (getDocs as Mock).mockResolvedValueOnce({ docs: [] });
+
+    const { result } = renderHook(() => useCareItems(null), { wrapper: makeWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual([]);
+  });
+});
+
+// ============================================================
 // useUpdateCareItem — 엣지 케이스
 // ============================================================
 describe('useUpdateCareItem — edge cases', () => {
@@ -635,5 +731,82 @@ describe('useUpdateCareItem — edge cases', () => {
     expect(callArgs.color).toBe('#000000');
     expect(callArgs.notifyEnabled).toBe(true);
     expect(callArgs.updatedAt).toBeDefined();
+  });
+
+  it('cycleValue만 변경해도 스케줄이 재계산된다', async () => {
+    // active 스케줄이 1개 있는 상황
+    const mockScheduleRef = { ref: 'schedule-ref-1' };
+    (getDocs as Mock)
+      .mockResolvedValueOnce({ docs: [mockScheduleRef] }) // activeSchedules
+      .mockResolvedValueOnce({ docs: [] });               // lastLog
+
+    const nextDate = new Date('2026-05-01T00:00:00.000Z');
+    (calculateNextDueDate as Mock).mockReturnValue(nextDate);
+
+    const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      id: 'care-item-1',
+      cycleValue: 14, // cycleUnit 미제공 → getDoc에서 가져온 'day' 사용
+    });
+
+    // writeBatch 경로: batch.commit이 호출되어야 함
+    expect(mockBatchEdge.commit).toHaveBeenCalledTimes(1);
+    // 스케줄 nextDueDate 업데이트 확인
+    expect(mockBatchEdge.update).toHaveBeenCalledWith(
+      'schedule-ref-1',
+      expect.objectContaining({ nextDueDate: '2026-05-01' }),
+    );
+  });
+
+  it('cycleUnit만 변경해도 스케줄이 재계산된다', async () => {
+    const mockScheduleRef = { ref: 'schedule-ref-2' };
+    (getDocs as Mock)
+      .mockResolvedValueOnce({ docs: [mockScheduleRef] })
+      .mockResolvedValueOnce({ docs: [] });
+
+    const nextDate = new Date('2026-06-07T00:00:00.000Z');
+    (calculateNextDueDate as Mock).mockReturnValue(nextDate);
+
+    const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      id: 'care-item-1',
+      cycleUnit: 'week', // cycleValue 미제공 → getDoc에서 가져온 7 사용
+    });
+
+    expect(mockBatchEdge.commit).toHaveBeenCalledTimes(1);
+    expect(mockBatchEdge.update).toHaveBeenCalledWith(
+      'schedule-ref-2',
+      expect.objectContaining({ nextDueDate: '2026-06-07' }),
+    );
+  });
+
+  it('이름만 변경하면 updateDoc만 호출되고 writeBatch는 사용되지 않는다', async () => {
+    const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      id: 'care-item-1',
+      name: '새 이름만',
+    });
+
+    expect(updateDoc).toHaveBeenCalledTimes(1);
+    expect(mockBatchEdge.commit).not.toHaveBeenCalled();
+  });
+
+  it('icon/color만 변경해도 updateDoc만 호출된다', async () => {
+    const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
+
+    await result.current.mutateAsync({
+      id: 'care-item-1',
+      icon: '🐈',
+      color: '#AABBCC',
+    });
+
+    expect(updateDoc).toHaveBeenCalledWith(
+      'mock-doc-ref',
+      expect.objectContaining({ icon: '🐈', color: '#AABBCC' }),
+    );
+    expect(mockBatchEdge.commit).not.toHaveBeenCalled();
   });
 });

@@ -682,4 +682,35 @@ describe('useDeletePet — 엣지 케이스', () => {
     // 두 타임스탬프는 같은 'now' 변수로 설정되므로 동일해야 함
     expect(updateData.archivedAt).toBe(updateData.updatedAt);
   });
+
+  it('연결된 케어 항목이 없어도 삭제가 성공한다', async () => {
+    // getDocs가 빈 스냅샷 반환 (beforeEach에서 이미 설정됨)
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useDeletePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync('pet-no-care-items');
+    });
+
+    // pet soft delete 1회만 실행되고 commit 성공
+    expect(mockBatch.update).toHaveBeenCalledTimes(1);
+    expect(mockBatch.update).toHaveBeenCalledWith(
+      'pet-doc-ref',
+      expect.objectContaining({ archivedAt: expect.any(String) }),
+    );
+    expect(mockBatch.commit).toHaveBeenCalledTimes(1);
+  });
+
+  it('삭제 성공 시 care-items 쿼리도 invalidate된다', async () => {
+    const { wrapper, queryClient } = createWrapper();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useDeletePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync('pet-cascade-test');
+    });
+
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['care-items'] });
+  });
 });

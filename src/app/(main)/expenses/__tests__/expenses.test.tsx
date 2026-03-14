@@ -72,6 +72,11 @@ vi.mock('@/hooks/use-expenses', () => ({
   useMonthlyStats: (month: string) => mockUseMonthlyStats(month),
 }));
 
+const mockUsePets = vi.fn();
+vi.mock('@/hooks/use-pets', () => ({
+  usePets: () => mockUsePets(),
+}));
+
 // ============================================================
 // 유틸 모킹
 // ============================================================
@@ -124,6 +129,7 @@ const mockStats = {
 describe('ExpensesPage (가계부)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUsePets.mockReturnValue({ data: [{ id: 'pet-1', name: '초코' }], isLoading: false });
   });
 
   // ─── 기본 렌더링 ──────────────────────────────────────────────
