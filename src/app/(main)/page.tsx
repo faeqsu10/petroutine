@@ -30,8 +30,8 @@ export default function HomePage() {
     }
   }, [pets, petsLoading, petsError, router]);
 
-  // selectedPetId: null → 전체 보기, string → 특정 펫
-  const activePetId = selectedPetId;
+  // selectedPetId: null → 첫 번째 펫 기본 선택, "all" → 전체 보기
+  const activePetId = selectedPetId === 'all' ? null : (selectedPetId ?? pets?.[0]?.id ?? null);
   const { data: careItems } = useCareItems(activePetId);
 
   const currentMonth = format(new Date(), 'yyyy-MM');
@@ -133,9 +133,9 @@ export default function HomePage() {
       {/* Pet Selector (Pills) */}
       <div className="flex gap-2 mb-10 overflow-x-auto no-scrollbar pb-1">
         <button
-          onClick={() => setSelectedPetId(null)}
+          onClick={() => setSelectedPetId('all')}
           className={`shrink-0 rounded-2xl px-6 py-2.5 text-sm font-bold transition-all ${
-            activePetId === null
+            selectedPetId === 'all'
               ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
               : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
           }`}

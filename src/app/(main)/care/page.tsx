@@ -19,8 +19,8 @@ export default function CarePage() {
   const { data: pets } = usePets();
   const selectedPetId = useCareStore((s) => s.selectedPetId);
   const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
-  // selectedPetId: null → 전체 보기, string → 특정 펫
-  const activePetId = selectedPetId;
+  // selectedPetId: null → 첫 번째 펫 기본 선택, "all" → 전체 보기
+  const activePetId = selectedPetId === 'all' ? null : (selectedPetId ?? pets?.[0]?.id ?? null);
   const { data: careItems, isLoading, isError } = useCareItems(activePetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
   const [editingItem, setEditingItem] = useState<CareItem | null>(null);
@@ -64,9 +64,9 @@ export default function CarePage() {
       {/* 반려동물 선택 - 프리미엄 탭 스타일 */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         <button
-          onClick={() => setSelectedPetId(null)}
+          onClick={() => setSelectedPetId('all')}
           className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-            activePetId === null
+            selectedPetId === 'all'
               ? 'bg-primary text-white shadow-lg shadow-primary/25'
               : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
           }`}
