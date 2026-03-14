@@ -14,11 +14,24 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // auth 상태 감지 — 로그인 완료되면 바로 홈으로
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Providers에서 세션 쿠키 자동 생성 → 여기선 라우팅만
-        router.replace('/');
+        // 세션 쿠키 생성 완료까지 기다린 후 이동
+        try {
+          const idToken = await user.getIdToken();
+          const res = await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          });
+          if (res.ok) {
+            router.replace('/');
+            return;
+          }
+        } catch (e) {
+          console.error('Session creation failed:', e);
+        }
+        setIsLoading(false);
       } else {
         setIsLoading(false);
       }
@@ -70,7 +83,6 @@ export default function LoginPage() {
             className="drop-shadow-sm"
           />
           <h1 className="sr-only">Petroutine</h1>
-
           <div className="space-y-1.5">
             <p className="text-[1.35rem] font-black tracking-tight leading-snug text-foreground">
               기억에 의존하지 않는 반려동물 관리
@@ -93,7 +105,6 @@ export default function LoginPage() {
           >
             Google로 시작하기
           </Button>
-
           <Button
             disabled
             className="h-14 w-full rounded-2xl bg-[#FEE500] text-base font-bold text-[#191919] hover:bg-[#FDD800] active:scale-[0.98] transition-all disabled:opacity-50"

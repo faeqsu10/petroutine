@@ -22,23 +22,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // 세션 쿠키가 없으면 자동 생성 (리다이렉트 로그인, 새로고침 등 모든 상황 대응)
-        const hasSession = document.cookie.includes('__session');
-        if (!hasSession) {
-          try {
-            const idToken = await user.getIdToken();
-            await fetch('/api/auth/session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ idToken }),
-            });
-          } catch (e) {
-            console.error('Session creation failed:', e);
-          }
-        }
-      }
+    const unsubscribe = onAuthStateChanged(auth, () => {
       if (!authReady) setAuthReady(true);
       queryClient.invalidateQueries();
     });
