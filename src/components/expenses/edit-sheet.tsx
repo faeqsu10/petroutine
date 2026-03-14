@@ -57,7 +57,12 @@ export function ExpenseEditSheet({ open, onOpenChange, expense }: ExpenseEditShe
         expenseDate,
         memo: memo.trim() || null,
       },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => onOpenChange(false),
+        onError: () => {
+          alert('수정에 실패했어요. 다시 시도해주세요.');
+        },
+      },
     );
   }
 
@@ -67,6 +72,9 @@ export function ExpenseEditSheet({ open, onOpenChange, expense }: ExpenseEditShe
       onSuccess: () => {
         setShowDeleteConfirm(false);
         onOpenChange(false);
+      },
+      onError: () => {
+        alert('삭제에 실패했어요. 다시 시도해주세요.');
       },
     });
   }

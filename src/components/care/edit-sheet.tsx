@@ -58,7 +58,12 @@ export function CareEditSheet({ open, onOpenChange, careItem }: CareEditSheetPro
     if (!careItem || !name.trim()) return;
     updateCareItem(
       { id: careItem.id, name: name.trim(), cycleValue, cycleUnit, icon, color },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => onOpenChange(false),
+        onError: () => {
+          alert('수정에 실패했어요. 다시 시도해주세요.');
+        },
+      },
     );
   }
 
@@ -68,6 +73,9 @@ export function CareEditSheet({ open, onOpenChange, careItem }: CareEditSheetPro
       onSuccess: () => {
         setShowDeleteConfirm(false);
         onOpenChange(false);
+      },
+      onError: () => {
+        alert('삭제에 실패했어요. 다시 시도해주세요.');
       },
     });
   }

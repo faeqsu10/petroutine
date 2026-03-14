@@ -39,6 +39,9 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
           setMemo('');
           onOpenChange(false);
         },
+        onError: () => {
+          alert('완료 처리에 실패했어요. 다시 시도해주세요.');
+        },
       },
     );
   }

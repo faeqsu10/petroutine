@@ -70,6 +70,7 @@ vi.mock('@/components/care/complete-modal', () => ({
 const mockUsePets = vi.fn();
 const mockUseCareItems = vi.fn();
 const mockUseCareStore = vi.fn();
+const mockUseMonthlyStats = vi.fn();
 
 vi.mock('@/hooks/use-pets', () => ({
   usePets: () => mockUsePets(),
@@ -77,6 +78,10 @@ vi.mock('@/hooks/use-pets', () => ({
 
 vi.mock('@/hooks/use-care-items', () => ({
   useCareItems: () => mockUseCareItems(),
+}));
+
+vi.mock('@/hooks/use-expenses', () => ({
+  useMonthlyStats: () => mockUseMonthlyStats(),
 }));
 
 vi.mock('@/stores/care-store', () => ({
@@ -135,6 +140,8 @@ describe('HomePage (대시보드)', () => {
       (selector: (s: { selectedPetId: string | null; setSelectedPetId: (id: string | null) => void }) => unknown) =>
         selector({ selectedPetId: null, setSelectedPetId: vi.fn() }),
     );
+
+    mockUseMonthlyStats.mockReturnValue({ data: { month: '2026-03', totalAmount: 0, byCategory: [], byPet: [] } });
   });
 
   // ─── 로딩 상태 ──────────────────────────────────────────────

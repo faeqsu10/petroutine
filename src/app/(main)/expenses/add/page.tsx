@@ -52,15 +52,19 @@ export default function AddExpensePage() {
   const selectedPetId = watch('petId');
 
   const onSubmit = async (values: FormValues) => {
-    await createExpense.mutateAsync({
-      petId: values.petId,
-      categoryId: values.categoryId,
-      amount: values.amount,
-      description: values.description,
-      expenseDate: values.expenseDate,
-      memo: values.memo ?? null,
-    });
-    router.push('/expenses');
+    try {
+      await createExpense.mutateAsync({
+        petId: values.petId,
+        categoryId: values.categoryId,
+        amount: values.amount,
+        description: values.description,
+        expenseDate: values.expenseDate,
+        memo: values.memo ?? null,
+      });
+      router.push('/expenses');
+    } catch {
+      alert('저장에 실패했어요. 다시 시도해주세요.');
+    }
   };
 
   return (

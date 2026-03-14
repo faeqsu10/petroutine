@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Bell, ChevronRight, TrendingUp, Sparkles } from 'lucide-react';
+import { Plus, ChevronRight, TrendingUp, Sparkles } from 'lucide-react';
+import { format } from 'date-fns';
 import { usePets } from '@/hooks/use-pets';
 import { useCareItems } from '@/hooks/use-care-items';
+import { useMonthlyStats } from '@/hooks/use-expenses';
 import { useCareStore } from '@/stores/care-store';
 import { getScheduleUrgency, getDdayText, getUrgencyColor } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,6 +22,12 @@ export default function HomePage() {
 
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
   const { data: careItems } = useCareItems(activePetId);
+
+  const currentMonth = format(new Date(), 'yyyy-MM');
+  const { data: monthlyStats } = useMonthlyStats(currentMonth);
+  const totalAmount = monthlyStats?.totalAmount ?? 0;
+
+  const activePet = pets?.find((p) => p.id === activePetId) ?? pets?.[0] ?? null;
 
   if (petsLoading) {
     return (
@@ -78,15 +86,9 @@ export default function HomePage() {
   return (
     <div className="max-w-md mx-auto min-h-screen px-5 pb-32 pt-10">
       {/* Header */}
-      <header className="flex items-center justify-between mb-10">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Pet Concierge</p>
-          <h1 className="text-2xl font-black tracking-tight text-foreground/90">반가워요, {pets[0]?.name} 보호자님!</h1>
-        </div>
-        <button className="relative bg-card/60 glass p-3 rounded-2xl shadow-bento border border-border/40 active:scale-95 transition-transform">
-          <Bell className="w-5 h-5 text-foreground/70" />
-          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-primary rounded-full ring-4 ring-card/60" />
-        </button>
+      <header className="mb-10">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Pet Concierge</p>
+        <h1 className="text-2xl font-black tracking-tight text-foreground/90">반가워요, {pets[0]?.name} 보호자님!</h1>
       </header>
 
       {/* Pet Selector (Pills) */}
@@ -187,19 +189,17 @@ export default function HomePage() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">이번 달 지출</p>
-            <p className="text-xl font-black tracking-tighter text-foreground/80">₩245,000</p>
+            <p className="text-xl font-black tracking-tighter text-foreground/80">₩{totalAmount.toLocaleString()}</p>
           </div>
         </Link>
 
-        {/* Pet Condition Bento (Small) */}
+        {/* Pet Weight Bento (Small) */}
         <div className="bento-item bg-primary/5 glass border-primary/10 p-5 flex flex-col justify-between aspect-square">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-primary">컨디션 맑음</p>
-          </div>
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">아이 체중</p>
-            <p className="text-xl font-black tracking-tighter text-foreground/80">5.4kg</p>
+            <p className="text-xl font-black tracking-tighter text-foreground/80">
+              {activePet?.weightKg != null ? `${activePet.weightKg}kg` : '미등록'}
+            </p>
           </div>
         </div>
 

@@ -294,7 +294,7 @@ export default function AddCareItemPage() {
                   <div className="flex items-center justify-between rounded-2xl bg-primary/5 p-4.5 border border-primary/10">
                     <div className="space-y-0.5">
                       <p className="text-sm font-bold text-primary">스마트 알림</p>
-                      <p className="text-[11px] font-medium text-primary/60">당일 오전에 리마인더를 보내드려요</p>
+                      <p className="text-[11px] font-medium text-primary/60">알림 기능은 준비 중이에요</p>
                     </div>
                     <button
                       type="button"
