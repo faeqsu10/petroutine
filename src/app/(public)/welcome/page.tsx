@@ -74,7 +74,7 @@ export default function WelcomePage() {
       </section>
 
       {/* 기능 카드 */}
-      <section className="relative px-5 pb-44">
+      <section className="relative px-5 pb-6">
         <div className="flex flex-col gap-3 max-w-sm mx-auto">
           {FEATURES.map((feature, index) => (
             <motion.div
@@ -109,7 +109,7 @@ export default function WelcomePage() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="fixed bottom-0 left-0 right-0 px-6 pb-12 pt-4 bg-gradient-to-t from-background via-background/98 to-transparent z-50"
+        className="px-6 pb-12 pt-8"
       >
         <div className="max-w-sm mx-auto flex flex-col items-center gap-3">
           <Link href="/login" className="w-full">
