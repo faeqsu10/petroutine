@@ -118,7 +118,7 @@ export default function AddExpensePage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bento-item bg-primary text-white p-8 shadow-lg shadow-primary/20"
+          className="rounded-xl bg-primary text-white p-8 shadow-lg shadow-primary/20"
         >
           <Label className="mb-4 block text-xs font-bold uppercase tracking-widest opacity-70">지출 금액</Label>
           <div className="flex items-baseline justify-center gap-2">
