@@ -23,13 +23,15 @@ export default function ExpensesPage() {
   const { data: pets } = usePets();
   const handlePrevMonth = () => setCurrentMonthDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentMonthDate((d) => addMonths(d, 1));
-  const { data: stats, isError: statsError } = useMonthlyStats(currentMonth);
-  const { data: expenses, isError: expensesError } = useExpenses(filterPetId, currentMonth);
+  const { data: stats, isError: statsError, error: statsErr } = useMonthlyStats(currentMonth);
+  const { data: expenses, isError: expensesError, error: expensesErr } = useExpenses(filterPetId, currentMonth);
 
   if (statsError || expensesError) {
+    const errMsg = (statsErr as Error)?.message || (expensesErr as Error)?.message || '알 수 없는 오류';
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4 px-5">
         <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했어요</p>
+        <p className="text-xs text-muted-foreground max-w-xs text-center break-all">{errMsg}</p>
         <button
           onClick={() => window.location.reload()}
           className="text-sm font-bold text-primary"
