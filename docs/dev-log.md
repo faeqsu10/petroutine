@@ -172,3 +172,22 @@
   - 말줄임표 `...` → `…` 유니코드 통일
   - viewport maximumScale/userScalable 제거 (접근성 개선)
 - **검증**: 280개 테스트 통과, 빌드 성공
+
+## Phase 6: PRD 미구현 기능 구현
+- **날짜**: 2026-03-14
+- **커밋**: `d7e90d9`, `6f1c339`
+- **작업**: PRD vs 구현 Gap 분석 후 미구현 기능 일괄 구현
+- **신규 기능**:
+  - 케어 기본 템플릿 15개 선택 UI (위생 5, 건강 5, 생활 5)
+  - 주기 수정 시 careSchedule nextDueDate 자동 재계산 (writeBatch)
+  - 완료 모달 소급 입력 (과거 날짜 선택 가능)
+  - Toast 피드백 시스템 (sonner)
+  - 대시보드 다가오는 일정 7일 이내 필터
+  - 지출 통계 카테고리별 비율(%) 표시
+  - 반려동물 삭제 cascade (연결된 careItems/schedules 비활성화)
+  - 커스텀 지출 카테고리 추가 UI + useCreateExpenseCategory 훅
+  - 재로그인/새로고침 시 데이터 유지 (onAuthStateChanged 리스너)
+- **버그 수정**:
+  - 지출 금액 입력 필드 숫자 안 보이는 문제 (text-white 명시)
+  - auth.currentUser null → onAuthStateChanged로 auth 초기화 대기
+- **검증**: 282개 테스트 통과, 빌드 성공
