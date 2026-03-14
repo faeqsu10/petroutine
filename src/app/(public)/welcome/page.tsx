@@ -74,7 +74,7 @@ export default function WelcomePage() {
       </section>
 
       {/* 기능 카드 */}
-      <section className="relative px-5 pb-80">
+      <section className="relative px-5 pb-44">
         <div className="flex flex-col gap-3 max-w-sm mx-auto">
           {FEATURES.map((feature, index) => (
             <motion.div
