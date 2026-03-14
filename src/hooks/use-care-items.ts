@@ -35,7 +35,9 @@ export function useCareItems(petId: string | null) {
 
       const itemIds = items.map((i) => i.id);
 
-      const idChunks = chunkArray(itemIds, 30);
+      // careSchedules 쿼리: careItemId in × status in [3] = N×3 조합
+      // Firestore 30개 제한 → 청크 10개씩 (10×3=30)
+      const idChunks = chunkArray(itemIds, 10);
 
       const [schedulesSnaps, logsSnaps] = await Promise.all([
         Promise.all(
