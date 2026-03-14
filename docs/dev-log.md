@@ -155,3 +155,20 @@
   - 에러 핸들링: 모든 mutation에 onError 콜백 추가 (케어 완료/수정/삭제, 지출 추가/수정/삭제)
 - **검증**: 289개 테스트 통과, 빌드 성공, 아키텍트 APPROVED
 - **교훈**: Firestore isOwner() 규칙 → 쿼리에 반드시 userId 필터 포함 (tasks/lessons.md 기록)
+
+## Phase 5.8: 코드 품질 리뷰 + 수정
+- **날짜**: 2026-03-14
+- **커밋**: `c60f08c`, `dbf9724`, `aa46803`
+- **작업**: 코드 품질 전수 리뷰 후 발견 이슈 수정
+- **수정 사항**:
+  - Dead code 제거: offlineQueue 관련 코드/테스트 삭제
+  - Firestore `in` 쿼리 30개 제한 방어: `chunkArray` 유틸 추가
+  - 쿼리 에러 UI: 대시보드, 케어, 지출, 설정 4개 페이지에 isError 분기 추가
+  - mutateAsync unhandled rejection: pets/add, pets/edit에 try/catch 추가
+  - deletePet onError 콜백 추가
+  - PRESET_COLORS 불일치 수정 (등록/수정 통일)
+  - 홈 인사말 `pets[0]` → `activePet` 수정
+  - 로그아웃 에러 핸들링 추가
+  - 말줄임표 `...` → `…` 유니코드 통일
+  - viewport maximumScale/userScalable 제거 (접근성 개선)
+- **검증**: 280개 테스트 통과, 빌드 성공
