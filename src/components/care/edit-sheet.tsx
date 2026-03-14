@@ -21,10 +21,9 @@ import {
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { useUpdateCareItem, useDeleteCareItem } from '@/hooks/use-care-items';
 import { cn } from '@/lib/utils';
+import { PRESET_COLORS, PRESET_ICONS } from '@/lib/constants';
 import type { CareItem } from '@/types';
 
-const PRESET_COLORS = ['#FF7E5F', '#FFB347', '#48C6EF', '#6B8DD6', '#764BA2', '#6A11CB'];
-const PRESET_ICONS = ['🛁', '💊', '💉', '✂️', '🦷', '🐾', '🍖', '🏥', '🧴', '👁️', '🦴', '🚿'];
 const CYCLE_UNIT_LABELS: Record<string, string> = { day: '일', week: '주', month: '개월' };
 
 interface CareEditSheetProps {

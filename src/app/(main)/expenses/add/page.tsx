@@ -1,21 +1,32 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useExpenseCategories } from '@/hooks/use-expense-categories';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { useExpenseCategories, useCreateExpenseCategory } from '@/hooks/use-expense-categories';
 import { usePets } from '@/hooks/use-pets';
 import { useCreateExpense } from '@/hooks/use-expenses';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+
+const PRESET_ICONS = ['🐾', '💊', '🏥', '✂️', '🛁', '🧸', '🎀', '🍖', '🦮', '🐠', '🌿', '🚗'];
+const PRESET_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ec4899', '#14b8a6', '#f59e0b'];
 
 const schema = z.object({
   amount: z.number({ error: '금액을 입력해 주세요' }).positive('0보다 큰 금액을 입력해 주세요').max(99_999_999, '금액은 1억 미만이어야 합니다'),
@@ -33,6 +44,25 @@ export default function AddExpensePage() {
   const { data: categories = [], isLoading: categoriesLoading } = useExpenseCategories();
   const { data: pets = [], isLoading: petsLoading } = usePets();
   const createExpense = useCreateExpense();
+  const createCategory = useCreateExpenseCategory();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('🐾');
+  const [newCatColor, setNewCatColor] = useState('#6366f1');
+
+  const handleCreateCategory = async () => {
+    if (!newCatName.trim()) return;
+    try {
+      await createCategory.mutateAsync({ name: newCatName.trim(), icon: newCatIcon, color: newCatColor });
+      setDialogOpen(false);
+      setNewCatName('');
+      setNewCatIcon('🐾');
+      setNewCatColor('#6366f1');
+    } catch {
+      alert('카테고리 추가에 실패했어요. 다시 시도해주세요.');
+    }
+  };
 
   const {
     register,
@@ -147,8 +177,89 @@ export default function AddExpensePage() {
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => setDialogOpen(true)}
+                className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/40 bg-background/30 py-4 transition-all hover:border-primary/40 hover:bg-background/50 active:scale-90"
+              >
+                <Plus className="h-7 w-7 text-muted-foreground/50" />
+                <span className="text-[11px] font-bold text-muted-foreground/50">추가</span>
+              </button>
             </div>
           )}
+
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="max-w-sm rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-base font-black">카테고리 추가</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">이름</Label>
+                  <Input
+                    placeholder="예: 미용"
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    className="h-11 rounded-xl border-border/40 bg-background/50 focus-visible:ring-primary"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCategory(); } }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">아이콘</Label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {PRESET_ICONS.map((icon) => (
+                      <button
+                        key={icon}
+                        type="button"
+                        onClick={() => setNewCatIcon(icon)}
+                        className={cn(
+                          'flex h-10 w-full items-center justify-center rounded-xl border-2 text-xl transition-all',
+                          newCatIcon === icon ? 'border-primary bg-primary/10' : 'border-border/40 bg-background/50',
+                        )}
+                      >
+                        {icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">색상</Label>
+                  <div className="flex gap-2">
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setNewCatColor(color)}
+                        className={cn(
+                          'h-8 w-8 rounded-full border-2 transition-all',
+                          newCatColor === color ? 'border-foreground scale-110' : 'border-transparent',
+                        )}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => setDialogOpen(false)}
+                >
+                  취소
+                </Button>
+                <Button
+                  type="button"
+                  className="rounded-xl"
+                  disabled={!newCatName.trim() || createCategory.isPending}
+                  onClick={handleCreateCategory}
+                >
+                  {createCategory.isPending ? '추가 중…' : '추가'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           {errors.categoryId && (
             <p className="mt-2 text-xs font-bold text-destructive">{errors.categoryId.message}</p>
           )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import type { Pet } from '@/types';
 
@@ -116,14 +116,54 @@ export function useDeletePet() {
       const uid = auth.currentUser?.uid;
       if (!uid) throw new Error('Not authenticated');
 
-      // Soft delete: archivedAt 설정
-      await updateDoc(doc(db, 'pets', petId), {
-        archivedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      const now = new Date().toISOString();
+      const batch = writeBatch(db);
+
+      // 1. pet soft delete: archivedAt 설정
+      batch.update(doc(db, 'pets', petId), {
+        archivedAt: now,
+        updatedAt: now,
       });
+
+      // 2. 해당 pet의 active careItems 조회 → isActive: false
+      const careItemsSnap = await getDocs(
+        query(
+          collection(db, 'careItems'),
+          where('petId', '==', petId),
+          where('isActive', '==', true),
+        ),
+      );
+      const careItemIds: string[] = [];
+      for (const careItemDoc of careItemsSnap.docs) {
+        careItemIds.push(careItemDoc.id);
+        batch.update(doc(db, 'careItems', careItemDoc.id), {
+          isActive: false,
+          updatedAt: now,
+        });
+      }
+
+      // 3. 해당 careItems의 active careSchedules 조회 → status: 'cancelled'
+      for (const careItemId of careItemIds) {
+        const schedulesSnap = await getDocs(
+          query(
+            collection(db, 'careSchedules'),
+            where('careItemId', '==', careItemId),
+            where('status', 'in', ['pending', 'due', 'overdue']),
+          ),
+        );
+        for (const scheduleDoc of schedulesSnap.docs) {
+          batch.update(doc(db, 'careSchedules', scheduleDoc.id), {
+            status: 'cancelled',
+            updatedAt: now,
+          });
+        }
+      }
+
+      await batch.commit();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PETS_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['care-items'] });
     },
   });
 }

@@ -20,8 +20,17 @@ interface CompleteModalProps {
   careItem: CareItem | null;
 }
 
+function todayDateStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalProps) {
   const [memo, setMemo] = useState('');
+  const [completedDate, setCompletedDate] = useState(todayDateStr);
   const { mutate: completeCare, isPending } = useCompleteCare();
 
   function handleComplete() {
@@ -33,10 +42,12 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
         cycleValue: careItem.cycleValue,
         cycleUnit: careItem.cycleUnit,
         memo: memo.trim() || undefined,
+        completedAt: completedDate,
       },
       {
         onSuccess: () => {
           setMemo('');
+          setCompletedDate(todayDateStr());
           onOpenChange(false);
         },
         onError: () => {
@@ -47,7 +58,10 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
   }
 
   function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) setMemo('');
+    if (!nextOpen) {
+      setMemo('');
+      setCompletedDate(todayDateStr());
+    }
     onOpenChange(nextOpen);
   }
 
@@ -63,18 +77,33 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-2">
-          <Label htmlFor="memo" className="text-sm font-medium text-gray-700">
-            메모 (선택)
-          </Label>
-          <Textarea
-            id="memo"
-            placeholder="케어 관련 메모를 남겨보세요"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            className="resize-none rounded-xl"
-            rows={3}
-          />
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="completedDate" className="text-sm font-medium text-gray-700">
+              완료 날짜
+            </Label>
+            <input
+              id="completedDate"
+              type="date"
+              value={completedDate}
+              max={todayDateStr()}
+              onChange={(e) => setCompletedDate(e.target.value)}
+              className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="memo" className="text-sm font-medium text-gray-700">
+              메모 (선택)
+            </Label>
+            <Textarea
+              id="memo"
+              placeholder="케어 관련 메모를 남겨보세요"
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              className="resize-none rounded-xl"
+              rows={3}
+            />
+          </div>
         </div>
 
         <DialogFooter>

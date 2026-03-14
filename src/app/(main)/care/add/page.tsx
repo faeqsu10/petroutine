@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { usePets } from '@/hooks/use-pets';
 import { useCareStore } from '@/stores/care-store';
 import { useCreateCareItem } from '@/hooks/use-create-care-item';
+import { useCareItems } from '@/hooks/use-care-items';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +29,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { motion } from 'framer-motion';
-
-const PRESET_COLORS = ['#FF7E5F', '#FFB347', '#48C6EF', '#6B8DD6', '#764BA2', '#6A11CB'];
-const PRESET_ICONS = ['🛁', '💊', '💉', '✂️', '🦷', '🐾', '🍖', '🏥', '🧴', '👁️', '🦴', '🚿'];
+import { PRESET_COLORS, PRESET_ICONS, CARE_TEMPLATES } from '@/lib/constants';
+import type { CareTemplate } from '@/lib/constants';
 
 const CATEGORY_LABELS: Record<string, string> = {
   hygiene: '위생',
@@ -38,6 +38,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   daily: '생활',
   custom: '기타',
 };
+
+const CATEGORY_TABS = ['hygiene', 'health', 'daily'] as const;
 
 const CYCLE_UNIT_LABELS: Record<string, string> = {
   day: '일',
@@ -63,6 +65,9 @@ export default function AddCareItemPage() {
   const selectedPetId = useCareStore((s) => s.selectedPetId);
   const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
   const { mutate: createCareItem, isPending } = useCreateCareItem();
+  const { data: existingCareItems } = useCareItems(activePetId);
+
+  const existingNames = new Set((existingCareItems ?? []).map((item) => item.name));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -76,6 +81,15 @@ export default function AddCareItemPage() {
       notifyEnabled: true,
     },
   });
+
+  function applyTemplate(template: CareTemplate) {
+    if (existingNames.has(template.name)) return;
+    form.setValue('name', template.name);
+    form.setValue('category', template.category as FormValues['category']);
+    form.setValue('cycleValue', template.cycleValue);
+    form.setValue('cycleUnit', template.cycleUnit as FormValues['cycleUnit']);
+    form.setValue('icon', template.icon);
+  }
 
   function onSubmit(values: FormValues) {
     if (!activePetId) {
@@ -120,11 +134,55 @@ export default function AddCareItemPage() {
         <p className="mt-2 text-sm font-medium text-muted-foreground">아이의 건강한 루틴을 만들어주세요</p>
       </header>
 
+      {/* 템플릿 선택 섹션 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bento-item bg-card/60 glass p-6 mb-6 space-y-4"
+      >
+        <div>
+          <p className="text-sm font-bold text-foreground/70">템플릿에서 선택</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">탭하면 폼이 자동으로 채워져요</p>
+        </div>
+
+        {CATEGORY_TABS.map((cat) => (
+          <div key={cat}>
+            <p className="mb-2 text-xs font-bold text-muted-foreground uppercase tracking-wide">
+              {CATEGORY_LABELS[cat]}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {CARE_TEMPLATES.filter((t) => t.category === cat).map((template) => {
+                const isRegistered = existingNames.has(template.name);
+                return (
+                  <button
+                    key={template.name}
+                    type="button"
+                    disabled={isRegistered}
+                    onClick={() => applyTemplate(template)}
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95',
+                      isRegistered
+                        ? 'opacity-50 cursor-not-allowed border-border/30 bg-background/30 text-muted-foreground'
+                        : 'border-border/50 bg-background/50 text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary',
+                    )}
+                  >
+                    <span>{template.icon}</span>
+                    <span>{template.name}</span>
+                    {isRegistered && <span className="text-[10px] text-muted-foreground">등록됨</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </motion.div>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
             className="bento-item bg-card/60 glass p-6 space-y-8"
           >
             {/* 항목 이름 */}
@@ -153,7 +211,7 @@ export default function AddCareItemPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-bold text-foreground/70">카테고리</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-12 rounded-xl border-border/40 bg-background/50">
                         <SelectValue placeholder="카테고리 선택" />
@@ -199,7 +257,7 @@ export default function AddCareItemPage() {
                   name="cycleUnit"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12 rounded-xl border-border/40 bg-background/50">
                             <SelectValue />
@@ -221,7 +279,7 @@ export default function AddCareItemPage() {
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}

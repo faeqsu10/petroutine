@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, addDoc, doc, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import { calculateNextDueDate, toLocalDateStr, chunkArray } from '@/lib/utils';
 import type { CareItem } from '@/types';
@@ -137,10 +137,65 @@ export function useUpdateCareItem() {
       const uid = auth.currentUser?.uid;
       if (!uid) throw new Error('Not authenticated');
 
-      await updateDoc(doc(db, 'careItems', id), {
+      const nowIso = new Date().toISOString();
+      const cycleChanged = data.cycleValue !== undefined || data.cycleUnit !== undefined;
+
+      if (!cycleChanged) {
+        await updateDoc(doc(db, 'careItems', id), {
+          ...data,
+          updatedAt: nowIso,
+        });
+        return;
+      }
+
+      // 주기 변경 시 — writeBatch로 careItem + active 스케줄 원자적 업데이트
+      const [activeSchedulesSnap, lastLogSnap, careItemSnap] = await Promise.all([
+        getDocs(
+          query(
+            collection(db, 'careSchedules'),
+            where('userId', '==', uid),
+            where('careItemId', '==', id),
+            where('status', 'in', ['pending', 'due', 'overdue']),
+          ),
+        ),
+        getDocs(
+          query(
+            collection(db, 'careLogs'),
+            where('userId', '==', uid),
+            where('careItemId', '==', id),
+            orderBy('completedAt', 'desc'),
+          ),
+        ),
+        getDoc(doc(db, 'careItems', id)),
+      ]);
+
+      const batch = writeBatch(db);
+
+      batch.update(doc(db, 'careItems', id), {
         ...data,
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso,
       });
+
+      if (activeSchedulesSnap.docs.length > 0) {
+        const lastLog = lastLogSnap.docs[0]?.data();
+        const baseDate = lastLog?.completedAt ? new Date(lastLog.completedAt) : new Date();
+
+        const careItemData = careItemSnap.data() as { cycleValue: number; cycleUnit: 'day' | 'week' | 'month' } | undefined;
+        const resolvedCycleValue = data.cycleValue ?? careItemData?.cycleValue ?? 1;
+        const resolvedCycleUnit = data.cycleUnit ?? careItemData?.cycleUnit ?? 'day';
+
+        const nextDue = calculateNextDueDate(baseDate, resolvedCycleValue, resolvedCycleUnit);
+        const nextDueDateStr = toLocalDateStr(nextDue);
+
+        for (const scheduleDoc of activeSchedulesSnap.docs) {
+          batch.update(scheduleDoc.ref, {
+            nextDueDate: nextDueDateStr,
+            updatedAt: nowIso,
+          });
+        }
+      }
+
+      await batch.commit();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CARE_ITEMS_KEY] });
@@ -199,17 +254,19 @@ export function useCompleteCare() {
       cycleValue,
       cycleUnit,
       memo,
+      completedAt,
     }: {
       careItemId: string;
       scheduleId: string;
       cycleValue: number;
       cycleUnit: 'day' | 'week' | 'month';
       memo?: string;
+      completedAt?: string;
     }) => {
       const uid = auth.currentUser?.uid;
       if (!uid) throw new Error('Not authenticated');
 
-      const now = new Date();
+      const now = completedAt ? new Date(completedAt) : new Date();
       const nowIso = now.toISOString();
       const batch = writeBatch(db);
 

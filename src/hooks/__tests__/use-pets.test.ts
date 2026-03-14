@@ -15,9 +15,15 @@ const {
   mockWhere,
   mockOrderBy,
   mockGetDocs,
+  mockWriteBatch,
+  mockBatch,
   mockAuth,
 } = vi.hoisted(() => {
   const mockAuth = { currentUser: { uid: 'test-user' } as { uid: string } | null };
+  const mockBatch = {
+    update: vi.fn(),
+    commit: vi.fn().mockResolvedValue(undefined),
+  };
   return {
     mockAddDoc: vi.fn(),
     mockUpdateDoc: vi.fn(),
@@ -27,6 +33,8 @@ const {
     mockWhere: vi.fn(),
     mockOrderBy: vi.fn(),
     mockGetDocs: vi.fn(),
+    mockWriteBatch: vi.fn(() => mockBatch),
+    mockBatch,
     mockAuth,
   };
 });
@@ -40,6 +48,7 @@ vi.mock('firebase/firestore', () => ({
   addDoc: mockAddDoc,
   doc: mockDoc,
   updateDoc: mockUpdateDoc,
+  writeBatch: mockWriteBatch,
 }));
 
 vi.mock('@/lib/firebase/client', () => ({
@@ -347,8 +356,16 @@ describe('useDeletePet', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.currentUser = { uid: 'test-user' };
-    mockUpdateDoc.mockResolvedValue(undefined);
     mockDoc.mockReturnValue('pet-doc-ref');
+    mockCollection.mockReturnValue('collection-ref');
+    mockQuery.mockReturnValue('query-ref');
+    mockWhere.mockReturnValue('where-ref');
+    // careItems 없는 기본 케이스: 빈 스냅샷 반환
+    mockGetDocs.mockResolvedValue({ docs: [] });
+    mockBatch.update.mockReset();
+    mockBatch.commit.mockReset();
+    mockBatch.commit.mockResolvedValue(undefined);
+    mockWriteBatch.mockReturnValue(mockBatch);
   });
 
   it('archivedAt을 현재 ISO 타임스탬프로 설정하여 소프트 삭제한다', async () => {
@@ -361,8 +378,13 @@ describe('useDeletePet', () => {
       await result.current.mutateAsync('pet-to-delete');
     });
 
-    expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
-    const [, updateData] = mockUpdateDoc.mock.calls[0];
+    // pet에 대한 batch.update 호출 확인
+    expect(mockBatch.update).toHaveBeenCalledWith('pet-doc-ref', expect.objectContaining({
+      archivedAt: expect.any(String),
+      updatedAt: expect.any(String),
+    }));
+    const petUpdateCall = mockBatch.update.mock.calls[0];
+    const updateData = petUpdateCall[1];
 
     expect(typeof updateData.archivedAt).toBe('string');
     const archivedDate = new Date(updateData.archivedAt);
@@ -379,12 +401,13 @@ describe('useDeletePet', () => {
       await result.current.mutateAsync('pet-to-delete');
     });
 
-    const [, updateData] = mockUpdateDoc.mock.calls[0];
+    const petUpdateCall = mockBatch.update.mock.calls[0];
+    const updateData = petUpdateCall[1];
     expect(typeof updateData.updatedAt).toBe('string');
     expect(isNaN(Date.parse(updateData.updatedAt))).toBe(false);
   });
 
-  it('addDoc을 호출하지 않고 updateDoc만 호출한다 (소프트 삭제)', async () => {
+  it('addDoc을 호출하지 않고 writeBatch로 소프트 삭제한다', async () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useDeletePet(), { wrapper });
 
@@ -393,7 +416,8 @@ describe('useDeletePet', () => {
     });
 
     expect(mockAddDoc).not.toHaveBeenCalled();
-    expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+    expect(mockWriteBatch).toHaveBeenCalledTimes(1);
+    expect(mockBatch.commit).toHaveBeenCalledTimes(1);
   });
 
   it('petId로 올바른 Firestore 문서를 타겟팅한다', async () => {
@@ -423,7 +447,7 @@ describe('useDeletePet', () => {
     expect((result.current.error as Error).message).toBe('Not authenticated');
   });
 
-  it('성공 시 pets 쿼리 캐시를 무효화한다', async () => {
+  it('성공 시 pets와 care-items 쿼리 캐시를 무효화한다', async () => {
     const { wrapper, queryClient } = createWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -434,6 +458,72 @@ describe('useDeletePet', () => {
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['pets'] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['care-items'] });
+  });
+
+  it('active careItems를 isActive: false로 비활성화한다', async () => {
+    mockGetDocs
+      .mockResolvedValueOnce({
+        docs: [
+          { id: 'care-item-1' },
+          { id: 'care-item-2' },
+        ],
+      })
+      // care-item-1의 schedules
+      .mockResolvedValueOnce({ docs: [] })
+      // care-item-2의 schedules
+      .mockResolvedValueOnce({ docs: [] });
+
+    mockDoc
+      .mockReturnValueOnce('pet-doc-ref')
+      .mockReturnValueOnce('care-item-1-ref')
+      .mockReturnValueOnce('care-item-2-ref');
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useDeletePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync('pet-with-care');
+    });
+
+    // pet + 2 careItems = 3 batch.update calls
+    expect(mockBatch.update).toHaveBeenCalledTimes(3);
+    expect(mockBatch.update).toHaveBeenCalledWith('care-item-1-ref', expect.objectContaining({
+      isActive: false,
+    }));
+    expect(mockBatch.update).toHaveBeenCalledWith('care-item-2-ref', expect.objectContaining({
+      isActive: false,
+    }));
+  });
+
+  it('active careSchedules를 cancelled로 변경한다', async () => {
+    mockGetDocs
+      // careItems 조회
+      .mockResolvedValueOnce({ docs: [{ id: 'care-item-1' }] })
+      // care-item-1의 schedules
+      .mockResolvedValueOnce({ docs: [{ id: 'sched-1' }, { id: 'sched-2' }] });
+
+    mockDoc
+      .mockReturnValueOnce('pet-doc-ref')
+      .mockReturnValueOnce('care-item-1-ref')
+      .mockReturnValueOnce('sched-1-ref')
+      .mockReturnValueOnce('sched-2-ref');
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useDeletePet(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync('pet-with-schedules');
+    });
+
+    // pet + 1 careItem + 2 schedules = 4 batch.update calls
+    expect(mockBatch.update).toHaveBeenCalledTimes(4);
+    expect(mockBatch.update).toHaveBeenCalledWith('sched-1-ref', expect.objectContaining({
+      status: 'cancelled',
+    }));
+    expect(mockBatch.update).toHaveBeenCalledWith('sched-2-ref', expect.objectContaining({
+      status: 'cancelled',
+    }));
   });
 });
 
@@ -552,12 +642,19 @@ describe('useDeletePet — 엣지 케이스', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.currentUser = { uid: 'test-user' };
-    mockUpdateDoc.mockResolvedValue(undefined);
     mockDoc.mockReturnValue('pet-doc-ref');
+    mockCollection.mockReturnValue('collection-ref');
+    mockQuery.mockReturnValue('query-ref');
+    mockWhere.mockReturnValue('where-ref');
+    mockGetDocs.mockResolvedValue({ docs: [] });
+    mockBatch.update.mockReset();
+    mockBatch.commit.mockReset();
+    mockBatch.commit.mockResolvedValue(undefined);
+    mockWriteBatch.mockReturnValue(mockBatch);
   });
 
-  it('Firestore updateDoc 실패 시 에러를 전파한다', async () => {
-    mockUpdateDoc.mockRejectedValueOnce(new Error('Network timeout'));
+  it('batch.commit 실패 시 에러를 전파한다', async () => {
+    mockBatch.commit.mockRejectedValueOnce(new Error('Network timeout'));
 
     const { wrapper } = createWrapper();
     const { result } = renderHook(() => useDeletePet(), { wrapper });
@@ -580,11 +677,9 @@ describe('useDeletePet — 엣지 케이스', () => {
       await result.current.mutateAsync('pet-1');
     });
 
-    const [, updateData] = mockUpdateDoc.mock.calls[0];
-    // 두 타임스탬프는 각각 new Date().toISOString()으로 생성되므로
-    // 같은 밀리초 내에 있어야 함
-    const archived = new Date(updateData.archivedAt).getTime();
-    const updated = new Date(updateData.updatedAt).getTime();
-    expect(Math.abs(archived - updated)).toBeLessThanOrEqual(1);
+    const petUpdateCall = mockBatch.update.mock.calls[0];
+    const updateData = petUpdateCall[1];
+    // 두 타임스탬프는 같은 'now' 변수로 설정되므로 동일해야 함
+    expect(updateData.archivedAt).toBe(updateData.updatedAt);
   });
 });

@@ -94,8 +94,15 @@ export default function HomePage() {
 
   const upcomingItems = (careItems ?? []).filter((item) => {
     if (!item.schedule) return false;
-    return getScheduleUrgency(item.schedule.nextDueDate) === 'pending';
-  }).slice(0, 3);
+    if (getScheduleUrgency(item.schedule.nextDueDate) !== 'pending') return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sevenDaysLater = new Date(today);
+    sevenDaysLater.setDate(today.getDate() + 7);
+    const dueDate = new Date(item.schedule.nextDueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate <= sevenDaysLater;
+  });
 
   return (
     <div className="max-w-md mx-auto min-h-screen px-5 pb-32 pt-10">
@@ -220,22 +227,26 @@ export default function HomePage() {
         {/* Upcoming Bento (Wide) */}
         <section className="col-span-2 bento-item bg-card/60 glass p-6">
           <h2 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 mb-6">다가오는 주요 일정</h2>
-          <div className="space-y-5">
-            {upcomingItems.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 group">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-all duration-300" />
-                <div className="flex-1 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg opacity-80 group-hover:scale-125 transition-transform">{item.icon}</span>
-                    <span className="text-sm font-bold text-foreground/70 group-hover:text-foreground transition-colors">{item.name}</span>
+          {upcomingItems.length === 0 ? (
+            <p className="text-xs font-medium text-muted-foreground/60 text-center py-4">7일 이내 예정된 항목이 없어요</p>
+          ) : (
+            <div className="space-y-5">
+              {upcomingItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-4 group">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-all duration-300" />
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg opacity-80 group-hover:scale-125 transition-transform">{item.icon}</span>
+                      <span className="text-sm font-bold text-foreground/70 group-hover:text-foreground transition-colors">{item.name}</span>
+                    </div>
+                    <p className="text-[11px] font-black uppercase tracking-tight text-primary/60">
+                      {getDdayText(item.schedule!.nextDueDate)}
+                    </p>
                   </div>
-                  <p className="text-[11px] font-black uppercase tracking-tight text-primary/60">
-                    {getDdayText(item.schedule!.nextDueDate)}
-                  </p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 

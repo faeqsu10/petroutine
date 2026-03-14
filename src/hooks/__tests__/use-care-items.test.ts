@@ -19,6 +19,7 @@ vi.mock('firebase/firestore', () => {
     where: vi.fn(),
     orderBy: vi.fn(),
     getDocs: vi.fn(),
+    getDoc: vi.fn(),
     addDoc: vi.fn(),
     doc: vi.fn(),
     updateDoc: vi.fn(),
@@ -56,6 +57,7 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
   query,
   where,
   updateDoc,
@@ -257,9 +259,24 @@ describe('useUpdateCareItem', () => {
     (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
     (doc as Mock).mockReturnValue('mock-doc-ref');
     (updateDoc as Mock).mockResolvedValue(undefined);
+    (collection as Mock).mockReturnValue('mock-collection-ref');
+    (query as Mock).mockReturnValue('mock-query-ref');
+    (where as Mock).mockReturnValue('mock-where-ref');
+    // getDocs: 기본적으로 activeSchedules 없음, lastLog 없음
+    (getDocs as Mock).mockResolvedValue({ docs: [] });
+    // getDoc: careItem 문서 mock (cycleValue/cycleUnit 기본값)
+    (getDoc as Mock).mockResolvedValue({ data: () => ({ cycleValue: 7, cycleUnit: 'day' }) });
   });
 
   it('care item 필드와 updatedAt 타임스탬프를 업데이트한다', async () => {
+    let mockBatchLocal: { set: Mock; update: Mock; commit: Mock };
+    mockBatchLocal = {
+      set: vi.fn(),
+      update: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+    (writeBatch as Mock).mockReturnValue(mockBatchLocal);
+
     const { result } = renderHook(() => useUpdateCareItem(), { wrapper: makeWrapper() });
 
     const before = new Date().toISOString();
@@ -275,7 +292,8 @@ describe('useUpdateCareItem', () => {
 
     const after = new Date().toISOString();
 
-    expect(updateDoc).toHaveBeenCalledWith(
+    // cycleValue/cycleUnit 변경 시 writeBatch 경로: batch.update로 careItem 업데이트
+    expect(mockBatchLocal.update).toHaveBeenCalledWith(
       'mock-doc-ref',
       expect.objectContaining({
         name: '새로운 이름',
@@ -287,7 +305,7 @@ describe('useUpdateCareItem', () => {
     );
 
     // updatedAt이 호출 시점의 ISO 문자열인지 확인
-    const callArgs = (updateDoc as Mock).mock.calls[0][1] as Record<string, unknown>;
+    const callArgs = mockBatchLocal.update.mock.calls[0][1] as Record<string, string>;
     expect(typeof callArgs.updatedAt).toBe('string');
     expect(callArgs.updatedAt >= before).toBe(true);
     expect(callArgs.updatedAt <= after).toBe(true);
@@ -550,11 +568,25 @@ describe('useCompleteCare — edge cases', () => {
 // useUpdateCareItem — 엣지 케이스
 // ============================================================
 describe('useUpdateCareItem — edge cases', () => {
+  let mockBatchEdge: { set: Mock; update: Mock; commit: Mock };
+
   beforeEach(() => {
     vi.clearAllMocks();
     (auth as { currentUser: { uid: string } | null }).currentUser = { uid: 'test-user' };
     (doc as Mock).mockReturnValue('mock-doc-ref');
     (updateDoc as Mock).mockResolvedValue(undefined);
+    (collection as Mock).mockReturnValue('mock-collection-ref');
+    (query as Mock).mockReturnValue('mock-query-ref');
+    (where as Mock).mockReturnValue('mock-where-ref');
+    (getDocs as Mock).mockResolvedValue({ docs: [] });
+    (getDoc as Mock).mockResolvedValue({ data: () => ({ cycleValue: 7, cycleUnit: 'day' }) });
+
+    mockBatchEdge = {
+      set: vi.fn(),
+      update: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+    (writeBatch as Mock).mockReturnValue(mockBatchEdge);
   });
 
   it('Firestore updateDoc 실패 시 에러를 전파한다', async () => {
@@ -594,7 +626,8 @@ describe('useUpdateCareItem — edge cases', () => {
       notifyEnabled: true,
     });
 
-    const callArgs = (updateDoc as Mock).mock.calls[0][1] as Record<string, unknown>;
+    // cycleValue/cycleUnit 변경 시 writeBatch 경로: batch.update로 careItem 업데이트
+    const callArgs = mockBatchEdge.update.mock.calls[0][1] as Record<string, unknown>;
     expect(callArgs.name).toBe('새 이름');
     expect(callArgs.cycleValue).toBe(14);
     expect(callArgs.cycleUnit).toBe('week');

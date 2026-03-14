@@ -1,7 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, query, where, orderBy, getDocs, addDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import type { ExpenseCategory } from '@/types';
 
@@ -50,6 +50,27 @@ export function useExpenseCategories() {
 
       // Merge: defaults first, then user-specific
       return [...defaults, ...userCats];
+    },
+  });
+}
+
+export function useCreateExpenseCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { name: string; icon: string; color: string }) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+      await addDoc(collection(db, 'expenseCategories'), {
+        ...input,
+        userId: uid,
+        isDefault: false,
+        sortOrder: 100,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-categories'] });
     },
   });
 }

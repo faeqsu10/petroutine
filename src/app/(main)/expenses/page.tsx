@@ -94,20 +94,25 @@ export default function ExpensesPage() {
               카테고리별 지출
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              {stats.byCategory.map((cat) => (
-                <div
-                  key={cat.categoryId}
-                  className="bento-item flex flex-col gap-2 bg-card/40 glass p-4"
-                >
-                  <span className="text-2xl">{cat.icon}</span>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-muted-foreground">{cat.name}</span>
-                    <span className="text-sm font-black text-foreground/80">
-                      {formatCurrency(cat.amount)}
-                    </span>
+              {stats.byCategory.map((cat) => {
+                const percent = stats.totalAmount > 0
+                  ? Math.round((cat.amount / stats.totalAmount) * 100)
+                  : 0;
+                return (
+                  <div
+                    key={cat.categoryId}
+                    className="bento-item flex flex-col gap-2 bg-card/40 glass p-4"
+                  >
+                    <span className="text-2xl">{cat.icon}</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-muted-foreground">{cat.name}</span>
+                      <span className="text-sm font-black text-foreground/80">
+                        {formatCurrency(cat.amount)} ({percent}%)
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.section>
         )}
