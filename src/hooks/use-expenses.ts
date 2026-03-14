@@ -78,8 +78,8 @@ export function useMonthlyStats(month: string) {
         return { month, totalAmount: 0, byCategory: [], byPet: [] };
       }
 
-      const categoryIds = [...new Set(items.map((i) => i.categoryId as string))];
-      const petIds = [...new Set(items.map((i) => i.petId as string))];
+      const categoryIds = [...new Set(items.map((i) => i.categoryId as string).filter(Boolean))];
+      const petIds = [...new Set(items.map((i) => i.petId as string).filter(Boolean))];
 
       const catChunks = chunkArray(categoryIds.length > 0 ? categoryIds : ['__none__'], 30);
       const petChunks = chunkArray(petIds.length > 0 ? petIds : ['__none__'], 30);
