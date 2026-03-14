@@ -50,9 +50,17 @@ export default function LoginPage() {
       await createSession(idToken);
       router.push('/');
     } catch (error: unknown) {
+      // COOP 에러로 팝업 통신 실패해도 인증 자체는 성공했을 수 있음
+      if (auth.currentUser) {
+        try {
+          const idToken = await auth.currentUser.getIdToken();
+          await createSession(idToken);
+          router.push('/');
+          return;
+        } catch { /* fall through */ }
+      }
       const code = (error as { code?: string })?.code;
       if (code === 'auth/popup-blocked' || code === 'auth/unauthorized-domain' || code === 'auth/operation-not-supported-in-this-environment') {
-        // 인앱 브라우저 등 팝업 안 되는 환경 → 리다이렉트 폴백
         signInWithRedirect(auth, provider);
       } else {
         console.error('Login error:', error);
