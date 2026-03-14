@@ -104,3 +104,54 @@
   - 세션 쿠키 방식 SSR 인증 (5일 만료)
   - Admin SDK Proxy lazy init (빌드 시점 에러 방지)
 - **비고**: 14개 라우트 빌드 성공. Supabase 참조 완전 제거.
+
+## Phase 5: 보안/성능 수정 + 테스트 확대
+- **날짜**: 2026-03-14
+- **커밋**: `e79783e`, `d9eaeae`
+- **작업**: Phase 4 검증 이슈 수정, 엣지 케이스 테스트 추가, timezone 버그 수정
+- **산출물**:
+  - `src/lib/utils.ts` — `toLocalDateStr()` 유틸 추가 (UTC timezone 버그 수정)
+  - Zustand 셀렉터 최적화 (전체 스토어 구독 → 개별 셀렉터)
+  - Zod 스키마 `.max()` 제한 추가 (XSS/DoS 방지)
+  - `documentId()` 사용으로 Firestore 내부 필드 참조 제거
+  - 150개 → 194개 테스트
+
+## Phase 5.5: 랜딩 페이지 + 프리미엄 UI 리디자인
+- **날짜**: 2026-03-14
+- **커밋**: `bf5a4e4`, `9efbb3e`, `85ca632`, `68b39f3`
+- **작업**: 로그인 월 UX 해결, 전체 UI 프리미엄 리디자인
+- **산출물**:
+  - `src/app/(public)/welcome/page.tsx` — 랜딩/웰컴 페이지 (framer-motion 애니메이션)
+  - `src/middleware.ts` — 미인증 사용자 `/welcome`으로 리다이렉트
+  - 디자인 시스템: HSL → oklch 컬러, 코랄 피치(#FF7E5F) 테마
+  - Pretendard 웹폰트, 플로팅 pill 네비게이션
+  - 로그인 페이지 디자인 통일
+  - PWA 아이콘 생성 (icon-192.png, icon-512.png)
+
+## Phase 5.6: 테스트 커버리지 확대
+- **날짜**: 2026-03-14
+- **커밋**: `367c933`
+- **작업**: 미테스트 영역 전수 테스트 작성
+- **산출물**:
+  - 10개 신규 테스트 파일, 80개 테스트 추가 (209개 → 289개)
+  - 훅: use-create-care-item (16), use-expense-categories (9)
+  - 컴포넌트: complete-modal (7), bottom-nav (6)
+  - 페이지: 대시보드 (6), 케어 (8), 지출 (8), 설정 (6), 반려동물 등록 (6), 로그인 (5)
+
+## Phase 5.7: Firestore 쿼리 버그 수정 + 전체 기능 감사
+- **날짜**: 2026-03-14
+- **커밋**: `c70ac86`, `bd681ed`, `d08bb80`
+- **작업**: 케어 항목 조회 불가 버그 근본 해결, 전체 앱 기능 감사 및 수정
+- **버그 수정**:
+  - `useCareItems` — Firestore 쿼리에 `userId` 필터 누락 → PERMISSION_DENIED (React Query가 삼킴)
+  - `useExpenseCategories` — 기본 카테고리 쿼리 동일 패턴 선제 수정
+  - Firestore 복합 인덱스 userId 포함 업데이트 + 재배포
+- **전체 기능 감사 수정**:
+  - 대시보드: ₩245,000 하드코딩 → `useMonthlyStats` 실제 데이터 연동
+  - 대시보드: 알림 벨 버튼 제거 (onClick 없이 빨간 도트 → 사용자 오도)
+  - 대시보드: 체중 하드코딩 → 실제 pet weightKg 표시, 컨디션 카드 제거
+  - 설정: "알림 설정", "프로필 편집" → "(준비 중)" 비활성 표시
+  - 케어 추가: 스마트 알림 문구 → "알림 기능은 준비 중이에요"
+  - 에러 핸들링: 모든 mutation에 onError 콜백 추가 (케어 완료/수정/삭제, 지출 추가/수정/삭제)
+- **검증**: 289개 테스트 통과, 빌드 성공, 아키텍트 APPROVED
+- **교훈**: Firestore isOwner() 규칙 → 쿼리에 반드시 userId 필터 포함 (tasks/lessons.md 기록)
