@@ -2,8 +2,15 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase/client';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth, storage } from '@/lib/firebase/client';
 import type { Pet } from '@/types';
+
+export async function uploadAvatar(file: File, petId: string): Promise<string> {
+  const storageRef = ref(storage, `avatars/${petId}/${Date.now()}_${file.name}`);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+}
 
 const PETS_KEY = 'pets';
 
@@ -85,6 +92,7 @@ export function useUpdatePet() {
       gender,
       neutered,
       weightKg,
+      avatarUrl,
     }: Partial<Pet> & { id: string }) => {
       const uid = auth.currentUser?.uid;
       if (!uid) throw new Error('Not authenticated');
@@ -99,6 +107,7 @@ export function useUpdatePet() {
       if (gender !== undefined) updateData.gender = gender;
       if (neutered !== undefined) updateData.neutered = neutered;
       if (weightKg !== undefined) updateData.weightKg = weightKg;
+      if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
 
       await updateDoc(doc(db, 'pets', id), updateData);
     },

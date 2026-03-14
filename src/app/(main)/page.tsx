@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, ChevronRight, TrendingUp, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePets } from '@/hooks/use-pets';
@@ -15,10 +16,17 @@ import type { CareItem } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function HomePage() {
+  const router = useRouter();
   const { data: pets, isLoading: petsLoading, isError: petsError } = usePets();
   const selectedPetId = useCareStore((s) => s.selectedPetId);
   const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
+
+  useEffect(() => {
+    if (!petsLoading && !petsError && pets && pets.length === 0) {
+      router.replace('/onboarding');
+    }
+  }, [pets, petsLoading, petsError, router]);
 
   // selectedPetId: null → 전체 보기, string → 특정 펫
   const activePetId = selectedPetId;
