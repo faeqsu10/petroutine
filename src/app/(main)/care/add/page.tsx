@@ -29,6 +29,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { PRESET_COLORS, PRESET_ICONS, CARE_TEMPLATES } from '@/lib/constants';
 import type { CareTemplate } from '@/lib/constants';
 
@@ -93,7 +94,7 @@ export default function AddCareItemPage() {
 
   function onSubmit(values: FormValues) {
     if (!activePetId) {
-      alert('반려동물을 먼저 등록해주세요.');
+      toast.error('반려동물을 먼저 등록해주세요.');
       router.push('/pets/add');
       return;
     }
@@ -111,10 +112,11 @@ export default function AddCareItemPage() {
       },
       {
         onSuccess: () => {
+          toast.success('케어 항목이 추가됐어요');
           router.push('/care');
         },
         onError: (error) => {
-          alert(`저장에 실패했어요: ${error.message}`);
+          toast.error(`저장에 실패했어요: ${error.message}`);
         },
       },
     );

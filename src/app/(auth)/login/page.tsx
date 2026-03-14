@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function LoginPage() {
       router.push('/');
     } catch (error) {
       console.error('Login error:', error);
-      alert('로그인에 실패했습니다. 다시 시도해주세요.');
+      toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
     }
   };
 

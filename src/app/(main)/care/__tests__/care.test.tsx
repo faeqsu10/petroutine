@@ -175,13 +175,14 @@ describe('CarePage (케어 관리)', () => {
       expect(screen.getByRole('button', { name: '몽이' })).toBeInTheDocument();
     });
 
-    it('반려동물이 1마리이면 선택 탭이 표시되지 않는다', () => {
+    it('반려동물이 1마리이면 해당 펫 탭과 전체 탭이 표시된다', () => {
       mockUsePets.mockReturnValue({ data: [mockPet1] });
       mockUseCareItems.mockReturnValue({ data: [], isLoading: false });
 
       render(<CarePage />);
 
-      expect(screen.queryByRole('button', { name: '초코' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '초코' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '전체' })).toBeInTheDocument();
     });
   });
 

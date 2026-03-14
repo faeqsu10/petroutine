@@ -185,9 +185,9 @@ describe('HomePage (대시보드)', () => {
       mockUseCareItems.mockReturnValue({ data: [] });
     });
 
-    it('반려동물 이름이 헤더에 표시된다', () => {
+    it('반려동물 미선택 시 기본 인사말이 표시된다', () => {
       render(<HomePage />);
-      expect(screen.getByText(/초코 보호자님/)).toBeInTheDocument();
+      expect(screen.getByText(/보호자님/)).toBeInTheDocument();
     });
 
     it('오늘 할 일 섹션이 표시된다', () => {

@@ -12,18 +12,22 @@ export function useCareItems(petId: string | null) {
   return useQuery({
     queryKey: [CARE_ITEMS_KEY, petId],
     queryFn: async (): Promise<CareItem[]> => {
-      if (!petId) return [];
-
       const uid = auth.currentUser?.uid;
       if (!uid) return [];
 
       const itemsSnap = await getDocs(
-        query(
-          collection(db, 'careItems'),
-          where('userId', '==', uid),
-          where('petId', '==', petId),
-          where('isActive', '==', true),
-        ),
+        petId
+          ? query(
+              collection(db, 'careItems'),
+              where('userId', '==', uid),
+              where('petId', '==', petId),
+              where('isActive', '==', true),
+            )
+          : query(
+              collection(db, 'careItems'),
+              where('userId', '==', uid),
+              where('isActive', '==', true),
+            ),
       );
 
       const items = itemsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -114,7 +118,6 @@ export function useCareItems(petId: string | null) {
         } as CareItem;
       });
     },
-    enabled: !!petId,
   });
 }
 

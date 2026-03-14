@@ -17,7 +17,8 @@ export default function CarePage() {
   const { data: pets } = usePets();
   const selectedPetId = useCareStore((s) => s.selectedPetId);
   const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
-  const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
+  // selectedPetId: null → 전체 보기, string → 특정 펫
+  const activePetId = selectedPetId;
   const { data: careItems, isLoading, isError } = useCareItems(activePetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
   const [editingItem, setEditingItem] = useState<CareItem | null>(null);
@@ -59,23 +60,31 @@ export default function CarePage() {
       </header>
 
       {/* 반려동물 선택 - 프리미엄 탭 스타일 */}
-      {pets && pets.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {pets.map((pet) => (
-            <button
-              key={pet.id}
-              onClick={() => setSelectedPetId(pet.id)}
-              className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-                activePetId === pet.id
-                  ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                  : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
-              }`}
-            >
-              {pet.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <button
+          onClick={() => setSelectedPetId(null)}
+          className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+            activePetId === null
+              ? 'bg-primary text-white shadow-lg shadow-primary/25'
+              : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+          }`}
+        >
+          전체
+        </button>
+        {pets?.map((pet) => (
+          <button
+            key={pet.id}
+            onClick={() => setSelectedPetId(pet.id)}
+            className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+              activePetId === pet.id
+                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+            }`}
+          >
+            {pet.name}
+          </button>
+        ))}
+      </div>
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">

@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { toast } from 'sonner';
 import { useUpdateCareItem, useDeleteCareItem } from '@/hooks/use-care-items';
 import { cn } from '@/lib/utils';
 import { PRESET_COLORS, PRESET_ICONS } from '@/lib/constants';
@@ -58,9 +59,12 @@ export function CareEditSheet({ open, onOpenChange, careItem }: CareEditSheetPro
     updateCareItem(
       { id: careItem.id, name: name.trim(), cycleValue, cycleUnit, icon, color },
       {
-        onSuccess: () => onOpenChange(false),
+        onSuccess: () => {
+          toast.success('수정 완료');
+          onOpenChange(false);
+        },
         onError: () => {
-          alert('수정에 실패했어요. 다시 시도해주세요.');
+          toast.error('수정에 실패했어요. 다시 시도해주세요.');
         },
       },
     );
@@ -70,11 +74,12 @@ export function CareEditSheet({ open, onOpenChange, careItem }: CareEditSheetPro
     if (!careItem) return;
     deleteCareItem(careItem.id, {
       onSuccess: () => {
+        toast.success('삭제 완료');
         setShowDeleteConfirm(false);
         onOpenChange(false);
       },
       onError: () => {
-        alert('삭제에 실패했어요. 다시 시도해주세요.');
+        toast.error('삭제에 실패했어요. 다시 시도해주세요.');
       },
     });
   }

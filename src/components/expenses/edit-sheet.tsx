@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { toast } from 'sonner';
 import { useUpdateExpense, useDeleteExpense } from '@/hooks/use-expenses';
 import { useExpenseCategories } from '@/hooks/use-expense-categories';
 import { cn } from '@/lib/utils';
@@ -58,9 +59,12 @@ export function ExpenseEditSheet({ open, onOpenChange, expense }: ExpenseEditShe
         memo: memo.trim() || null,
       },
       {
-        onSuccess: () => onOpenChange(false),
+        onSuccess: () => {
+          toast.success('수정 완료');
+          onOpenChange(false);
+        },
         onError: () => {
-          alert('수정에 실패했어요. 다시 시도해주세요.');
+          toast.error('수정에 실패했어요. 다시 시도해주세요.');
         },
       },
     );
@@ -70,11 +74,12 @@ export function ExpenseEditSheet({ open, onOpenChange, expense }: ExpenseEditShe
     if (!expense) return;
     deleteExpense(expense.id, {
       onSuccess: () => {
+        toast.success('삭제 완료');
         setShowDeleteConfirm(false);
         onOpenChange(false);
       },
       onError: () => {
-        alert('삭제에 실패했어요. 다시 시도해주세요.');
+        toast.error('삭제에 실패했어요. 다시 시도해주세요.');
       },
     });
   }

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import { useCompleteCare } from '@/hooks/use-care-items';
 import type { CareItem } from '@/types';
 
@@ -46,12 +47,13 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
       },
       {
         onSuccess: () => {
+          toast.success('완료! 다음 예정일이 자동으로 설정됐어요');
           setMemo('');
           setCompletedDate(todayDateStr());
           onOpenChange(false);
         },
         onError: () => {
-          alert('완료 처리에 실패했어요. 다시 시도해주세요.');
+          toast.error('완료 처리에 실패했어요. 다시 시도해주세요.');
         },
       },
     );

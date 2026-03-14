@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useExpenses, useMonthlyStats } from '@/hooks/use-expenses';
+import { usePets } from '@/hooks/use-pets';
 import { formatCurrency } from '@/lib/utils';
 import { ExpenseEditSheet } from '@/components/expenses/edit-sheet';
 import type { Expense } from '@/types';
@@ -16,11 +17,13 @@ export default function ExpensesPage() {
   const [currentMonthDate, setCurrentMonthDate] = useState(() => new Date());
   const currentMonth = format(currentMonthDate, 'yyyy-MM');
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [filterPetId, setFilterPetId] = useState<string | null>(null);
 
+  const { data: pets } = usePets();
   const handlePrevMonth = () => setCurrentMonthDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentMonthDate((d) => addMonths(d, 1));
   const { data: stats, isError: statsError } = useMonthlyStats(currentMonth);
-  const { data: expenses, isError: expensesError } = useExpenses(null, currentMonth);
+  const { data: expenses, isError: expensesError } = useExpenses(filterPetId, currentMonth);
 
   if (statsError || expensesError) {
     return (
@@ -43,15 +46,44 @@ export default function ExpensesPage() {
         <p className="text-sm text-muted-foreground">우리 아이를 위한 지출을 관리하세요</p>
       </header>
 
+      {/* 반려동물 필터 탭 */}
+      {pets && pets.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <button
+            onClick={() => setFilterPetId(null)}
+            className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+              filterPetId === null
+                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+            }`}
+          >
+            전체
+          </button>
+          {pets.map((pet) => (
+            <button
+              key={pet.id}
+              onClick={() => setFilterPetId(pet.id)}
+              className={`shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+                filterPetId === pet.id
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                  : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+              }`}
+            >
+              {pet.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 월별 총지출 카드 */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[#FF9A8B] p-8 text-white shadow-xl shadow-primary/20"
       >
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute -left-4 -bottom-4 h-24 w-24 rounded-full bg-black/5 blur-xl" />
-        
+
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <Button
@@ -139,7 +171,7 @@ export default function ExpensesPage() {
               >
                 <div className="flex items-center gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-lg">
-                    {stats?.byCategory.find(c => c.categoryId === expense.categoryId)?.icon || '💰'}
+                    {stats?.byCategory.find((c) => c.categoryId === expense.categoryId)?.icon || '💰'}
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground/80">{expense.description || '지출'}</p>
@@ -157,7 +189,7 @@ export default function ExpensesPage() {
 
       {/* 플로팅 추가 버튼 */}
       <Link href="/expenses/add">
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="fixed bottom-28 right-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-xl shadow-primary/30 active:bg-primary/90"

@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const petSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요').max(30, '이름은 30자 이내로 입력해주세요'),
@@ -79,9 +80,10 @@ export default function AddPetPage() {
         weightKg,
         avatarUrl: null,
       });
+      toast.success('반려동물이 등록됐어요');
       router.push('/');
     } catch {
-      alert('저장에 실패했어요. 다시 시도해주세요.');
+      toast.error('저장에 실패했어요. 다시 시도해주세요.');
     }
   }
 

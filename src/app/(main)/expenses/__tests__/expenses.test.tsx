@@ -69,7 +69,7 @@ const mockUseMonthlyStats = vi.fn();
 
 vi.mock('@/hooks/use-expenses', () => ({
   useExpenses: () => mockUseExpenses(),
-  useMonthlyStats: () => mockUseMonthlyStats(),
+  useMonthlyStats: (month: string) => mockUseMonthlyStats(month),
 }));
 
 // ============================================================

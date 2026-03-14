@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const petSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요').max(30, '이름은 30자 이내로 입력해주세요'),
@@ -101,20 +102,22 @@ export default function EditPetPage() {
         neutered: values.neutered,
         weightKg,
       });
+      toast.success('수정 완료');
       router.push('/settings');
     } catch {
-      alert('저장에 실패했어요. 다시 시도해주세요.');
+      toast.error('저장에 실패했어요. 다시 시도해주세요.');
     }
   }
 
   function handleDelete() {
     deletePet.mutate(petId, {
       onSuccess: () => {
+        toast.success('삭제 완료');
         setShowDeleteConfirm(false);
         router.push('/settings');
       },
       onError: () => {
-        alert('삭제에 실패했어요. 다시 시도해주세요.');
+        toast.error('삭제에 실패했어요. 다시 시도해주세요.');
       },
     });
   }

@@ -20,14 +20,15 @@ export default function HomePage() {
   const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
 
-  const activePetId = selectedPetId ?? pets?.[0]?.id ?? null;
+  // selectedPetId: null → 전체 보기, string → 특정 펫
+  const activePetId = selectedPetId;
   const { data: careItems } = useCareItems(activePetId);
 
   const currentMonth = format(new Date(), 'yyyy-MM');
   const { data: monthlyStats } = useMonthlyStats(currentMonth);
   const totalAmount = monthlyStats?.totalAmount ?? 0;
 
-  const activePet = pets?.find((p) => p.id === activePetId) ?? pets?.[0] ?? null;
+  const activePet = pets?.find((p) => p.id === activePetId) ?? null;
 
   if (petsLoading) {
     return (
@@ -109,27 +110,37 @@ export default function HomePage() {
       {/* Header */}
       <header className="mb-10">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Pet Concierge</p>
-        <h1 className="text-2xl font-black tracking-tight text-foreground/90">반가워요, {activePet?.name} 보호자님!</h1>
+        <h1 className="text-2xl font-black tracking-tight text-foreground/90">
+          {activePet ? `반가워요, ${activePet.name} 보호자님!` : '반가워요, 보호자님!'}
+        </h1>
       </header>
 
       {/* Pet Selector (Pills) */}
-      {pets.length > 1 && (
-        <div className="flex gap-2 mb-10 overflow-x-auto no-scrollbar pb-1">
-          {pets.map((pet) => (
-            <button
-              key={pet.id}
-              onClick={() => setSelectedPetId(pet.id)}
-              className={`shrink-0 rounded-2xl px-6 py-2.5 text-sm font-bold transition-all ${
-                activePetId === pet.id
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
-                  : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
-              }`}
-            >
-              {pet.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex gap-2 mb-10 overflow-x-auto no-scrollbar pb-1">
+        <button
+          onClick={() => setSelectedPetId(null)}
+          className={`shrink-0 rounded-2xl px-6 py-2.5 text-sm font-bold transition-all ${
+            activePetId === null
+              ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
+              : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+          }`}
+        >
+          전체
+        </button>
+        {pets.map((pet) => (
+          <button
+            key={pet.id}
+            onClick={() => setSelectedPetId(pet.id)}
+            className={`shrink-0 rounded-2xl px-6 py-2.5 text-sm font-bold transition-all ${
+              activePetId === pet.id
+                ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
+                : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+            }`}
+          >
+            {pet.name}
+          </button>
+        ))}
+      </div>
 
       {/* Bento Grid */}
       <div className="grid grid-cols-2 gap-4">

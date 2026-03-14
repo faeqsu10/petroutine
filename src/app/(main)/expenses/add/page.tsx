@@ -24,6 +24,7 @@ import { usePets } from '@/hooks/use-pets';
 import { useCreateExpense } from '@/hooks/use-expenses';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const PRESET_ICONS = ['🐾', '💊', '🏥', '✂️', '🛁', '🧸', '🎀', '🍖', '🦮', '🐠', '🌿', '🚗'];
 const PRESET_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ec4899', '#14b8a6', '#f59e0b'];
@@ -60,7 +61,7 @@ export default function AddExpensePage() {
       setNewCatIcon('🐾');
       setNewCatColor('#6366f1');
     } catch {
-      alert('카테고리 추가에 실패했어요. 다시 시도해주세요.');
+      toast.error('카테고리 추가에 실패했어요. 다시 시도해주세요.');
     }
   };
 
@@ -91,9 +92,10 @@ export default function AddExpensePage() {
         expenseDate: values.expenseDate,
         memo: values.memo ?? null,
       });
+      toast.success('지출이 기록됐어요');
       router.push('/expenses');
     } catch {
-      alert('저장에 실패했어요. 다시 시도해주세요.');
+      toast.error('저장에 실패했어요. 다시 시도해주세요.');
     }
   };
 
