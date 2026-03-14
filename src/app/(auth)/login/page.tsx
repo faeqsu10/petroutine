@@ -1,8 +1,9 @@
 'use client';
 
 import { auth } from '@/lib/firebase/client';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -10,28 +11,34 @@ import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleGoogleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-
-      const res = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
+  // 리다이렉트 후 결과 처리
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result) {
+          const idToken = await result.user.getIdToken();
+          const res = await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          });
+          if (!res.ok) throw new Error('세션 생성 실패');
+          router.push('/');
+          return;
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error('Redirect result error:', error);
+        setIsLoading(false);
       });
+  }, [router]);
 
-      if (!res.ok) {
-        throw new Error('세션 생성 실패');
-      }
-
-      router.push('/');
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
-    }
+  const handleGoogleLogin = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithRedirect(auth, provider);
   };
 
   return (

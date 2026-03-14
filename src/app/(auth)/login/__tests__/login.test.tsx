@@ -11,11 +11,8 @@ vi.mock('@/lib/firebase/client', () => ({
 
 vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn().mockImplementation(() => ({})),
-  signInWithPopup: vi.fn().mockResolvedValue({
-    user: {
-      getIdToken: vi.fn().mockResolvedValue('mock-id-token'),
-    },
-  }),
+  signInWithRedirect: vi.fn(),
+  getRedirectResult: vi.fn().mockResolvedValue(null),
 }));
 
 // ============================================================
