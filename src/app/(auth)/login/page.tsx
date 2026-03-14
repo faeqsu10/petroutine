@@ -60,6 +60,12 @@ export default function LoginPage() {
         }}
       />
 
+      {isLoading ? (
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+          <p className="text-sm text-muted-foreground">로그인 처리 중…</p>
+        </div>
+      ) : (
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-10">
         {/* 로고 + 헤드카피 */}
         <motion.div
@@ -127,6 +133,7 @@ export default function LoginPage() {
           Google 계정으로 간편하게 시작할 수 있어요
         </motion.p>
       </div>
+      )}
     </div>
   );
 }

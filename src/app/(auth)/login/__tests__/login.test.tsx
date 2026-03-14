@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 // ============================================================
@@ -68,33 +68,36 @@ describe('LoginPage', () => {
     vi.clearAllMocks();
   });
 
-  it('로그인 페이지가 렌더링된다', () => {
+  it('로그인 페이지가 렌더링된다', async () => {
     render(<LoginPage />);
-    expect(screen.getByText('Petroutine')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Petroutine')).toBeInTheDocument());
   });
 
-  it('앱 로고(타이틀)가 표시된다', () => {
+  it('앱 로고(타이틀)가 표시된다', async () => {
     render(<LoginPage />);
-    const title = screen.getByText('Petroutine');
-    expect(title).toBeInTheDocument();
-    // h1 태그인지 확인
-    expect(title.tagName).toBe('H1');
+    await waitFor(() => {
+      const title = screen.getByText('Petroutine');
+      expect(title).toBeInTheDocument();
+      expect(title.tagName).toBe('H1');
+    });
   });
 
-  it('Google 로그인 버튼이 표시된다', () => {
+  it('Google 로그인 버튼이 표시된다', async () => {
     render(<LoginPage />);
-    expect(screen.getByRole('button', { name: 'Google로 시작하기' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Google로 시작하기' })).toBeInTheDocument());
   });
 
-  it('카카오 로그인 버튼이 준비중 상태로 표시된다', () => {
+  it('카카오 로그인 버튼이 준비중 상태로 표시된다', async () => {
     render(<LoginPage />);
-    const kakaoBtn = screen.getByRole('button', { name: '카카오로 시작하기 (준비 중)' });
-    expect(kakaoBtn).toBeInTheDocument();
-    expect(kakaoBtn).toBeDisabled();
+    await waitFor(() => {
+      const kakaoBtn = screen.getByRole('button', { name: '카카오로 시작하기 (준비 중)' });
+      expect(kakaoBtn).toBeInTheDocument();
+      expect(kakaoBtn).toBeDisabled();
+    });
   });
 
-  it('앱 소개 텍스트가 표시된다', () => {
+  it('앱 소개 텍스트가 표시된다', async () => {
     render(<LoginPage />);
-    expect(screen.getByText('기억에 의존하지 않는 반려동물 관리')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('기억에 의존하지 않는 반려동물 관리')).toBeInTheDocument());
   });
 });
