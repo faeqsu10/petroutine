@@ -9,10 +9,14 @@ vi.mock('@/lib/firebase/client', () => ({
   auth: {},
 }));
 
+const mockOnAuthStateChanged = vi.fn((_, callback: (user: null) => void) => {
+  callback(null); // 미인증 상태
+  return vi.fn(); // unsubscribe
+});
 vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn().mockImplementation(() => ({})),
   signInWithRedirect: vi.fn(),
-  getRedirectResult: vi.fn().mockResolvedValue(null),
+  onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...(args as [unknown, (user: null) => void])),
 }));
 
 // ============================================================
