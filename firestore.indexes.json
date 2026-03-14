@@ -44,6 +44,14 @@
       ]
     },
     {
+      "collectionGroup": "careItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "careSchedules",
       "queryScope": "COLLECTION",
       "fields": [
