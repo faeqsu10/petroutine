@@ -52,13 +52,13 @@ describe('ConfirmDialog', () => {
     it('isPending이 true이면 비활성화된다', () => {
       render(<ConfirmDialog {...makeProps({ isPending: true })} />);
 
-      const confirmBtn = screen.getByRole('button', { name: '처리 중...' });
+      const confirmBtn = screen.getByRole('button', { name: '처리 중…' });
       expect(confirmBtn).toBeDisabled();
     });
 
-    it('isPending이 true이면 "처리 중..." 텍스트를 표시한다', () => {
+    it('isPending이 true이면 "처리 중…" 텍스트를 표시한다', () => {
       render(<ConfirmDialog {...makeProps({ isPending: true })} />);
-      expect(screen.getByRole('button', { name: '처리 중...' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '처리 중…' })).toBeInTheDocument();
     });
 
     it('isPending이 false이면 confirmLabel 텍스트를 표시한다', () => {

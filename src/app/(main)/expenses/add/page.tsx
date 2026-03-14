@@ -253,7 +253,7 @@ export default function AddExpensePage() {
             disabled={isSubmitting || createExpense.isPending}
             className="h-16 w-full rounded-2xl bg-primary text-lg font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {isSubmitting || createExpense.isPending ? '기록하는 중...' : '지출 내역 저장하기'}
+            {isSubmitting || createExpense.isPending ? '기록하는 중…' : '지출 내역 저장하기'}
           </Button>
         </motion.div>
       </form>

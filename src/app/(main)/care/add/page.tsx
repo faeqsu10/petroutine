@@ -327,7 +327,7 @@ export default function AddCareItemPage() {
               disabled={isPending}
               className="h-16 w-full rounded-2xl bg-primary text-lg font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 active:scale-[0.98] transition-all"
             >
-              {isPending ? '저장하는 중...' : '케어 항목 저장하기'}
+              {isPending ? '저장하는 중…' : '케어 항목 저장하기'}
             </Button>
           </motion.div>
         </form>

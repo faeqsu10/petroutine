@@ -54,7 +54,7 @@ export function ConfirmDialog({
             disabled={isPending}
             className="flex-1 rounded-xl bg-red-500 text-white hover:bg-red-600"
           >
-            {isPending ? '처리 중...' : confirmLabel}
+            {isPending ? '처리 중…' : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

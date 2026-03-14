@@ -173,7 +173,7 @@ describe('AddPetPage', () => {
     expect(screen.getByRole('button', { name: '아이 등록 완료하기' })).toBeInTheDocument();
   });
 
-  it('isPending이 true일 때 버튼이 "등록 중..." 텍스트를 표시하며 비활성화된다', () => {
+  it('isPending이 true일 때 버튼이 "등록 중…" 텍스트를 표시하며 비활성화된다', () => {
     vi.mocked(useCreatePet).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: true,
@@ -181,7 +181,7 @@ describe('AddPetPage', () => {
     } as ReturnType<typeof useCreatePet>);
 
     render(<AddPetPage />);
-    const btn = screen.getByRole('button', { name: '등록 중...' });
+    const btn = screen.getByRole('button', { name: '등록 중…' });
     expect(btn).toBeDisabled();
   });
 

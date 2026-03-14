@@ -314,7 +314,7 @@ export default function AddPetPage() {
                   'disabled:opacity-60',
                 )}
               >
-                {createPet.isPending ? '등록 중...' : '아이 등록 완료하기'}
+                {createPet.isPending ? '등록 중…' : '아이 등록 완료하기'}
               </Button>
 
               {createPet.isError && (

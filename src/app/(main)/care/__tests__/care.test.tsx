@@ -234,7 +234,7 @@ describe('CarePage (케어 관리)', () => {
 
       render(<CarePage />);
 
-      expect(screen.getByText('로딩 중...')).toBeInTheDocument();
+      expect(screen.getByText('로딩 중…')).toBeInTheDocument();
     });
   });
 });

@@ -179,7 +179,7 @@ export function ExpenseEditSheet({ open, onOpenChange, expense }: ExpenseEditShe
                 disabled={isUpdating || amount <= 0 || !description.trim()}
                 className="flex-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {isUpdating ? '저장 중...' : '저장'}
+                {isUpdating ? '저장 중…' : '저장'}
               </Button>
             </div>
           </div>

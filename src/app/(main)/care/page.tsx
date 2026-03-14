@@ -80,7 +80,7 @@ export default function CarePage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
-          <p className="text-sm font-medium text-muted-foreground/60">로딩 중...</p>
+          <p className="text-sm font-medium text-muted-foreground/60">로딩 중…</p>
         </div>
       ) : Object.keys(grouped).length === 0 ? (
         <motion.div 
