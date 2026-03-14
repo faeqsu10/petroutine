@@ -21,7 +21,7 @@ export default function CarePage() {
   const setSelectedPetId = useCareStore((s) => s.setSelectedPetId);
   // selectedPetId: null → 첫 번째 펫 기본 선택, "all" → 전체 보기
   const activePetId = selectedPetId === 'all' ? null : (selectedPetId ?? pets?.[0]?.id ?? null);
-  const { data: careItems, isLoading, isError } = useCareItems(activePetId);
+  const { data: careItems, isLoading, isError, error } = useCareItems(activePetId);
   const [completingItem, setCompletingItem] = useState<CareItem | null>(null);
   const [editingItem, setEditingItem] = useState<CareItem | null>(null);
 
@@ -109,6 +109,7 @@ export default function CarePage() {
       ) : isError ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4 px-5">
           <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했어요</p>
+          <p className="text-xs text-muted-foreground max-w-xs text-center break-all">{(error as Error)?.message}</p>
           <button
             onClick={() => window.location.reload()}
             className="text-sm font-bold text-primary"
