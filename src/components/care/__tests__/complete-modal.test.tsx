@@ -7,11 +7,15 @@ import React from 'react';
 // 훅 모킹 — vi.mock은 호이스팅됨
 // ============================================================
 const mockCompleteCare = vi.fn();
+const mockUndoComplete = vi.fn();
 
 vi.mock('@/hooks/use-care-items', () => ({
   useCompleteCare: () => ({
     mutate: mockCompleteCare,
     isPending: false,
+  }),
+  useUndoCompleteCare: () => ({
+    mutate: mockUndoComplete,
   }),
 }));
 
@@ -121,8 +125,8 @@ describe('CompleteModal', () => {
 
     it('완료 성공 시 onOpenChange(false)를 호출한다', async () => {
       const onOpenChange = vi.fn();
-      mockCompleteCare.mockImplementationOnce((_vars: unknown, opts: { onSuccess: () => void }) => {
-        opts.onSuccess();
+      mockCompleteCare.mockImplementationOnce((_vars: unknown, opts: { onSuccess: (data: { logId: string; newScheduleId: string }) => void }) => {
+        opts.onSuccess({ logId: 'log-1', newScheduleId: 'schedule-2' });
       });
 
       renderModal({ onOpenChange });

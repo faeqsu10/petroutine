@@ -45,7 +45,7 @@ export interface CareLog {
 
 export interface Expense {
   id: string;
-  petId: string;
+  petId: string | null;
   categoryId: string;
   amount: number;
   description: string;

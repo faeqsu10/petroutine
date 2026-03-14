@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { useCompleteCare } from '@/hooks/use-care-items';
+import { useCompleteCare, useUndoCompleteCare } from '@/hooks/use-care-items';
 import type { CareItem } from '@/types';
 
 interface CompleteModalProps {
@@ -33,24 +33,38 @@ export function CompleteModal({ open, onOpenChange, careItem }: CompleteModalPro
   const [memo, setMemo] = useState('');
   const [completedDate, setCompletedDate] = useState(todayDateStr);
   const { mutate: completeCare, isPending } = useCompleteCare();
+  const { mutate: undoComplete } = useUndoCompleteCare();
 
   function handleComplete() {
     if (!careItem || !careItem.schedule) return;
+    const previousScheduleId = careItem.schedule.id;
     completeCare(
       {
         careItemId: careItem.id,
-        scheduleId: careItem.schedule.id,
+        scheduleId: previousScheduleId,
         cycleValue: careItem.cycleValue,
         cycleUnit: careItem.cycleUnit,
         memo: memo.trim() || undefined,
         completedAt: completedDate,
       },
       {
-        onSuccess: () => {
-          toast.success('완료! 다음 예정일이 자동으로 설정됐어요');
+        onSuccess: (data) => {
           setMemo('');
           setCompletedDate(todayDateStr());
           onOpenChange(false);
+          toast.success('완료! 다음 예정일이 자동으로 설정됐어요', {
+            action: {
+              label: '되돌리기',
+              onClick: () => {
+                undoComplete({
+                  logId: data.logId,
+                  newScheduleId: data.newScheduleId,
+                  previousScheduleId,
+                });
+              },
+            },
+            duration: 5000,
+          });
         },
         onError: () => {
           toast.error('완료 처리에 실패했어요. 다시 시도해주세요.');

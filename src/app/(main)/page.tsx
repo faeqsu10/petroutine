@@ -87,6 +87,11 @@ export default function HomePage() {
     );
   }
 
+  const recentlyCompleted = (careItems ?? [])
+    .filter((item) => item.lastLog)
+    .sort((a, b) => new Date(b.lastLog!.completedAt).getTime() - new Date(a.lastLog!.completedAt).getTime())
+    .slice(0, 3);
+
   const todayItems = (careItems ?? []).filter((item) => {
     if (!item.schedule) return false;
     const urgency = getScheduleUrgency(item.schedule.nextDueDate);
@@ -259,6 +264,26 @@ export default function HomePage() {
             </div>
           )}
         </section>
+
+        {/* Recently Completed Bento (Wide) */}
+        {recentlyCompleted.length > 0 && (
+          <section className="col-span-2 bento-item bg-card/60 glass p-6">
+            <h2 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 mb-6">최근 완료</h2>
+            <div className="space-y-4">
+              {recentlyCompleted.map((item) => (
+                <div key={item.id} className="flex items-center gap-4">
+                  <span className="text-xl bg-background/40 p-2 rounded-xl">{item.icon}</span>
+                  <div className="flex-1 flex items-center justify-between">
+                    <span className="text-sm font-bold text-foreground/70">{item.name}</span>
+                    <span className="text-[11px] font-black text-muted-foreground/50">
+                      {format(new Date(item.lastLog!.completedAt), 'M월 d일')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Floating Add Button */}

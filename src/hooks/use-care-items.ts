@@ -303,6 +303,39 @@ export function useCompleteCare() {
       });
 
       await batch.commit();
+      return { logId: logRef.id, newScheduleId: nextScheduleRef.id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [CARE_ITEMS_KEY] });
+    },
+  });
+}
+
+export function useUndoCompleteCare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      logId,
+      newScheduleId,
+      previousScheduleId,
+    }: {
+      logId: string;
+      newScheduleId: string;
+      previousScheduleId: string;
+    }) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not authenticated');
+      const batch = writeBatch(db);
+      // 1) careLog 삭제
+      batch.delete(doc(db, 'careLogs', logId));
+      // 2) 새로 생성된 다음 스케줄 삭제
+      batch.delete(doc(db, 'careSchedules', newScheduleId));
+      // 3) 이전 스케줄 복원 (completed → pending)
+      batch.update(doc(db, 'careSchedules', previousScheduleId), {
+        status: 'pending',
+        updatedAt: new Date().toISOString(),
+      });
+      await batch.commit();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CARE_ITEMS_KEY] });

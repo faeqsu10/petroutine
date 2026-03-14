@@ -33,7 +33,7 @@ const schema = z.object({
   amount: z.number({ error: '금액을 입력해 주세요' }).positive('0보다 큰 금액을 입력해 주세요').max(99_999_999, '금액은 1억 미만이어야 합니다'),
   description: z.string().min(1, '내용을 입력해 주세요').max(100, '내용은 100자 이내로 입력해 주세요'),
   categoryId: z.string().min(1, '카테고리를 선택해 주세요'),
-  petId: z.string().min(1, '반려동물을 선택해 주세요'),
+  petId: z.string(),
   expenseDate: z.string().min(1, '날짜를 선택해 주세요').regex(/^\d{4}-\d{2}-\d{2}$/, '날짜 형식이 올바르지 않습니다'),
   memo: z.string().max(500, '메모는 500자 이내로 입력해 주세요').optional(),
 });
@@ -85,7 +85,7 @@ export default function AddExpensePage() {
   const onSubmit = async (values: FormValues) => {
     try {
       await createExpense.mutateAsync({
-        petId: values.petId,
+        petId: values.petId || null,
         categoryId: values.categoryId,
         amount: values.amount,
         description: values.description,
@@ -291,14 +291,26 @@ export default function AddExpensePage() {
           </div>
 
           {/* 반려동물 */}
-          {pets.length > 0 && (
-            <div className="space-y-4">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">반려동물</Label>
-              <div className="flex flex-wrap gap-2">
-                {petsLoading ? (
-                  <div className="h-10 w-24 animate-pulse rounded-2xl bg-background/50" />
-                ) : (
-                  pets.map((pet) => {
+          <div className="space-y-4">
+            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">반려동물</Label>
+            <div className="flex flex-wrap gap-2">
+              {petsLoading ? (
+                <div className="h-10 w-24 animate-pulse rounded-2xl bg-background/50" />
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setValue('petId', '', { shouldValidate: true })}
+                    className={cn(
+                      'rounded-2xl border-2 px-5 py-2.5 text-sm font-bold transition-all active:scale-95',
+                      selectedPetId === '' || selectedPetId === undefined
+                        ? 'border-primary bg-primary text-white shadow-md shadow-primary/20'
+                        : 'border-border/40 bg-background/50 text-muted-foreground/60 hover:border-primary/40',
+                    )}
+                  >
+                    공통
+                  </button>
+                  {pets.map((pet) => {
                     const isSelected = selectedPetId === pet.id;
                     return (
                       <button
@@ -315,14 +327,11 @@ export default function AddExpensePage() {
                         {pet.name}
                       </button>
                     );
-                  })
-                )}
-              </div>
-              {errors.petId && (
-                <p className="text-xs font-bold text-destructive">{errors.petId.message}</p>
+                  })}
+                </>
               )}
             </div>
-          )}
+          </div>
 
           {/* 날짜 */}
           <div className="space-y-3">
