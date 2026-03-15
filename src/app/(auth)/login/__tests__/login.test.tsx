@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 // ============================================================
@@ -9,15 +9,19 @@ vi.mock('@/lib/firebase/client', () => ({
   auth: {},
 }));
 
+const mockSetCustomParameters = vi.fn();
 const mockOnAuthStateChanged = vi.fn((_, callback: (user: null) => void) => {
   callback(null);
   return vi.fn();
 });
+const mockSignInWithPopup = vi.fn().mockResolvedValue({
+  user: { getIdToken: vi.fn().mockResolvedValue('mock-token') },
+});
 vi.mock('firebase/auth', () => ({
-  GoogleAuthProvider: vi.fn().mockImplementation(() => ({})),
-  signInWithPopup: vi.fn().mockResolvedValue({
-    user: { getIdToken: vi.fn().mockResolvedValue('mock-token') },
+  GoogleAuthProvider: vi.fn(function MockGoogleAuthProvider(this: { setCustomParameters: typeof mockSetCustomParameters }) {
+    this.setCustomParameters = mockSetCustomParameters;
   }),
+  signInWithPopup: (...args: unknown[]) => mockSignInWithPopup(...args),
   signInWithRedirect: vi.fn(),
   onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...(args as [unknown, (user: null) => void])),
 }));
@@ -26,8 +30,9 @@ vi.mock('firebase/auth', () => ({
 // next/navigation 모킹
 // ============================================================
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   usePathname: () => '/login',
 }));
 
@@ -73,6 +78,7 @@ import LoginPage from '../page';
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
   });
 
   it('로그인 페이지가 렌더링된다', async () => {
@@ -106,5 +112,17 @@ describe('LoginPage', () => {
   it('앱 소개 텍스트가 표시된다', async () => {
     render(<LoginPage />);
     await waitFor(() => expect(screen.getByText('기억에 의존하지 않는 반려동물 관리')).toBeInTheDocument());
+  });
+
+  it('Google 로그인 시 계정 선택 화면을 강제한다', async () => {
+    render(<LoginPage />);
+
+    const googleButton = await screen.findByRole('button', { name: 'Google로 시작하기' });
+    fireEvent.click(googleButton);
+
+    await waitFor(() => {
+      expect(mockSetCustomParameters).toHaveBeenCalledWith({ prompt: 'select_account' });
+      expect(mockSignInWithPopup).toHaveBeenCalled();
+    });
   });
 });

@@ -43,8 +43,10 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
-      // 팝업 먼저 시도 (일반 브라우저에서 가장 안정적)
+      // 기존 Google 세션이 있어도 계정 선택 화면을 항상 노출한다.
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
       await createSession(idToken);
