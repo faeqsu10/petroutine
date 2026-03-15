@@ -38,6 +38,11 @@ export default function RootLayout({
   return (
     <html lang="ko" className="antialiased" suppressHydrationWarning>
       <head>
+        {/* DNS 사전 연결 — 폰트/Firebase 첫 요청 지연 감소 */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+        <link rel="preconnect" href="https://firestore.googleapis.com" />
+        <link rel="preconnect" href="https://www.googleapis.com" />
+        <link rel="dns-prefetch" href="https://firebaseapp.com" />
         <link
           rel="stylesheet"
           as="style"

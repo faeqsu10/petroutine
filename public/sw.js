@@ -26,7 +26,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: Network first, cache fallback (API 요청은 캐시 안 함)
+// Fetch: 정적 자산은 Cache First, 나머지는 Network First
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -47,6 +47,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // 정적 자산(JS, CSS, 이미지, 폰트): Cache First → 네트워크 왕복 없이 즉시 반환
+  if (/\.(js|css|png|svg|jpg|jpeg|webp|woff2?)(\?|$)/.test(url.pathname)) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // 나머지(HTML 페이지 등): Network First, 오프라인 시 캐시 폴백
   event.respondWith(
     fetch(event.request)
       .then((response) => {
