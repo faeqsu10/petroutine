@@ -1,29 +1,53 @@
-import { adminAuth } from '@/lib/firebase/admin';
+import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { NextResponse } from 'next/server';
 
+// 에러 로그를 Firestore에 저장
+async function logError(step: string, detail: string) {
+  try {
+    await adminDb.collection('errorLogs').add({
+      source: 'kakao-callback',
+      step,
+      detail,
+      timestamp: new Date().toISOString(),
+    });
+  } catch { /* 로깅 실패는 무시 */ }
+}
+
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
 
+  // Vercel에서 origin이 다를 수 있으므로 환경변수 또는 헤더에서 가져옴
+  const host = request.headers.get('host') ?? '';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const appOrigin = `${protocol}://${host}`;
+
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=kakao_failed`);
+    await logError('code', 'Missing authorization code');
+    return NextResponse.redirect(`${appOrigin}/login?error=kakao_no_code`);
   }
 
   try {
     // 1) 인가 코드 → 액세스 토큰 교환
+    const redirectUri = `${appOrigin}/api/auth/kakao/callback`;
+    const clientId = process.env.KAKAO_REST_API_KEY;
+
+    await logError('debug', `clientId: ${clientId?.substring(0, 8)}..., redirectUri: ${redirectUri}`);
+
     const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
-        client_id: process.env.KAKAO_REST_API_KEY!,
-        redirect_uri: `${origin}/api/auth/kakao/callback`,
+        client_id: clientId!,
+        redirect_uri: redirectUri,
         code,
       }),
     });
     if (!tokenRes.ok) {
       const errorBody = await tokenRes.text();
-      throw new Error(`Token exchange failed: ${tokenRes.status} ${errorBody}`);
+      await logError('token_exchange', `${tokenRes.status}: ${errorBody}`);
+      throw new Error(`Token exchange: ${tokenRes.status}`);
     }
     const { access_token } = await tokenRes.json() as { access_token: string };
 
@@ -31,14 +55,17 @@ export async function GET(request: Request) {
     const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
       headers: { Authorization: `Bearer ${access_token}` },
     });
-    if (!userRes.ok) throw new Error('Kakao user info failed');
+    if (!userRes.ok) {
+      await logError('user_info', `${userRes.status}`);
+      throw new Error('Kakao user info failed');
+    }
     const kakaoUser = await userRes.json() as {
       id: number;
       properties?: { nickname?: string; profile_image?: string };
       kakao_account?: { email?: string };
     };
 
-    // 3) Firebase 사용자 생성/업데이트 + Custom Token
+    // 3) Firebase 사용자 생성/업데이트
     const uid = `kakao:${kakaoUser.id}`;
     const displayName = kakaoUser.properties?.nickname ?? '';
     const photoURL = kakaoUser.properties?.profile_image ?? null;
@@ -52,7 +79,6 @@ export async function GET(request: Request) {
 
     // 4) 세션 쿠키 생성
     const customToken = await adminAuth.createCustomToken(uid);
-    // Custom Token → ID Token 변환을 위해 Firebase Auth REST API 사용
     const signInRes = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`,
       {
@@ -61,13 +87,17 @@ export async function GET(request: Request) {
         body: JSON.stringify({ token: customToken, returnSecureToken: true }),
       },
     );
-    if (!signInRes.ok) throw new Error('Custom token sign-in failed');
+    if (!signInRes.ok) {
+      const signInErr = await signInRes.text();
+      await logError('custom_token_signin', signInErr);
+      throw new Error('Custom token sign-in failed');
+    }
     const { idToken } = await signInRes.json() as { idToken: string };
 
-    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5일
+    const expiresIn = 60 * 60 * 24 * 5 * 1000;
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
 
-    const response = NextResponse.redirect(`${origin}/`);
+    const response = NextResponse.redirect(`${appOrigin}/`);
     response.cookies.set('__session', sessionCookie, {
       maxAge: expiresIn / 1000,
       httpOnly: true,
@@ -79,7 +109,7 @@ export async function GET(request: Request) {
     return response;
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'unknown';
-    console.error('Kakao callback error:', error);
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(msg)}`);
+    await logError('catch', msg);
+    return NextResponse.redirect(`${appOrigin}/login?error=${encodeURIComponent(msg)}`);
   }
 }

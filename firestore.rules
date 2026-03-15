@@ -85,6 +85,12 @@ service cloud.firestore {
       allow read, write: if isAuth() && request.auth.uid == userId;
     }
 
+    // Error Logs — Admin SDK만 쓰기, 인증된 사용자 읽기
+    match /errorLogs/{logId} {
+      allow read: if isAuth();
+      allow write: if false; // Admin SDK (서버)에서만 쓰기
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;
