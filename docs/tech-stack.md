@@ -148,7 +148,7 @@
 | NoSQL 유연성 | ★★★★ | ★★ | ★★★★ |
 
 - **Firestore**: top-level 컬렉션 + userId 필드로 소유권 관리. 클라이언트에서 SDK 직접 호출
-- **Firebase Auth**: Google OAuth (signInWithPopup) + 세션 쿠키 방식 SSR 인증
+- **Firebase Auth**: Google OAuth (signInWithRedirect) + 세션 쿠키 방식 SSR 인증
 - **보안 규칙**: `firestore.rules`에서 userId 기반 접근 제어
 - **무료 티어**: Spark plan — 50K reads/day, 20K writes/day, 1GB Storage → MVP 충분
 - **한국 리전**: asia-northeast3 (서울) 사용 가능
@@ -159,7 +159,7 @@
 - `writeBatch`로 원자적 쓰기 (케어 완료, 항목 생성)
 
 **인증 방식:**
-- 클라이언트: `signInWithPopup` → ID Token 획득
+- 클라이언트: `signInWithRedirect` → ID Token 획득
 - 서버: `/api/auth/session` → `adminAuth.createSessionCookie()` → `__session` 쿠키 설정 (5일 만료)
 - 미들웨어: `__session` 쿠키 존재 확인으로 라우트 보호
 

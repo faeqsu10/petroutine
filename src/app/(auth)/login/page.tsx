@@ -1,7 +1,7 @@
 'use client';
 
 import { auth } from '@/lib/firebase/client';
-import { GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -44,30 +44,15 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
+    setIsLoading(true);
 
     try {
-      // 기존 Google 세션이 있어도 계정 선택 화면을 항상 노출한다.
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-      await createSession(idToken);
-      router.push('/');
+      // Redirect 기반 인증으로 COOP/팝업 창 간 참조 이슈를 피한다.
+      await signInWithRedirect(auth, provider);
     } catch (error: unknown) {
-      // COOP 에러로 팝업 통신 실패해도 인증 자체는 성공했을 수 있음
-      if (auth.currentUser) {
-        try {
-          const idToken = await auth.currentUser.getIdToken();
-          await createSession(idToken);
-          router.push('/');
-          return;
-        } catch { /* fall through */ }
-      }
-      const code = (error as { code?: string })?.code;
-      if (code === 'auth/popup-blocked' || code === 'auth/unauthorized-domain' || code === 'auth/operation-not-supported-in-this-environment') {
-        signInWithRedirect(auth, provider);
-      } else {
-        console.error('Login error:', error);
-        toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
-      }
+      console.error('Login error:', error);
+      toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
+      setIsLoading(false);
     }
   };
 

@@ -30,3 +30,9 @@
 - **원인**: `bento-item` 클래스가 `@apply bg-card ...`로 배경색을 설정하는데, Tailwind에서 같은 속성의 유틸리티 클래스는 뒤에 오는 것이 아니라 CSS 소스 순서에 따라 적용됨.
 - **해결**: `bento-item` 제거 → 필요한 스타일(`rounded-xl`)만 직접 적용.
 - **규칙**: 커스텀 CSS 클래스(`bento-item`, `glass` 등)와 Tailwind 유틸리티를 함께 쓸 때, 커스텀 클래스가 어떤 속성을 설정하는지 `globals.css`에서 먼저 확인. 배경색/텍스트색을 오버라이드하려면 커스텀 클래스를 빼고 직접 적용.
+
+### [2026-03-15] COOP가 있는 앱에서 Firebase popup auth 사용 시 브라우저 경고 반복
+- **문제**: Google 로그인 시 `Cross-Origin-Opener-Policy policy would block the window.closed/window.close call` 경고가 반복되고, 팝업 인증 흐름이 브라우저 정책에 민감하게 흔들림.
+- **원인**: 앱 전체에 COOP 헤더가 적용된 상태에서 `signInWithPopup`이 cross-origin 팝업의 `window.closed`/`window.close()`를 참조함. Firebase SDK 내부 popup polling/cleanup 로직이 브라우저 정책과 충돌.
+- **해결**: 로그인 흐름을 `signInWithRedirect` 기반으로 전환하고, `prompt: 'select_account'`는 유지해 계정 선택 UX를 보장.
+- **규칙**: COOP/보안 헤더를 유지하는 앱에서는 OAuth 기본 전략을 popup이 아니라 redirect로 설계. popup은 인증 전용 경로에서 헤더 예외 처리가 명확할 때만 제한적으로 사용.

@@ -89,7 +89,7 @@
   - `.env.local` / `.env.local.example` — Firebase 환경변수
 - **변경 사항**:
   - 5개 데이터 훅 Firestore 쿼리로 전환 (use-pets, use-care-items, use-expenses, use-expense-categories, use-create-care-item)
-  - 로그인: `signInWithPopup` + `GoogleAuthProvider` → 세션 쿠키 방식
+  - 로그인: `signInWithRedirect` + `GoogleAuthProvider` → 세션 쿠키 방식
   - 미들웨어: `__session` 쿠키 존재 확인
   - 케어 완료/생성: `writeBatch` 원자적 쓰기
   - Supabase 의존성 제거 (`@supabase/supabase-js`, `@supabase/ssr`)
@@ -215,3 +215,15 @@
   - 아바타: Firebase Storage 연동, pets/add 사진 업로드 UI
   - next.config: 이미지 도메인 설정
 - **검증**: 304개 테스트 통과, 빌드 성공
+
+## Phase 7.1: Google 로그인 안정화
+- **날짜**: 2026-03-15
+- **커밋**: `fecef18`
+- **작업**: COOP 환경에서 흔들리던 Google popup 로그인 제거, redirect 기반으로 인증 전략 정리
+- **수정 사항**:
+  - 로그인: `signInWithPopup` 제거 → `signInWithRedirect` 단일 경로로 단순화
+  - Google 계정 선택 강제 유지 (`prompt: 'select_account'`)
+  - 로그인 테스트를 redirect 흐름 기준으로 수정
+  - auth callback/tech-stack/dev-log 문서 표현을 redirect 기준으로 정리
+  - `tasks/lessons.md`에 COOP + popup auth 충돌 패턴 기록
+- **검증**: 로그인 테스트 6개 통과, 변경 파일 lint 통과

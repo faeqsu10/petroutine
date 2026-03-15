@@ -14,15 +14,12 @@ const mockOnAuthStateChanged = vi.fn((_, callback: (user: null) => void) => {
   callback(null);
   return vi.fn();
 });
-const mockSignInWithPopup = vi.fn().mockResolvedValue({
-  user: { getIdToken: vi.fn().mockResolvedValue('mock-token') },
-});
+const mockSignInWithRedirect = vi.fn().mockResolvedValue(undefined);
 vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn(function MockGoogleAuthProvider(this: { setCustomParameters: typeof mockSetCustomParameters }) {
     this.setCustomParameters = mockSetCustomParameters;
   }),
-  signInWithPopup: (...args: unknown[]) => mockSignInWithPopup(...args),
-  signInWithRedirect: vi.fn(),
+  signInWithRedirect: (...args: unknown[]) => mockSignInWithRedirect(...args),
   onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...(args as [unknown, (user: null) => void])),
 }));
 
@@ -122,7 +119,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(mockSetCustomParameters).toHaveBeenCalledWith({ prompt: 'select_account' });
-      expect(mockSignInWithPopup).toHaveBeenCalled();
+      expect(mockSignInWithRedirect).toHaveBeenCalled();
     });
   });
 });
