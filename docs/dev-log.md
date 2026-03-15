@@ -228,6 +228,18 @@
   - `tasks/lessons.md`에 COOP + popup auth 충돌 패턴 기록
 - **검증**: 로그인 테스트 6개 통과, 변경 파일 lint 통과
 
+## Phase 7.2: Google 로그인 redirect 복귀 루프 수정
+- **날짜**: 2026-03-15
+- **커밋**: `7aa5207`
+- **작업**: redirect 로그인 후 다시 로그인 화면으로 돌아가던 회귀 수정
+- **수정 사항**:
+  - 로그인 페이지에서 `getRedirectResult(auth)`를 먼저 처리하도록 복구
+  - redirect 결과가 있으면 세션 쿠키 생성 완료 후 `/`로 이동
+  - `onAuthStateChanged`는 새로고침/기존 세션 복구용 fallback으로 유지
+  - redirect 복귀 후 세션 생성 + 홈 이동 회귀 테스트 추가
+  - `tasks/lessons.md`에 redirect auth 결과 소비 순서 규칙 기록
+- **검증**: 로그인 테스트 7개 통과, 변경 파일 lint 통과
+
 ## Phase 8.5: 버그 수정 + 문서 현행화
 - **날짜**: 2026-03-15
 - **커밋**: `e95a759`, `e71f1e3`, `f27458b` 외 다수
