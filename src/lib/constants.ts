@@ -30,3 +30,10 @@ export const CARE_TEMPLATES = [
 ] as const;
 
 export type CareTemplate = (typeof CARE_TEMPLATES)[number];
+
+export const PRODUCT_CATEGORIES = {
+  food: '🍖 사료',
+  treat: '🦴 간식',
+  supply: '🧸 용품',
+  hygiene: '🧴 위생',
+};

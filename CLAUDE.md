@@ -17,6 +17,7 @@
 ## 기술 스택
 - Next.js 16 + React 19 + TypeScript 5
 - Firebase (Firestore + Auth + Storage)
+- 소셜 로그인: Google OAuth (redirect), 카카오 REST API OAuth + Firebase Custom Auth, 이메일/비밀번호
 - TanStack React Query + Zustand
 - shadcn/ui + Tailwind CSS v4 + framer-motion
 - Vitest + Testing Library

@@ -6,6 +6,7 @@ import { auth, db } from '@/lib/firebase/client';
 import { doc, setDoc } from 'firebase/firestore';
 import { useState, useEffect, type ReactNode } from 'react';
 import { Toaster } from '@/components/ui/sonner';
+import { logClientError } from '@/lib/client-error-logger';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -39,6 +40,21 @@ export function Providers({ children }: { children: ReactNode }) {
     });
     return unsubscribe;
   }, [queryClient, authReady]);
+
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      void logClientError('window.onerror', event.message, event.filename + ':' + event.lineno);
+    };
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      void logClientError('unhandled-rejection', event.reason?.message ?? 'Unknown');
+    };
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

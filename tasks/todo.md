@@ -67,5 +67,6 @@
 - [x] 카카오 로그인 (REST API OAuth + Firebase Custom Auth)
 - [x] 이메일/비밀번호 로그인 + 회원가입 + 비밀번호 찾기
 - [x] Firestore 에러 로그 시스템 (errorLogs 컬렉션)
+- [ ] 카카오맵 API 연동 (병원 지도 검색) — 승인 대기 중
 - [ ] 사료/용품 추천 (제휴 수익) — PRD v2
 - [ ] 병원 연결/추천 (수수료 수익) — PRD v3

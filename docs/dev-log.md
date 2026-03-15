@@ -323,3 +323,43 @@
   - 삭제된 반려동물 케어 항목 잔존 정리
   - 중복 케어 항목 정리 스크립트
 - **검증**: 340개 테스트 통과, 빌드 성공
+
+## Phase 10: 카카오 로그인
+- **날짜**: 2026-03-15
+- **작업**: 카카오 REST API OAuth → Firebase Custom Token 방식으로 소셜 로그인 추가
+- **산출물**:
+  - `src/app/api/auth/kakao/route.ts` — 카카오 인가 코드 → 토큰 교환 → 사용자 정보 조회 → Firebase Custom Token 발급 API
+  - `src/app/(auth)/login/page.tsx` — 카카오 로그인 버튼 추가
+  - `functions/` — Firebase Admin SDK 기반 Custom Token 생성 Cloud Function
+- **기술 결정**:
+  - SDK 직접 호출 대신 REST API 리다이렉트 방식 채택 (카카오 SDK v2 Auth.login deprecated)
+  - 카카오 플랫폼 키(JavaScript Key)가 아닌 앱 기본 REST API 키 사용
+  - 토큰 교환 시 client_secret 필수 포함 (카카오 앱 보안 설정 활성화 상태)
+- **검증**: 빌드 성공
+
+## Phase 10.1: 이메일/비밀번호 로그인 + 회원가입
+- **날짜**: 2026-03-15
+- **작업**: Firebase Auth 이메일/비밀번호 제공자 추가, 회원가입 + 비밀번호 재설정 흐름 구현
+- **산출물**:
+  - `src/app/(auth)/signup/page.tsx` — 이메일 + 비밀번호 회원가입 폼 (react-hook-form + zod)
+  - `src/app/(auth)/forgot-password/page.tsx` — 비밀번호 재설정 이메일 발송 페이지
+  - `src/app/(auth)/login/page.tsx` — 이메일 로그인 탭 추가 (Google/카카오/이메일 통합 UI)
+  - `src/hooks/use-auth.ts` — 이메일 로그인/회원가입/비밀번호 재설정 mutation
+- **검증**: 빌드 성공
+
+## Phase 10.2: Firestore 에러 로그 시스템
+- **날짜**: 2026-03-15
+- **작업**: 클라이언트 에러를 Firestore `errorLogs` 컬렉션에 기록하는 중앙화 로그 시스템 구축
+- **산출물**:
+  - `src/lib/firebase/error-logger.ts` — `logError()` 유틸 (컬렉션명, 에러 메시지, 스택, userId, timestamp 기록)
+  - `firestore.rules` — `errorLogs` 컬렉션 쓰기 규칙 추가 (인증 사용자만)
+  - 주요 mutation onError 콜백에 `logError()` 연동
+- **검증**: 빌드 성공
+
+## Phase 10.3: 카카오 콜백 디버깅 + client_secret 수정
+- **날짜**: 2026-03-15
+- **작업**: 카카오 OAuth 콜백에서 토큰 교환 실패 원인 추적 및 수정
+- **버그 수정**:
+  - 카카오 앱 설정에서 client_secret이 활성화된 상태였으나 토큰 교환 요청에 누락 → `KOE320` 에러
+  - Next.js API 라우트에서 `cookies().set()` + `NextResponse.redirect()` 조합 시 쿠키 미전달 → `response.cookies.set()` 방식으로 전환
+- **검증**: 카카오 로그인 왕복 성공, 빌드 성공

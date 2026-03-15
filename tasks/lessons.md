@@ -66,3 +66,27 @@
 - **원인**: `public/sw.js`가 모든 GET 요청을 네트워크 우선 + 캐시 fallback 대상으로 다루고 있어 `/__/auth/*`, `/__/firebase/*`, `/login` 같은 인증 민감 경로까지 service worker 영향권에 들어감.
 - **해결**: service worker가 `__/`, `/login`, `/signup`, `/welcome`, `/auth/` 경로를 우회하도록 수정하고 캐시 버전을 올림.
 - **규칙**: OAuth redirect, 세션 복구, helper 초기화에 관여하는 경로는 service worker 캐시 대상에서 제외. 인증 이슈 추적 시 DevTools에서 service worker unregister + site data clear도 함께 확인.
+
+### [2026-03-15] 카카오 SDK v2에서 Auth.login deprecated → authorize 또는 REST API 직접 리다이렉트 사용
+- **문제**: 카카오 JavaScript SDK v2에서 `Kakao.Auth.login()`을 호출하면 deprecated 경고가 뜨고 팝업 기반 흐름이 불안정함.
+- **원인**: SDK v2부터 `Auth.login`은 deprecated이고, 권장 방식은 `Kakao.Auth.authorize()` 또는 REST API 인가 코드 요청 URL(`https://kauth.kakao.com/oauth/authorize`)로 직접 리다이렉트하는 방식.
+- **해결**: SDK를 로드하지 않고 REST API 인가 URL로 직접 `window.location.href` 리다이렉트. 콜백 처리는 Next.js API 라우트에서 인가 코드 → 토큰 교환 순으로 진행.
+- **규칙**: 카카오 로그인 구현 시 SDK `Auth.login` 사용 금지. `Kakao.Auth.authorize()` 또는 REST API URL 직접 리다이렉트 방식으로 구현.
+
+### [2026-03-15] 카카오 플랫폼 키(JavaScript Key) vs 앱 기본 REST API 키 혼동 주의
+- **문제**: 토큰 교환 API 요청에 JavaScript Key를 `client_id`로 사용해 `KOE101` 인증 오류 발생.
+- **원인**: 카카오 앱 설정에는 여러 종류의 키가 있다. JavaScript Key는 SDK 초기화용이고, REST API 호출(토큰 교환, 사용자 정보 조회 등)에는 반드시 앱 기본 정보의 **REST API 키**를 사용해야 함.
+- **해결**: `KAKAO_REST_API_KEY` 환경변수를 별도 분리하고 토큰 교환 `client_id` 파라미터에 REST API 키 사용.
+- **규칙**: 카카오 API 호출 시 키 종류를 반드시 구분. SDK 초기화 → JavaScript Key, REST API 요청 → REST API 키, Admin 작업 → Admin 키. `.env.local.example`에 용도 주석 명시.
+
+### [2026-03-15] Next.js API 라우트에서 cookies().set() + NextResponse.redirect() 조합 시 쿠키 누락
+- **문제**: 카카오 콜백 API 라우트에서 세션 쿠키를 설정하고 홈으로 redirect했는데, 브라우저에 쿠키가 전달되지 않아 미들웨어가 인증 실패로 처리함.
+- **원인**: `cookies().set()`은 현재 응답 객체가 아닌 별도 컨텍스트에 쿠키를 설정하는데, `NextResponse.redirect()`로 새 응답 객체를 만들면 앞서 설정한 쿠키가 포함되지 않음.
+- **해결**: `NextResponse.redirect(url)`로 response를 먼저 생성한 뒤, `response.cookies.set(name, value, options)`로 해당 response 객체에 직접 쿠키를 추가하고 `return response`.
+- **규칙**: Next.js API 라우트에서 쿠키 설정 + 리다이렉트가 동시에 필요할 때는 반드시 `response.cookies.set()` 방식을 사용. `cookies().set()` + `NextResponse.redirect()` 조합은 쿠키가 누락됨.
+
+### [2026-03-15] 카카오 client_secret 활성화 시 토큰 교환에 client_secret 필수 포함
+- **문제**: 카카오 토큰 교환 요청이 `KOE320` 오류로 실패함.
+- **원인**: 카카오 앱 설정 → 보안 → Client Secret에서 시크릿 코드를 활성화한 상태였으나, 토큰 교환 POST 요청 body에 `client_secret` 파라미터를 포함하지 않음.
+- **해결**: `KAKAO_CLIENT_SECRET` 환경변수를 추가하고 토큰 교환 요청 body에 `client_secret` 필드 포함.
+- **규칙**: 카카오 앱에서 Client Secret을 활성화했다면 인가 코드 → 토큰 교환 요청에 `client_secret`이 필수. 앱 설정 변경 시 `.env.local`과 Vercel 환경변수를 함께 업데이트.

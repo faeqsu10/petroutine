@@ -1,16 +1,10 @@
-import { adminAuth, adminDb } from '@/lib/firebase/admin';
+import { adminAuth } from '@/lib/firebase/admin';
+import { logError as logErrorUtil } from '@/lib/error-logger';
 import { NextResponse } from 'next/server';
 
 // 에러 로그를 Firestore에 저장
 async function logError(step: string, detail: string) {
-  try {
-    await adminDb.collection('errorLogs').add({
-      source: 'kakao-callback',
-      step,
-      detail,
-      timestamp: new Date().toISOString(),
-    });
-  } catch { /* 로깅 실패는 무시 */ }
+  await logErrorUtil('kakao-callback', step, detail);
 }
 
 export async function GET(request: Request) {

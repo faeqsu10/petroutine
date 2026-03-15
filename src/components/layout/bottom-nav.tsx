@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Heart, Wallet, Settings } from 'lucide-react';
+import { Home, Heart, Wallet, Settings, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/', label: '홈', icon: Home },
   { href: '/care', label: '케어', icon: Heart },
   { href: '/expenses', label: '가계부', icon: Wallet },
+  { href: '/recommend', label: '추천', icon: ShoppingBag },
   { href: '/settings', label: '설정', icon: Settings },
 ] as const;
 
