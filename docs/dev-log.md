@@ -261,6 +261,16 @@
   - `tasks/lessons.md`에 helper 경로/빌드 범위 규칙 기록
 - **검증**: middleware + login 테스트 15개 통과, `next build` 통과
 
+## Phase 7.5: Firebase init.json same-site 제공
+- **날짜**: 2026-03-15
+- **커밋**: `9bee7f0`
+- **작업**: Vercel 도메인에서 Firebase redirect helper가 필요한 `__/firebase/init.json`을 same-site로 제공
+- **수정 사항**:
+  - `next.config.ts`에서 `/__/firebase/init.json`을 `/api/firebase/init`으로 rewrite
+  - `src/app/api/firebase/init/route.ts` 추가로 env 기반 Firebase config JSON 응답
+  - `tasks/lessons.md`에 `__/auth/handler` 직접 접속 오류와 `init.json` 404를 구분하는 규칙 기록
+- **검증**: middleware + login 테스트 15개 통과, `next build` 통과
+
 ## Phase 8.5: 버그 수정 + 문서 현행화
 - **날짜**: 2026-03-15
 - **커밋**: `e95a759`, `e71f1e3`, `f27458b` 외 다수
