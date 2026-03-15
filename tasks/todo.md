@@ -50,7 +50,7 @@
 
 ## v2 (향후)
 - [ ] Push 알림 (FCM + Cloud Functions) — Firebase Blaze 플랜 필요
-- [ ] PWA 오프라인 (Service Worker)
+- [x] PWA 기본 Service Worker (앱 설치 + 정적 자산 캐싱)
 - [ ] 카카오 로그인 (Firebase Custom Auth)
 - [ ] 알림 설정 페이지 (FCM 구현 후)
 - [x] 프로필 편집 페이지
