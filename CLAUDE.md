@@ -16,18 +16,39 @@
 
 ## 기술 스택
 - Next.js 16 + React 19 + TypeScript 5
-- Firebase (Firestore + Auth)
+- Firebase (Firestore + Auth + Storage)
 - TanStack React Query + Zustand
-- shadcn/ui + Tailwind CSS
+- shadcn/ui + Tailwind CSS v4 + framer-motion
 - Vitest + Testing Library
+- sonner (Toast 피드백)
 
 ## 프로젝트 구조
 ```
 agents/           # 전문가 에이전트 정의
 docs/             # 문서 (PRD, dev-log, API 등)
-tasks/            # 할일, 교훈
-src/              # 소스코드 (구현 시 생성)
+tasks/            # 할일 (todo.md), 교훈 (lessons.md)
+scripts/          # 유틸 스크립트 (seed-categories.ts 등)
+src/
+  app/            # Next.js App Router 페이지
+    (main)/       # 인증 필요 페이지 (대시보드, 케어, 가계부, 설정)
+    (auth)/       # 로그인/회원가입
+    (public)/     # 웰컴 페이지
+    api/          # API 라우트 (세션 관리)
+  components/     # UI 컴포넌트 (care, expenses, layout, shared, ui)
+  hooks/          # TanStack Query 훅 (use-pets, use-care-items, use-expenses 등)
+  stores/         # Zustand 스토어 (care-store)
+  lib/            # 유틸리티 (utils, constants, firebase/)
+  types/          # TypeScript 타입 정의
+firestore.rules   # Firestore 보안 규칙
+firestore.indexes.json # Firestore 복합 인덱스
 ```
+
+## 핵심 기술 규칙
+- Firestore 쿼리: `isOwner()` 규칙이 있는 컬렉션은 반드시 `where('userId', '==', uid)` 포함
+- Firestore 인덱스: 쿼리 필드 조합 변경 시 `firestore.indexes.json` 업데이트 + 배포
+- `in` 쿼리 × 다른 `in` 쿼리 조합 시 disjunction 30개 제한 주의 (chunkArray 활용)
+- 커스텀 CSS 클래스(bento-item 등)와 Tailwind 유틸리티 충돌 시 커스텀 클래스 제거
+- 레이아웃 상수는 `src/lib/constants.ts`에서 관리 (BOTTOM_NAV_PADDING 등)
 
 ## 에이전트 팀
 이 프로젝트는 6명의 전문가 에이전트로 구성된 팀이 협업합니다.

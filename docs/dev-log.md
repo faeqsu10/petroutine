@@ -227,3 +227,18 @@
   - auth callback/tech-stack/dev-log 문서 표현을 redirect 기준으로 정리
   - `tasks/lessons.md`에 COOP + popup auth 충돌 패턴 기록
 - **검증**: 로그인 테스트 6개 통과, 변경 파일 lint 통과
+
+## Phase 8.5: 버그 수정 + 문서 현행화
+- **날짜**: 2026-03-15
+- **커밋**: `e95a759`, `e71f1e3`, `f27458b` 외 다수
+- **버그 수정**:
+  - Firestore disjunction 30개 제한 초과 (careSchedules 청크 10개로 축소)
+  - 온보딩 중복 접근 방지 (반려동물 있으면 대시보드 리다이렉트)
+  - 가계부 공통 지출(petId null) 통계 쿼리 실패 수정
+  - 가계부/케어 전체보기 인덱스 추가 + 배포
+  - 지출 금액 입력 bento-item CSS 충돌 수정
+  - 웰컴 페이지 CTA 간격 조정
+  - Google 로그인 COOP 팝업 이슈 (signInWithPopup + catch fallback)
+  - 로그인 리다이렉트 루프 수정 (세션 생성 await 후 이동)
+- **문서 업데이트**: CLAUDE.md 프로젝트 구조/기술 규칙, todo.md 전체 현행화, lessons.md COOP 교훈
+- **검증**: 304개 테스트 통과, 빌드 성공

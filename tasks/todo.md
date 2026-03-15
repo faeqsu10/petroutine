@@ -1,63 +1,49 @@
 # Petroutine - TODO
 
-## Phase 0: 프로젝트 셋업
-- [x] 에이전트 팀 구성 (agents/ 디렉토리)
-- [x] CLAUDE.md 작성
-- [x] Git 레포 초기 커밋
-- [x] 기술 스택 결정
+## Phase 0~4: 완료 ✅
+- [x] 프로젝트 셋업, 기획, 설계, MVP 구현, CRUD, 테스트/검증
+- [x] Firebase 마이그레이션 (Supabase → Firestore + Auth)
+- [x] Firestore 보안 규칙 + 복합 인덱스
 
-## Phase 1: 기획
-- [x] PRD 작성 (docs/PRD.md)
-- [x] 유저 스토리 정의 (docs/PRD.md 내 포함)
-- [x] 유저 플로우 설계 (docs/user-flows.md)
-- [x] 와이어프레임 작성 (docs/wireframes.md)
+## Phase 5~5.8: 완료 ✅
+- [x] 보안/성능 수정 (timezone 버그, Zod max, Zustand 셀렉터)
+- [x] 프리미엄 UI 리디자인 (코랄 피치 테마, Pretendard, 플로팅 네비)
+- [x] 랜딩/웰컴 페이지 + 로그인 페이지 디자인 통일
+- [x] 테스트 커버리지 확대 (209→304개)
+- [x] Firestore 쿼리 userId 필터 버그 수정
+- [x] 전체 기능 감사 + 하드코딩 제거 + 에러 핸들링 추가
+- [x] 코드 품질 리뷰 (dead code 제거, chunkArray, 접근성)
 
-## Phase 2: 설계
-- [x] 기술 스택 결정 (docs/tech-stack.md)
-- [x] DB 스키마 설계 - ERD (docs/erd.md)
-- [x] API 명세 작성 (docs/api-spec.md)
-- [x] 시스템 아키텍처 (.omc/autopilot/spec.md)
+## Phase 6~6.5: 완료 ✅
+- [x] 케어 기본 템플릿 15개 선택 UI
+- [x] 주기 수정 시 스케줄 자동 재계산
+- [x] 완료 소급 입력 (날짜 선택)
+- [x] Toast 피드백 시스템 (sonner)
+- [x] 전체 보기 탭 (대시보드/케어)
+- [x] 가계부 강화 (반려동물 필터, 전월 대비, 카테고리 드릴다운)
+- [x] 완료 되돌리기 (5초 undo)
+- [x] 공통 지출 (petId 없이 기록)
+- [x] 대시보드 최근 완료 표시
+- [x] 커스텀 지출 카테고리 추가 UI
+- [x] 레이아웃 상수 중앙화 (BOTTOM_NAV_PADDING, PRESET_COLORS 등)
 
-## Phase 3: 구현 (MVP) — UI 기능 구현 완료
-- [x] 프로젝트 초기화 + 보일러플레이트
-- [x] 타입 시스템 (src/types/)
-- [x] Firebase 클라이언트/Admin SDK (src/lib/firebase/)
-- [x] 유틸리티 함수 (src/lib/utils.ts)
-- [x] TanStack Query 훅 (src/hooks/)
-- [x] Zustand 스토어 (src/stores/)
-- [x] 레이아웃 + 내비게이션 (src/components/layout/)
-- [x] 페이지 스캐폴드 (홈/케어/가계부/설정/로그인)
-- [x] shadcn/ui 초기화 + UI 컴포넌트 (12개)
-- [x] 반려동물 프로필 등록 UI (pets/add)
-- [x] 케어 항목 추가 UI (care/add)
-- [x] 완료 체크 모달 (CompleteModal)
-- [x] 홈 대시보드 완성 (완료 버튼 + 모달 연동)
-- [x] 지출 기록 추가 UI (expenses/add)
-- [x] 월별 지출 통계 + 월 네비게이션
-- [x] 설정 페이지 (반려동물 목록, 앱 설정)
-- [x] OAuth 콜백 라우트 (auth/callback)
-- [x] PWA manifest.json
-- [x] Supabase → Firebase 마이그레이션
-- [x] Firestore 보안 규칙 + 인덱스 정의
-- [ ] 푸시 알림 (FCM) — Phase 2로 이관
+## Phase 7: v1.1 완료 ✅
+- [x] 온보딩 3단계 플로우 (환영 → 반려동물 등록 → 케어 항목 선택)
+- [x] 반려동물 아바타 업로드 (Firebase Storage)
+- [x] 반려동물 삭제 cascade (연결된 careItems/schedules 비활성화)
 
-## Phase 3.5: CRUD 완성 + 카테고리 시딩
-- [x] 기본 지출 카테고리 시딩 스크립트 (scripts/seed-categories.ts)
-- [x] useUpdatePet, useDeletePet 훅 추가
-- [x] useUpdateCareItem, useDeleteCareItem 훅 추가
-- [x] useUpdateExpense, useDeleteExpense 훅 추가
-- [x] 반려동물 수정 페이지 (pets/[id]/edit)
-- [x] 케어 항목 수정 Sheet (edit-sheet.tsx)
-- [x] 지출 수정 Sheet (edit-sheet.tsx)
-- [x] 삭제 확인 다이얼로그 (confirm-dialog.tsx)
-- [x] 설정 페이지 반려동물 링크 연결
-- [x] 케어 페이지 수정/삭제 UI 연결
-- [x] 가계부 페이지 수정/삭제 UI 연결
+## Phase 8: 버그 수정 (진행 중)
+- [x] Google 로그인 COOP 팝업 이슈 — signInWithPopup + catch fallback
+- [x] Firestore disjunction 30개 제한 초과 수정 (청크 10개)
+- [x] 가계부 인덱스 추가 (expenses userId+expenseDate ASC)
+- [x] 온보딩 중복 접근 방지
+- [ ] 가계부/케어 디버그 에러 메시지 → 정상 UI 복원
 
-## Phase 4: 검증
-- [x] P1 훅 단위 테스트 (use-care-items, use-expenses, use-pets) — 52개 테스트 추가, 총 122개
-- [x] P1.5 엣지 케이스 테스트 + timezone 버그 수정 — 27개 추가, 총 150개
-- [x] P2 UI 컴포넌트 테스트 — 39개 추가 (confirm-dialog 12, care edit-sheet 12, expense edit-sheet 15)
-- [x] 보안 점검 — 입력 길이 제한 추가 (Zod max), Firestore rules 검증, XSS 점검 통과
-- [x] 성능 검증 — timezone 버그 수정, `documentId()` 전환, Zustand 셀렉터, invalidateQueries 범위 축소
-- [x] 보안/성능 발견사항 수정 — toLocalDateStr 유틸리티, 5개 새 테스트, 총 194개
+## v2 (향후)
+- [ ] Push 알림 (FCM + Cloud Functions) — Firebase Blaze 플랜 필요
+- [ ] PWA 오프라인 (Service Worker)
+- [ ] 카카오 로그인 (Firebase Custom Auth)
+- [ ] 알림 설정 페이지 (FCM 구현 후)
+- [ ] 프로필 편집 페이지
+- [ ] 사료/용품 추천 (제휴 수익) — PRD v2
+- [ ] 병원 연결/추천 (수수료 수익) — PRD v3
