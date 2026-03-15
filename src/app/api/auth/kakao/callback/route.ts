@@ -21,7 +21,10 @@ export async function GET(request: Request) {
         code,
       }),
     });
-    if (!tokenRes.ok) throw new Error('Token exchange failed');
+    if (!tokenRes.ok) {
+      const errorBody = await tokenRes.text();
+      throw new Error(`Token exchange failed: ${tokenRes.status} ${errorBody}`);
+    }
     const { access_token } = await tokenRes.json() as { access_token: string };
 
     // 2) 액세스 토큰 → 카카오 사용자 정보
