@@ -121,7 +121,17 @@ export default function LoginPage() {
   const handleKakaoLogin = async () => {
     setIsLoading(true);
     try {
-      if (!window.Kakao?.isInitialized()) {
+      // SDK 동적 로드
+      if (!window.Kakao) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('카카오 SDK 로드 실패'));
+          document.head.appendChild(script);
+        });
+      }
+      if (!window.Kakao.isInitialized()) {
         window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY!);
       }
 
@@ -176,7 +186,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-background overflow-hidden px-6">
-      <Script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" strategy="beforeInteractive" />
+      {/* 카카오 SDK는 handleKakaoLogin에서 동적 로드 */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[55%] pointer-events-none"
         style={{
