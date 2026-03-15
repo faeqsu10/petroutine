@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
@@ -21,6 +21,11 @@ vi.mock('@/lib/firebase/config', () => ({
   firebaseConfig: {
     authDomain: 'petroutine-ielc.vercel.app',
   },
+}));
+
+const mockStartKakaoLogin = vi.fn();
+vi.mock('@/lib/kakao-login', () => ({
+  startKakaoLogin: (...args: unknown[]) => mockStartKakaoLogin(...args),
 }));
 
 vi.mock('firebase/firestore', () => ({
@@ -117,11 +122,11 @@ vi.mock('@/components/ui/card', () => ({
 // ============================================================
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, initial, animate, transition, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+    div: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
       React.createElement('div', props, children),
-    form: ({ children, initial, animate, transition, onSubmit, ...props }: { children?: React.ReactNode; onSubmit?: React.FormEventHandler; [key: string]: unknown }) =>
+    form: ({ children, onSubmit, ...props }: { children?: React.ReactNode; onSubmit?: React.FormEventHandler; [key: string]: unknown }) =>
       React.createElement('form', { onSubmit, ...props }, children),
-    p: ({ children, initial, animate, transition, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+    p: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
       React.createElement('p', props, children),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
@@ -136,8 +141,12 @@ import LoginPage from '../page';
 // 테스트
 // ============================================================
 describe('LoginPage', () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.clearAllMocks();
+    process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY = 'test-kakao-key';
     mockGetRedirectResult.mockResolvedValue(null);
     mockGetFirebaseAuthDomainMismatch.mockReturnValue(null);
     mockGetFirebaseAuthDomainMismatchMessage.mockReturnValue('로그인 설정 오류');
@@ -147,6 +156,10 @@ describe('LoginPage', () => {
     });
     mockFetch.mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', mockFetch);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it('로그인 페이지가 렌더링된다', async () => {
@@ -190,6 +203,18 @@ describe('LoginPage', () => {
     });
   });
 
+  it('카카오 로그인 시 계정 확인을 강제하는 로그인 흐름을 시작한다', async () => {
+    render(<LoginPage />);
+
+    const kakaoButton = await screen.findByRole('button', { name: '카카오로 시작하기' });
+    fireEvent.click(kakaoButton);
+
+    expect(mockStartKakaoLogin).toHaveBeenCalledWith({
+      restApiKey: 'test-kakao-key',
+      currentOrigin: window.location.origin,
+    });
+  });
+
   it('앱 소개 텍스트가 표시된다', async () => {
     render(<LoginPage />);
     await waitFor(() => expect(screen.getByText('기억에 의존하지 않는 반려동물 관리')).toBeInTheDocument());
@@ -217,6 +242,10 @@ describe('LoginPage', () => {
 
   it('redirect 로그인 복귀 시 세션 생성 후 홈으로 이동한다', async () => {
     const redirectUser = {
+      uid: 'redirect-user',
+      email: 'redirect@example.com',
+      displayName: 'Redirect User',
+      photoURL: null,
       getIdToken: vi.fn().mockResolvedValue('redirect-token'),
     };
     mockGetRedirectResult.mockResolvedValue({ user: redirectUser });
@@ -228,6 +257,66 @@ describe('LoginPage', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken: 'redirect-token' }),
+      });
+      expect(mockReplace).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('redirect 결과 복구가 실패해도 fallback 구독 후 로그인 화면을 다시 보여준다', async () => {
+    mockGetRedirectResult.mockRejectedValue(new Error('missing initial state'));
+
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith('로그인에 실패했습니다. 다시 시도해주세요.');
+      expect(screen.getByRole('button', { name: 'Google로 시작하기' })).toBeInTheDocument();
+    });
+  });
+
+  it('redirect 로그인 후 세션 생성이 실패하면 홈으로 이동하지 않고 로딩을 해제한다', async () => {
+    const redirectUser = {
+      uid: 'redirect-user',
+      email: 'redirect@example.com',
+      displayName: 'Redirect User',
+      photoURL: null,
+      getIdToken: vi.fn().mockResolvedValue('redirect-token'),
+    };
+    mockGetRedirectResult.mockResolvedValue({ user: redirectUser });
+    mockFetch.mockResolvedValue({ ok: false });
+
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'redirect-token' }),
+      });
+      expect(mockReplace).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Google로 시작하기' })).toBeInTheDocument();
+    });
+  });
+
+  it('redirect 결과가 없어도 auth 상태 fallback 사용자로 세션을 복구한다', async () => {
+    const fallbackUser = {
+      uid: 'existing-user',
+      email: 'existing@example.com',
+      displayName: 'Existing User',
+      photoURL: null,
+      getIdToken: vi.fn().mockResolvedValue('fallback-token'),
+    };
+    mockOnAuthStateChanged.mockImplementation((_, callback: (user: typeof fallbackUser) => void) => {
+      callback(fallbackUser);
+      return vi.fn();
+    });
+
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'fallback-token' }),
       });
       expect(mockReplace).toHaveBeenCalledWith('/');
     });

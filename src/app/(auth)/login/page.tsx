@@ -2,6 +2,7 @@
 
 import { auth, db } from '@/lib/firebase/client';
 import { firebaseConfig } from '@/lib/firebase/config';
+import { startKakaoLogin } from '@/lib/kakao-login';
 import {
   getFirebaseAuthDomainMismatch,
   getFirebaseAuthDomainMismatchMessage,
@@ -10,7 +11,6 @@ import {
   GoogleAuthProvider,
   getRedirectResult,
   onAuthStateChanged,
-  signInWithCustomToken,
   signInWithRedirect,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -174,10 +174,15 @@ export default function LoginPage() {
   };
 
   const handleKakaoLogin = () => {
-    const restApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
-    const redirectUri = `${window.location.origin}/api/auth/kakao/callback`;
-    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${restApiKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
-    window.location.href = kakaoAuthUrl;
+    try {
+      startKakaoLogin({
+        restApiKey: process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY,
+        currentOrigin: window.location.origin,
+      });
+    } catch (error) {
+      console.error('Kakao login error:', error);
+      toast.error('카카오 로그인 설정에 문제가 있습니다. 다시 확인해주세요.');
+    }
   };
 
   const handleGoogleLogin = async () => {

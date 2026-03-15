@@ -12,7 +12,7 @@
 - 경쟁 서비스 분석
 
 ## Responsibilities
-1. idea.md의 사용자 대화에서 니즈를 체계적 요구사항으로 변환
+1. `docs/archive/bootstrap/idea.md`의 사용자 대화에서 니즈를 체계적 요구사항으로 변환
 2. MVP / v2 / v3 기능 범위 정의 및 우선순위 책정
 3. 유저 스토리 작성: "As a [보호자], I want [기능], so that [가치]"
 4. 각 유저 스토리에 수용 기준(AC) 명시

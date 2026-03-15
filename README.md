@@ -36,6 +36,9 @@ npm run dev
 # 테스트 실행
 npm test
 
+# 커버리지 리포트
+npm run test:coverage
+
 # 프로덕션 빌드
 npm run build
 ```
@@ -45,6 +48,7 @@ npm run build
 ## 프로젝트 구조
 
 ```
+functions/            # Firebase Cloud Functions (소스와 배포 엔트리 포함)
 src/
 ├── app/              # Next.js App Router 페이지
 ├── components/       # UI 컴포넌트 (shadcn/ui 기반)
@@ -53,9 +57,12 @@ src/
 ├── lib/              # Firebase 클라이언트, 유틸리티
 └── types/            # TypeScript 타입 정의
 docs/                 # PRD, API 명세, ERD 등 문서
+docs/archive/         # 초기 메모와 참고 초안 아카이브
 tasks/                # TODO, 교훈 기록
 scripts/              # 시딩 스크립트
 ```
+
+문서 기준점은 [`docs/README.md`](/home/faeqsu10/projects/petroutine/docs/README.md)에서 확인할 수 있습니다.
 
 로그인 문제가 다시 생기면 [`docs/auth-login-checklist.md`](/home/faeqsu10/projects/petroutine/docs/auth-login-checklist.md) 순서대로 확인하면 됩니다.
 
@@ -71,3 +78,7 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
+
+## Functions 작업
+
+Cloud Functions는 [`functions/`](/home/faeqsu10/projects/petroutine/functions/) 아래의 별도 패키지에서 관리합니다. Functions 코드를 수정했으면 해당 디렉터리에서 `npm install` 후 `npm run build`를 실행해 `lib/` 산출물을 다시 만든 뒤 배포 절차를 진행합니다.
