@@ -48,11 +48,15 @@
 - [x] CLAUDE.md, todo.md, dev-log.md, lessons.md 현행화
 - [x] 가계부/케어 디버그 에러 메시지 → 정상 UI 복원
 
-## v2 (향후)
-- [ ] Push 알림 (FCM + Cloud Functions) — Firebase Blaze 플랜 필요
+## v2: 완료 ✅
 - [x] PWA 기본 Service Worker (앱 설치 + 정적 자산 캐싱)
-- [ ] 카카오 로그인 (Firebase Custom Auth)
-- [ ] 알림 설정 페이지 (FCM 구현 후)
 - [x] 프로필 편집 페이지
+- [x] 알림 설정 페이지 (전체/항목별 ON/OFF + 시간 설정)
+- [x] Push 알림 (FCM 클라이언트 + Cloud Functions 스케줄러)
+- [x] Firebase Storage 보안 규칙
+- [x] Google 로그인 안정화 (COOP + auth helper 프록시)
+
+## v3 (향후)
+- [ ] 카카오 로그인 (Firebase Custom Auth + Cloud Functions)
 - [ ] 사료/용품 추천 (제휴 수익) — PRD v2
 - [ ] 병원 연결/추천 (수수료 수익) — PRD v3
