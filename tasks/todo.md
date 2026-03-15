@@ -46,7 +46,7 @@
 - [x] 온보딩 중복 접근 방지
 - [x] 케어/대시보드 기본 탭을 첫 번째 펫으로 변경
 - [x] CLAUDE.md, todo.md, dev-log.md, lessons.md 현행화
-- [ ] 가계부/케어 디버그 에러 메시지 → 정상 UI 복원
+- [x] 가계부/케어 디버그 에러 메시지 → 정상 UI 복원
 
 ## v2 (향후)
 - [ ] Push 알림 (FCM + Cloud Functions) — Firebase Blaze 플랜 필요
