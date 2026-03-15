@@ -122,7 +122,7 @@
 - **작업**: 로그인 월 UX 해결, 전체 UI 프리미엄 리디자인
 - **산출물**:
   - `src/app/(public)/welcome/page.tsx` — 랜딩/웰컴 페이지 (framer-motion 애니메이션)
-  - `src/middleware.ts` — 미인증 사용자 `/welcome`으로 리다이렉트
+  - `src/proxy.ts` — 미인증 사용자 `/welcome`으로 리다이렉트
   - 디자인 시스템: HSL → oklch 컬러, 코랄 피치(#FF7E5F) 테마
   - Pretendard 웹폰트, 플로팅 pill 네비게이션
   - 로그인 페이지 디자인 통일
@@ -255,11 +255,11 @@
 - **커밋**: `f844391`
 - **작업**: Firebase helper 요청이 미들웨어에 막히는 문제와 Cloud Functions 타입 체크로 인한 Vercel 배포 실패 수정
 - **수정 사항**:
-  - `middleware.ts` public path에 `__/auth`, `__/firebase` 추가
-  - `middleware.test.ts`에 Firebase helper 경로 통과 테스트 추가
+  - `proxy.ts` public path에 `__/auth`, `__/firebase` 추가
+  - `proxy.test.ts`에 Firebase helper 경로 통과 테스트 추가
   - 루트 `tsconfig.json`에서 `functions/` 디렉토리 제외
   - `tasks/lessons.md`에 helper 경로/빌드 범위 규칙 기록
-- **검증**: middleware + login 테스트 15개 통과, `next build` 통과
+- **검증**: proxy + login 테스트 15개 통과, `next build` 통과
 
 ## Phase 7.5: Firebase init.json same-site 제공
 - **날짜**: 2026-03-15
@@ -269,7 +269,7 @@
   - `next.config.ts`에서 `/__/firebase/init.json`을 `/api/firebase/init`으로 rewrite
   - `src/app/api/firebase/init/route.ts` 추가로 env 기반 Firebase config JSON 응답
   - `tasks/lessons.md`에 `__/auth/handler` 직접 접속 오류와 `init.json` 404를 구분하는 규칙 기록
-- **검증**: middleware + login 테스트 15개 통과, `next build` 통과
+- **검증**: proxy + login 테스트 15개 통과, `next build` 통과
 
 ## Phase 7.6: Service Worker auth 경로 우회
 - **날짜**: 2026-03-15
@@ -280,6 +280,18 @@
   - 캐시 버전 `petroutine-v2`로 갱신
   - `tasks/lessons.md`에 auth 경로 SW 우회 규칙 기록
 - **검증**: `next build` 통과
+
+## Phase 7.7: Next proxy 규칙 전환 + 로그인 체크리스트 문서화
+- **날짜**: 2026-03-15
+- **커밋**: `e9dbb78`
+- **작업**: Next 16 권장 규칙에 맞춰 `middleware.ts`를 `proxy.ts`로 전환하고, 로그인 장애 대응 문서를 추가
+- **수정 사항**:
+  - `src/middleware.ts` → `src/proxy.ts`로 전환
+  - `src/middleware.test.ts` → `src/proxy.test.ts`로 전환
+  - 로그인 체크리스트 문서 `docs/auth-login-checklist.md` 추가
+  - `README.md`에 로그인 체크리스트 링크 추가
+  - 관련 문서 표현을 `proxy` 기준으로 정리
+- **검증**: proxy + login 테스트 15개 통과, `next build` 통과, Next middleware deprecation 경고 제거
 
 ## Phase 8.5: 버그 수정 + 문서 현행화
 - **날짜**: 2026-03-15
