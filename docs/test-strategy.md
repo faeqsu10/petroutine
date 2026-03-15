@@ -47,15 +47,15 @@
 ### P1 - 데이터 레이어 (다음 단계)
 | 모듈 | 함수/기능 | 리스크 | 상태 |
 |------|-----------|--------|------|
-| `src/hooks/use-care-items.ts` | `useCompleteCare` | **Critical** — 완료 처리 + 다음 일정 생성 | Planned |
-| `src/hooks/use-create-care-item.ts` | `useCreateCareItem` | **High** — 초기 스케줄 생성 | Planned |
-| `src/hooks/use-expenses.ts` | `useCreateExpense` | **Medium** — 지출 기록 | Planned |
-| `src/hooks/use-pets.ts` | `useCreatePet` | **Medium** — 반려동물 등록 | Planned |
+| `src/hooks/use-care-items.ts` | `useCompleteCare` | **Critical** — 완료 처리 + 다음 일정 생성 | Done |
+| `src/hooks/use-create-care-item.ts` | `useCreateCareItem` | **High** — 초기 스케줄 생성 | Done |
+| `src/hooks/use-expenses.ts` | `useCreateExpense` | **Medium** — 지출 기록 | Done |
+| `src/hooks/use-pets.ts` | `useCreatePet` | **Medium** — 반려동물 등록 | Done |
 
 ### P2 - UI 컴포넌트 (이후)
 | 모듈 | 기능 | 리스크 | 상태 |
 |------|------|--------|------|
-| `CompleteModal` | 완료 모달 인터랙션 | **Medium** — 핵심 UX 플로우 | Planned |
+| `CompleteModal` | 완료 모달 인터랙션 | **Medium** — 핵심 UX 플로우 | Done |
 | 폼 페이지들 | 유효성 검증, 제출 | **Medium** | Planned |
 
 ### P3 - E2E (향후)
@@ -178,12 +178,14 @@ src/
       care-store.test.ts     # P0 - Zustand 스토어 (Done)
   hooks/
     __tests__/
-      use-care-items.test.ts  # P1 - 케어 항목 훅 (Planned)
-      use-expenses.test.ts    # P1 - 지출 훅 (Planned)
+      use-care-items.test.ts       # P1 - 케어 항목 훅 (Done)
+      use-create-care-item.test.ts # P1 - 생성 훅 (Done)
+      use-expenses.test.ts         # P1 - 지출 훅 (Done)
+      use-pets.test.ts             # P1 - 반려동물 훅 (Done)
   components/
     care/
       __tests__/
-        complete-modal.test.tsx  # P2 - 완료 모달 (Planned)
+        complete-modal.test.tsx    # P2 - 완료 모달 (Done)
 ```
 
 ---
