@@ -9,11 +9,18 @@ export const metadata: Metadata = {
     template: '%s | Petroutine',
   },
   description: '기억에 의존하지 않는 현대적이고 우아한 반려동물 관리 시스템',
+  applicationName: 'Petroutine',
+  keywords: ['반려동물', '케어', '관리', '가계부', '펫'],
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Petroutine',
+  },
+  openGraph: {
+    title: 'Petroutine | 프리미엄 펫 컨시어지',
+    description: '기억에 의존하지 않는 현대적이고 우아한 반려동물 관리 시스템',
+    type: 'website',
   },
 };
 
@@ -29,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="antialiased">
+    <html lang="ko" className="antialiased" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"

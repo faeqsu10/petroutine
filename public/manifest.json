@@ -1,23 +1,42 @@
 {
+  "id": "/",
   "name": "Petroutine",
   "short_name": "Petroutine",
   "description": "기억에 의존하지 않는 반려동물 관리 시스템",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#FF7E5F",
   "orientation": "portrait",
+  "categories": ["lifestyle", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "케어 관리",
+      "url": "/care",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "가계부",
+      "url": "/expenses",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
   "gcm_sender_id": "103953800507"
 }

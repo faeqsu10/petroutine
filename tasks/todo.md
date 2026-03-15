@@ -60,7 +60,7 @@
 - [x] User 문서 자동 생성 (로그인 시 Firestore에 저장)
 - [x] Analytics 연동 (GA4 — 사용자 행동 추적)
 - [x] CI/CD 파이프라인 (GitHub Actions — 테스트/빌드 자동화)
-- [ ] 다크 모드 지원
+- [x] 다크 모드 지원
 - [ ] 앱 스토어 등록 준비 (TWA/PWA 최적화)
 
 ## v3 (향후)
