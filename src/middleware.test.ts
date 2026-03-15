@@ -101,6 +101,22 @@ describe('middleware', () => {
       expect(mockRedirect).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
+
+    it('/__/auth/handler 접근 시 리다이렉트 없이 통과한다', () => {
+      const req = makeRequest('/__/auth/handler');
+      middleware(req);
+
+      expect(mockRedirect).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledTimes(1);
+    });
+
+    it('/__/firebase/init.json 접근 시 리다이렉트 없이 통과한다', () => {
+      const req = makeRequest('/__/firebase/init.json');
+      middleware(req);
+
+      expect(mockRedirect).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledTimes(1);
+    });
   });
 
   // ─── 인증 사용자 ──────────────────────────────────────────

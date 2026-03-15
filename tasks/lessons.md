@@ -48,3 +48,9 @@
 - **원인**: 앱 도메인은 `*.vercel.app`인데 `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`이 `*.firebaseapp.com`이면 redirect helper가 cross-site로 동작한다. 브라우저의 third-party storage 제한 때문에 redirect 결과 복구가 깨질 수 있음.
 - **해결**: `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`을 앱 도메인으로 맞추고, `next.config.ts` rewrites로 `__/auth/*`와 `__/firebase/*`를 Firebase Hosting helper로 프록시.
 - **규칙**: Firebase Hosting이 아닌 호스트(Vercel 등)에서 `signInWithRedirect`를 쓸 때는 `authDomain`만 바꾸지 말고 same-site helper 경로(`__/auth`, `__/firebase`)를 함께 제공.
+
+### [2026-03-15] 인증 helper 경로는 미들웨어 예외 대상이어야 하고 Cloud Functions 소스는 Next 빌드에서 제외해야 함
+- **문제**: `__/auth/handler` 요청이 인증 미들웨어에 걸려 `/welcome`으로 리다이렉트되고, Vercel 배포는 `functions/src` 타입 에러 때문에 실패함.
+- **원인**: `middleware.ts`의 public path 목록에 `__/auth`, `__/firebase`가 없었고, 루트 `tsconfig.json`이 `functions/`까지 `include`해 Next build가 Cloud Functions 코드를 함께 타입 체크함.
+- **해결**: `middleware.ts`에 Firebase helper 경로 예외 추가, 관련 테스트 추가. 루트 `tsconfig.json`에서 `functions/` 제외.
+- **규칙**: OAuth/helper 내부 경로(`__/auth`, `__/firebase`)는 인증 미들웨어에서 절대 막지 말 것. Next 앱과 별도 런타임(Cloud Functions, scripts)은 루트 TS 빌드 범위에서 명시적으로 제외.
