@@ -173,33 +173,11 @@ export default function LoginPage() {
     }
   };
 
-  const handleKakaoLogin = async () => {
-    setIsLoading(true);
-    try {
-      // SDK 동적 로드
-      if (!window.Kakao) {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('카카오 SDK 로드 실패'));
-          document.head.appendChild(script);
-        });
-      }
-      if (!window.Kakao.isInitialized()) {
-        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY!);
-      }
-
-      // 카카오 OAuth 페이지로 리다이렉트 (콜백에서 처리)
-      window.Kakao.Auth.authorize({
-        redirectUri: `${window.location.origin}/api/auth/kakao/callback`,
-      });
-      return; // 리다이렉트되므로 이후 코드 실행 안 됨
-    } catch (error: unknown) {
-      console.error('Kakao login error:', error);
-      toast.error('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
-      setIsLoading(false);
-    }
+  const handleKakaoLogin = () => {
+    const restApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
+    const redirectUri = `${window.location.origin}/api/auth/kakao/callback`;
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${restApiKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+    window.location.href = kakaoAuthUrl;
   };
 
   const handleGoogleLogin = async () => {
