@@ -1,11 +1,17 @@
 'use client';
 
 import { auth, db } from '@/lib/firebase/client';
-import { GoogleAuthProvider, getRedirectResult, onAuthStateChanged, signInWithRedirect, type User } from 'firebase/auth';
+import { firebaseConfig } from '@/lib/firebase/config';
+import {
+  getFirebaseAuthDomainMismatch,
+  getFirebaseAuthDomainMismatchMessage,
+} from '@/lib/firebase/auth-domain';
+import { GoogleAuthProvider, getRedirectResult, onAuthStateChanged, signInWithCustomToken, signInWithRedirect, type User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Script from 'next/script';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -19,39 +25,40 @@ async function createSession(idToken: string) {
   if (!res.ok) throw new Error('세션 생성 실패');
 }
 
+async function upsertUserDoc(user: User) {
+  const now = new Date().toISOString();
+  const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
+    await setDoc(userRef, {
+      email: user.email ?? '',
+      displayName: user.displayName ?? '',
+      avatarUrl: user.photoURL,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      createdAt: now,
+      updatedAt: now,
+      lastActiveAt: now,
+    });
+  } else {
+    await setDoc(userRef, {
+      displayName: user.displayName ?? '',
+      avatarUrl: user.photoURL,
+      updatedAt: now,
+      lastActiveAt: now,
+    }, { merge: true });
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [authConfigIssue, setAuthConfigIssue] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
     let handled = false;
     let unsubscribe = () => {};
-
-    const upsertUserDoc = async (user: User) => {
-      const now = new Date().toISOString();
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          email: user.email ?? '',
-          displayName: user.displayName ?? '',
-          avatarUrl: user.photoURL,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          createdAt: now,
-          updatedAt: now,
-          lastActiveAt: now,
-        });
-      } else {
-        await setDoc(userRef, {
-          displayName: user.displayName ?? '',
-          avatarUrl: user.photoURL,
-          updatedAt: now,
-          lastActiveAt: now,
-        }, { merge: true });
-      }
-    };
 
     const completeLogin = async (user: User) => {
       if (!isActive || handled) return;
@@ -71,6 +78,17 @@ export default function LoginPage() {
     };
 
     const initAuth = async () => {
+      const authDomainMismatch = getFirebaseAuthDomainMismatch(
+        firebaseConfig.authDomain,
+        window.location.host,
+      );
+
+      if (authDomainMismatch) {
+        const message = getFirebaseAuthDomainMismatchMessage(authDomainMismatch);
+        console.error('Firebase authDomain mismatch:', authDomainMismatch);
+        if (isActive) setAuthConfigIssue(message);
+      }
+
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
@@ -100,9 +118,50 @@ export default function LoginPage() {
     };
   }, [router]);
 
+  const handleKakaoLogin = async () => {
+    setIsLoading(true);
+    try {
+      if (!window.Kakao?.isInitialized()) {
+        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY!);
+      }
+
+      const response = await new Promise<{ access_token: string }>((resolve, reject) => {
+        window.Kakao.Auth.login({
+          success: resolve,
+          fail: reject,
+        });
+      });
+
+      const res = await fetch('https://us-central1-petroutine-2b8fd.cloudfunctions.net/kakaoAuth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: response.access_token }),
+      });
+      if (!res.ok) throw new Error('카카오 인증 서버 오류');
+      const { customToken } = await res.json() as { customToken: string };
+
+      await signInWithCustomToken(auth, customToken);
+      const user = auth.currentUser!;
+      const idToken = await user.getIdToken();
+      await createSession(idToken);
+      await upsertUserDoc(user);
+      router.replace('/');
+    } catch (error: unknown) {
+      console.error('Kakao login error:', error);
+      toast.error('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
+
+    if (authConfigIssue) {
+      toast.error('로그인 설정 오류가 있습니다. authDomain 값을 현재 앱 도메인으로 맞춰주세요.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -117,6 +176,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-background overflow-hidden px-6">
+      <Script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" strategy="beforeInteractive" />
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[55%] pointer-events-none"
         style={{
@@ -172,16 +232,22 @@ export default function LoginPage() {
         >
           <Button
             onClick={handleGoogleLogin}
+            disabled={Boolean(authConfigIssue)}
             className="h-14 w-full rounded-2xl bg-primary text-base font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 active:scale-[0.98] transition-all"
           >
             Google로 시작하기
           </Button>
           <Button
-            disabled
-            className="h-14 w-full rounded-2xl bg-[#FEE500] text-base font-bold text-[#191919] hover:bg-[#FDD800] active:scale-[0.98] transition-all disabled:opacity-50"
+            onClick={handleKakaoLogin}
+            className="h-14 w-full rounded-2xl bg-[#FEE500] text-base font-bold text-[#191919] hover:bg-[#FDD800] active:scale-[0.98] transition-all"
           >
-            카카오로 시작하기 (준비 중)
+            카카오로 시작하기
           </Button>
+          {authConfigIssue && (
+            <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm leading-relaxed text-destructive">
+              {authConfigIssue}
+            </p>
+          )}
         </motion.div>
 
         <motion.p

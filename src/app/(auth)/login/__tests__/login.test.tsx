@@ -10,6 +10,19 @@ vi.mock('@/lib/firebase/client', () => ({
   db: {},
 }));
 
+const mockGetFirebaseAuthDomainMismatch = vi.fn().mockReturnValue(null);
+const mockGetFirebaseAuthDomainMismatchMessage = vi.fn().mockReturnValue('로그인 설정 오류');
+vi.mock('@/lib/firebase/auth-domain', () => ({
+  getFirebaseAuthDomainMismatch: (...args: unknown[]) => mockGetFirebaseAuthDomainMismatch(...args),
+  getFirebaseAuthDomainMismatchMessage: (...args: unknown[]) => mockGetFirebaseAuthDomainMismatchMessage(...args),
+}));
+
+vi.mock('@/lib/firebase/config', () => ({
+  firebaseConfig: {
+    authDomain: 'petroutine-ielc.vercel.app',
+  },
+}));
+
 vi.mock('firebase/firestore', () => ({
   doc: vi.fn(),
   getDoc: vi.fn().mockResolvedValue({ exists: () => false }),
@@ -41,6 +54,13 @@ const mockFetch = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
   usePathname: () => '/login',
+}));
+
+const mockToastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
 }));
 
 // ============================================================
@@ -86,6 +106,8 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetRedirectResult.mockResolvedValue(null);
+    mockGetFirebaseAuthDomainMismatch.mockReturnValue(null);
+    mockGetFirebaseAuthDomainMismatchMessage.mockReturnValue('로그인 설정 오류');
     mockOnAuthStateChanged.mockImplementation((_, callback: (user: null) => void) => {
       callback(null);
       return vi.fn();
@@ -113,12 +135,12 @@ describe('LoginPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Google로 시작하기' })).toBeInTheDocument());
   });
 
-  it('카카오 로그인 버튼이 준비중 상태로 표시된다', async () => {
+  it('카카오 로그인 버튼이 표시된다', async () => {
     render(<LoginPage />);
     await waitFor(() => {
-      const kakaoBtn = screen.getByRole('button', { name: '카카오로 시작하기 (준비 중)' });
+      const kakaoBtn = screen.getByRole('button', { name: '카카오로 시작하기' });
       expect(kakaoBtn).toBeInTheDocument();
-      expect(kakaoBtn).toBeDisabled();
+      expect(kakaoBtn).not.toBeDisabled();
     });
   });
 
@@ -155,5 +177,34 @@ describe('LoginPage', () => {
       });
       expect(mockReplace).toHaveBeenCalledWith('/');
     });
+  });
+
+  it('authDomain 설정이 현재 앱 도메인과 다르면 로그인 버튼이 비활성화된다', async () => {
+    mockGetFirebaseAuthDomainMismatch.mockReturnValue({
+      configuredAuthDomain: 'petroutine-2b8fd.firebaseapp.com',
+      currentHost: 'petroutine-ielc.vercel.app',
+      usesFirebaseHostedDomain: true,
+    });
+
+    render(<LoginPage />);
+
+    const googleButton = await screen.findByRole('button', { name: 'Google로 시작하기' });
+    expect(googleButton).toBeDisabled();
+    expect(screen.getByText('로그인 설정 오류')).toBeInTheDocument();
+  });
+
+  it('authDomain 설정이 잘못되면 redirect 로그인을 시작하지 않는다', async () => {
+    mockGetFirebaseAuthDomainMismatch.mockReturnValue({
+      configuredAuthDomain: 'petroutine-2b8fd.firebaseapp.com',
+      currentHost: 'petroutine-ielc.vercel.app',
+      usesFirebaseHostedDomain: true,
+    });
+
+    render(<LoginPage />);
+
+    const googleButton = await screen.findByRole('button', { name: 'Google로 시작하기' });
+    fireEvent.click(googleButton);
+
+    expect(mockSignInWithRedirect).not.toHaveBeenCalled();
   });
 });
