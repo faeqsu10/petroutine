@@ -7,6 +7,13 @@ import React from 'react';
 // ============================================================
 vi.mock('@/lib/firebase/client', () => ({
   auth: {},
+  db: {},
+}));
+
+vi.mock('firebase/firestore', () => ({
+  doc: vi.fn(),
+  getDoc: vi.fn().mockResolvedValue({ exists: () => false }),
+  setDoc: vi.fn().mockResolvedValue(undefined),
 }));
 
 const mockSetCustomParameters = vi.fn();

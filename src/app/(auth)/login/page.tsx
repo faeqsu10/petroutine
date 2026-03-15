@@ -1,7 +1,8 @@
 'use client';
 
-import { auth } from '@/lib/firebase/client';
+import { auth, db } from '@/lib/firebase/client';
 import { GoogleAuthProvider, getRedirectResult, onAuthStateChanged, signInWithRedirect, type User } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
@@ -27,6 +28,31 @@ export default function LoginPage() {
     let handled = false;
     let unsubscribe = () => {};
 
+    const upsertUserDoc = async (user: User) => {
+      const now = new Date().toISOString();
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email ?? '',
+          displayName: user.displayName ?? '',
+          avatarUrl: user.photoURL,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          createdAt: now,
+          updatedAt: now,
+          lastActiveAt: now,
+        });
+      } else {
+        await setDoc(userRef, {
+          displayName: user.displayName ?? '',
+          avatarUrl: user.photoURL,
+          updatedAt: now,
+          lastActiveAt: now,
+        }, { merge: true });
+      }
+    };
+
     const completeLogin = async (user: User) => {
       if (!isActive || handled) return;
 
@@ -34,6 +60,7 @@ export default function LoginPage() {
       try {
         const idToken = await user.getIdToken();
         await createSession(idToken);
+        await upsertUserDoc(user);
         if (!isActive) return;
         router.replace('/');
       } catch (e) {

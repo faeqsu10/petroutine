@@ -14,6 +14,7 @@ export interface UserDoc {
   timezone: string;
   createdAt: string;
   updatedAt: string;
+  lastActiveAt: string;
 }
 
 export interface PetDoc {
