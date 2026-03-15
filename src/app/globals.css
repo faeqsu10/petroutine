@@ -48,6 +48,27 @@
   --shadow-bento-hover: 0 12px 40px rgba(0, 0, 0, 0.06);
 }
 
+.dark {
+  --color-background: oklch(0.14 0.02 285);
+  --color-foreground: oklch(0.98 0.01 60);
+  --color-card: oklch(0.2 0.02 285);
+  --color-card-foreground: oklch(0.98 0.01 60);
+  --color-popover: oklch(0.2 0.02 285);
+  --color-popover-foreground: oklch(0.98 0.01 60);
+  --color-primary: oklch(0.72 0.16 35);
+  --color-primary-foreground: oklch(0.14 0.02 285);
+  --color-secondary: oklch(0.22 0.02 285);
+  --color-secondary-foreground: oklch(0.98 0.01 60);
+  --color-muted: oklch(0.22 0.02 285);
+  --color-muted-foreground: oklch(0.6 0.02 285);
+  --color-accent: oklch(0.22 0.02 285);
+  --color-accent-foreground: oklch(0.98 0.01 60);
+  --color-destructive: oklch(0.6 0.2 25);
+  --color-border: oklch(0.3 0.02 285);
+  --color-input: oklch(0.3 0.02 285);
+  --color-ring: oklch(0.72 0.16 35);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -63,7 +84,15 @@
   @apply bg-white/70 backdrop-blur-xl border border-white/20;
 }
 
+.dark .glass {
+  @apply bg-white/10 border-white/10;
+}
+
 /* 벤토 아이템 공통 스타일 */
 .bento-item {
   @apply bg-card rounded-xl border border-border shadow-bento transition-all duration-300 hover:shadow-bento-hover hover:-translate-y-0.5;
+}
+
+.dark .bento-item {
+  @apply bg-card border-border;
 }

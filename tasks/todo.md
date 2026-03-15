@@ -57,9 +57,9 @@
 - [x] Google 로그인 안정화 (COOP + auth helper 프록시)
 
 ## Phase 9: 출시 준비 + 품질 개선
-- [ ] User 문서 자동 생성 (로그인 시 Firestore에 저장)
-- [ ] Analytics 연동 (GA4 — 사용자 행동 추적)
-- [ ] CI/CD 파이프라인 (GitHub Actions — 테스트/빌드 자동화)
+- [x] User 문서 자동 생성 (로그인 시 Firestore에 저장)
+- [x] Analytics 연동 (GA4 — 사용자 행동 추적)
+- [x] CI/CD 파이프라인 (GitHub Actions — 테스트/빌드 자동화)
 - [ ] 다크 모드 지원
 - [ ] 앱 스토어 등록 준비 (TWA/PWA 최적화)
 

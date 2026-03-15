@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { usePets } from '@/hooks/use-pets';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight, Bell, User, LogOut, Plus } from 'lucide-react';
+import { ChevronRight, Bell, User, LogOut, Plus, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BOTTOM_NAV_PADDING } from '@/lib/constants';
@@ -30,6 +31,7 @@ const item = {
 export default function SettingsPage() {
   const router = useRouter();
   const { data: pets, isError: petsError } = usePets();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -137,6 +139,26 @@ export default function SettingsPage() {
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
           </Link>
+          <div className="flex items-center justify-between p-4.5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+                {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              </div>
+              <div>
+                <p className="font-bold text-foreground/80">다크 모드</p>
+                <p className="text-xs font-medium text-muted-foreground">화면 색상 테마 변경</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`relative h-7 w-12 rounded-full transition-colors ${theme === 'dark' ? 'bg-primary' : 'bg-muted-foreground/20'}`}
+            >
+              <span
+                className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${theme === 'dark' ? 'right-1' : 'left-1'}`}
+              />
+            </button>
+          </div>
         </div>
       </motion.section>
 
