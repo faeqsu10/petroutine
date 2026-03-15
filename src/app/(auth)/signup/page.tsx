@@ -156,6 +156,7 @@ export default function SignupPage() {
               placeholder="이름"
               required
               aria-label="이름"
+              autoComplete="name"
               className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             {errors.displayName && (
@@ -171,6 +172,7 @@ export default function SignupPage() {
               placeholder="이메일"
               required
               aria-label="이메일"
+              autoComplete="email"
               className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             {errors.email && (
@@ -186,6 +188,7 @@ export default function SignupPage() {
               placeholder="비밀번호 (6자 이상)"
               required
               aria-label="비밀번호"
+              autoComplete="new-password"
               className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             {errors.password && (
@@ -201,6 +204,7 @@ export default function SignupPage() {
               placeholder="비밀번호 확인"
               required
               aria-label="비밀번호 확인"
+              autoComplete="new-password"
               className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             {errors.passwordConfirm && (

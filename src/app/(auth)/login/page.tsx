@@ -267,6 +267,7 @@ export default function LoginPage() {
                 onChange={(e) => setResetEmail(e.target.value)}
                 placeholder="가입한 이메일 주소"
                 required
+                autoComplete="email"
                 className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
               <Button
@@ -293,6 +294,7 @@ export default function LoginPage() {
                 placeholder="이메일"
                 required
                 aria-label="이메일"
+                autoComplete="email"
                 className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
               <input
@@ -302,6 +304,7 @@ export default function LoginPage() {
                 placeholder="비밀번호"
                 required
                 aria-label="비밀번호"
+                autoComplete="current-password"
                 className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
               <Button

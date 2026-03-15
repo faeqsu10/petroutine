@@ -53,6 +53,12 @@ vi.mock('lucide-react', () => ({
   User: () => React.createElement('span', { 'data-testid': 'icon-user' }),
   LogOut: () => React.createElement('span', { 'data-testid': 'icon-logout' }),
   Plus: () => React.createElement('span', { 'data-testid': 'icon-plus' }),
+  Moon: () => React.createElement('span', { 'data-testid': 'icon-moon' }),
+  Sun: () => React.createElement('span', { 'data-testid': 'icon-sun' }),
+}));
+
+vi.mock('@/hooks/use-theme', () => ({
+  useTheme: vi.fn(() => ({ theme: 'light', toggleTheme: vi.fn() })),
 }));
 
 // ============================================================
