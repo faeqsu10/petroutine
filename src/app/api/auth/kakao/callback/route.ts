@@ -75,7 +75,8 @@ export async function GET(request: Request) {
 
     return response;
   } catch (error) {
+    const msg = error instanceof Error ? error.message : 'unknown';
     console.error('Kakao callback error:', error);
-    return NextResponse.redirect(`${origin}/login?error=kakao_failed`);
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(msg)}`);
   }
 }
