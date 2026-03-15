@@ -30,6 +30,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  // http(s) 이외의 스킴(chrome-extension 등)은 캐시 불가 → 무시
+  if (!event.request.url.startsWith('http')) return;
+
   const url = new URL(event.request.url);
 
   // Auth/helper 경로는 sessionStorage 및 redirect 상태에 민감하므로 SW 캐시를 우회한다.
