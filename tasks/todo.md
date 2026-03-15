@@ -32,11 +32,20 @@
 - [x] 반려동물 아바타 업로드 (Firebase Storage)
 - [x] 반려동물 삭제 cascade (연결된 careItems/schedules 비활성화)
 
-## Phase 8: 버그 수정 (진행 중)
+## Phase 8: 버그 수정 + 안정화
 - [x] Google 로그인 COOP 팝업 이슈 — signInWithPopup + catch fallback
+- [x] Google 로그인 redirect 기반 전환 + 계정 선택 강제
+- [x] 로그인 리다이렉트 루프 수정 (세션 생성 await 후 이동)
+- [x] 로그인 이중 진입 방지 (로딩 스피너)
 - [x] Firestore disjunction 30개 제한 초과 수정 (청크 10개)
 - [x] 가계부 인덱스 추가 (expenses userId+expenseDate ASC)
+- [x] 케어 전체 보기 인덱스 추가 (careItems userId+isActive)
+- [x] 가계부 공통 지출(petId null) 통계 쿼리 실패 수정
+- [x] 지출 금액 입력 bento-item CSS 충돌 수정
+- [x] 웰컴 페이지 CTA 간격 조정 (fixed→일반 플로우)
 - [x] 온보딩 중복 접근 방지
+- [x] 케어/대시보드 기본 탭을 첫 번째 펫으로 변경
+- [x] CLAUDE.md, todo.md, dev-log.md, lessons.md 현행화
 - [ ] 가계부/케어 디버그 에러 메시지 → 정상 UI 복원
 
 ## v2 (향후)
