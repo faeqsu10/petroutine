@@ -307,3 +307,19 @@
   - 로그인 리다이렉트 루프 수정 (세션 생성 await 후 이동)
 - **문서 업데이트**: CLAUDE.md 프로젝트 구조/기술 규칙, todo.md 전체 현행화, lessons.md COOP 교훈
 - **검증**: 304개 테스트 통과, 빌드 성공
+
+## Phase 9: 출시 준비 + 품질 개선
+- **날짜**: 2026-03-15
+- **커밋**: `0215960`, `7c1faa2`, `52958c4`
+- **신규 기능**:
+  - User 문서 자동 생성: 로그인 시 Firestore upsert + lastActiveAt 갱신
+  - GA4 Analytics: NEXT_PUBLIC_GA_ID 기반 조건부 스크립트 로드
+  - CI/CD: GitHub Actions 워크플로우 (push/PR → 테스트+빌드 자동화)
+  - 다크 모드: oklch 다크 팔레트 + useTheme 훅 + 설정 토글
+  - 앱 스토어 준비: manifest shortcuts/categories/maskable, openGraph 메타
+- **버그 수정**:
+  - 페이지 전환 깜빡임 제거 (layout AnimatePresence 삭제)
+  - Google 프로필 사진 도메인 추가 (lh3.googleusercontent.com)
+  - 삭제된 반려동물 케어 항목 잔존 정리
+  - 중복 케어 항목 정리 스크립트
+- **검증**: 340개 테스트 통과, 빌드 성공
