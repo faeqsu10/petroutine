@@ -6,12 +6,21 @@ import {
   getFirebaseAuthDomainMismatch,
   getFirebaseAuthDomainMismatchMessage,
 } from '@/lib/firebase/auth-domain';
-import { GoogleAuthProvider, getRedirectResult, onAuthStateChanged, signInWithCustomToken, signInWithRedirect, type User } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithCustomToken,
+  signInWithRedirect,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  type User,
+} from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Script from 'next/script';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -54,6 +63,16 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [authConfigIssue, setAuthConfigIssue] = useState<string | null>(null);
+
+  // 이메일 폼 상태
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+
+  // 비밀번호 찾기 상태
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetLoading, setIsResetLoading] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -117,6 +136,42 @@ export default function LoginPage() {
       unsubscribe();
     };
   }, [router]);
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    setIsEmailLoading(true);
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await credential.user.getIdToken();
+      await createSession(idToken);
+      await upsertUserDoc(credential.user);
+      router.replace('/');
+    } catch (error: unknown) {
+      console.error('Email login error:', error);
+      toast.error('이메일 또는 비밀번호가 올바르지 않습니다.');
+      setIsEmailLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) return;
+
+    setIsResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      toast.success('비밀번호 재설정 이메일을 보냈어요');
+      setShowResetForm(false);
+      setResetEmail('');
+    } catch (error: unknown) {
+      console.error('Password reset error:', error);
+      toast.error('이메일 전송에 실패했습니다. 이메일 주소를 확인해주세요.');
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
 
   const handleKakaoLogin = async () => {
     setIsLoading(true);
@@ -208,7 +263,7 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground">로그인 처리 중…</p>
         </div>
       ) : (
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-10">
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -234,10 +289,94 @@ export default function LoginPage() {
           </div>
         </motion.div>
 
+        {/* 이메일/비밀번호 로그인 폼 */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ delay: 0.12, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="w-full"
+        >
+          {showResetForm ? (
+            <form onSubmit={handlePasswordReset} className="flex flex-col gap-3">
+              <p className="text-sm font-medium text-foreground mb-1">비밀번호 재설정</p>
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="가입한 이메일 주소"
+                required
+                className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+              <Button
+                type="submit"
+                disabled={isResetLoading}
+                className="h-12 w-full rounded-xl bg-primary text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
+              >
+                {isResetLoading ? '전송 중…' : '재설정 이메일 보내기'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setShowResetForm(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center"
+              >
+                돌아가기
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleEmailLogin} className="flex flex-col gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="이메일"
+                required
+                aria-label="이메일"
+                className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호"
+                required
+                aria-label="비밀번호"
+                className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+              <Button
+                type="submit"
+                disabled={isEmailLoading}
+                className="h-12 w-full rounded-xl bg-primary text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
+              >
+                {isEmailLoading ? '로그인 중…' : '로그인'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setShowResetForm(true)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center"
+              >
+                비밀번호를 잊으셨나요?
+              </button>
+            </form>
+          )}
+        </motion.div>
+
+        {/* 구분선 */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.20, duration: 0.4 }}
+          className="w-full flex items-center gap-3"
+        >
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-xs text-muted-foreground">또는</span>
+          <div className="flex-1 h-px bg-border" />
+        </motion.div>
+
+        {/* 소셜 로그인 버튼 */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="w-full flex flex-col gap-3"
         >
           <Button
@@ -260,13 +399,17 @@ export default function LoginPage() {
           )}
         </motion.div>
 
+        {/* 회원가입 링크 */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
+          transition={{ delay: 0.40, duration: 0.5 }}
           className="text-xs text-muted-foreground text-center"
         >
-          Google 계정으로 간편하게 시작할 수 있어요
+          계정이 없으신가요?{' '}
+          <Link href="/signup" className="font-semibold text-primary hover:underline">
+            회원가입
+          </Link>
         </motion.p>
       </div>
       )}

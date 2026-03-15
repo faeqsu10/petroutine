@@ -36,6 +36,9 @@ const mockOnAuthStateChanged = vi.fn((_, callback: (user: null) => void) => {
   return vi.fn();
 });
 const mockSignInWithRedirect = vi.fn().mockResolvedValue(undefined);
+const mockSignInWithEmailAndPassword = vi.fn();
+const mockSendPasswordResetEmail = vi.fn();
+
 vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn(function MockGoogleAuthProvider(this: { setCustomParameters: typeof mockSetCustomParameters }) {
     this.setCustomParameters = mockSetCustomParameters;
@@ -43,6 +46,9 @@ vi.mock('firebase/auth', () => ({
   getRedirectResult: (...args: unknown[]) => mockGetRedirectResult(...args),
   signInWithRedirect: (...args: unknown[]) => mockSignInWithRedirect(...args),
   onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...(args as [unknown, (user: null) => void])),
+  signInWithEmailAndPassword: (...args: unknown[]) => mockSignInWithEmailAndPassword(...args),
+  sendPasswordResetEmail: (...args: unknown[]) => mockSendPasswordResetEmail(...args),
+  signInWithCustomToken: vi.fn(),
 }));
 
 // ============================================================
@@ -56,10 +62,20 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/login',
 }));
 
+// ============================================================
+// next/link 모킹
+// ============================================================
+vi.mock('next/link', () => ({
+  default: ({ href, children }: { href: string; children: React.ReactNode }) =>
+    React.createElement('a', { href }, children),
+}));
+
 const mockToastError = vi.fn();
+const mockToastSuccess = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     error: (...args: unknown[]) => mockToastError(...args),
+    success: (...args: unknown[]) => mockToastSuccess(...args),
   },
 }));
 
@@ -71,18 +87,20 @@ vi.mock('@/components/ui/button', () => ({
     children,
     disabled,
     onClick,
+    type,
     className,
     variant,
   }: {
     children: React.ReactNode;
     disabled?: boolean;
     onClick?: () => void;
+    type?: string;
     className?: string;
     variant?: string;
   }) =>
     React.createElement(
       'button',
-      { disabled, onClick, className, 'data-variant': variant },
+      { disabled, onClick, type, className, 'data-variant': variant },
       children,
     ),
 }));
@@ -92,6 +110,21 @@ vi.mock('@/components/ui/card', () => ({
     React.createElement('div', { className, 'data-testid': 'card' }, children),
   CardContent: ({ children, className }: { children: React.ReactNode; className?: string }) =>
     React.createElement('div', { className }, children),
+}));
+
+// ============================================================
+// framer-motion 모킹
+// ============================================================
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, initial, animate, transition, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('div', props, children),
+    form: ({ children, initial, animate, transition, onSubmit, ...props }: { children?: React.ReactNode; onSubmit?: React.FormEventHandler; [key: string]: unknown }) =>
+      React.createElement('form', { onSubmit, ...props }, children),
+    p: ({ children, initial, animate, transition, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('p', props, children),
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // ============================================================
@@ -130,6 +163,19 @@ describe('LoginPage', () => {
     });
   });
 
+  it('이메일/비밀번호 입력 필드가 표시된다', async () => {
+    render(<LoginPage />);
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('이메일')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('비밀번호')).toBeInTheDocument();
+    });
+  });
+
+  it('로그인 버튼이 표시된다', async () => {
+    render(<LoginPage />);
+    await waitFor(() => expect(screen.getByRole('button', { name: '로그인' })).toBeInTheDocument());
+  });
+
   it('Google 로그인 버튼이 표시된다', async () => {
     render(<LoginPage />);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Google로 시작하기' })).toBeInTheDocument());
@@ -147,6 +193,14 @@ describe('LoginPage', () => {
   it('앱 소개 텍스트가 표시된다', async () => {
     render(<LoginPage />);
     await waitFor(() => expect(screen.getByText('기억에 의존하지 않는 반려동물 관리')).toBeInTheDocument());
+  });
+
+  it('회원가입 링크가 표시된다', async () => {
+    render(<LoginPage />);
+    await waitFor(() => {
+      const signupLink = screen.getByRole('link', { name: '회원가입' });
+      expect(signupLink).toHaveAttribute('href', '/signup');
+    });
   });
 
   it('Google 로그인 시 계정 선택 화면을 강제한다', async () => {
@@ -176,6 +230,85 @@ describe('LoginPage', () => {
         body: JSON.stringify({ idToken: 'redirect-token' }),
       });
       expect(mockReplace).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('이메일/비밀번호 로그인 성공 시 홈으로 이동한다', async () => {
+    const fakeUser = { getIdToken: vi.fn().mockResolvedValue('email-token') };
+    mockSignInWithEmailAndPassword.mockResolvedValue({ user: fakeUser });
+
+    render(<LoginPage />);
+    await waitFor(() => screen.getByPlaceholderText('이메일'));
+
+    fireEvent.change(screen.getByPlaceholderText('이메일'), {
+      target: { value: 'test@example.com' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('비밀번호'), {
+      target: { value: 'password123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '로그인' }));
+
+    await waitFor(() => {
+      expect(mockSignInWithEmailAndPassword).toHaveBeenCalledWith(
+        expect.anything(),
+        'test@example.com',
+        'password123',
+      );
+      expect(mockReplace).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('이메일/비밀번호 로그인 실패 시 toast 에러를 표시한다', async () => {
+    mockSignInWithEmailAndPassword.mockRejectedValue(new Error('wrong-password'));
+
+    render(<LoginPage />);
+    await waitFor(() => screen.getByPlaceholderText('이메일'));
+
+    fireEvent.change(screen.getByPlaceholderText('이메일'), {
+      target: { value: 'test@example.com' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('비밀번호'), {
+      target: { value: 'wrongpass' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '로그인' }));
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith('이메일 또는 비밀번호가 올바르지 않습니다.');
+    });
+  });
+
+  it('비밀번호 찾기 링크 클릭 시 재설정 폼이 표시된다', async () => {
+    render(<LoginPage />);
+    await waitFor(() => screen.getByText('비밀번호를 잊으셨나요?'));
+
+    fireEvent.click(screen.getByText('비밀번호를 잊으셨나요?'));
+
+    await waitFor(() => {
+      expect(screen.getByText('비밀번호 재설정')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('가입한 이메일 주소')).toBeInTheDocument();
+    });
+  });
+
+  it('비밀번호 재설정 이메일 전송 성공 시 toast success를 표시한다', async () => {
+    mockSendPasswordResetEmail.mockResolvedValue(undefined);
+
+    render(<LoginPage />);
+    await waitFor(() => screen.getByText('비밀번호를 잊으셨나요?'));
+
+    fireEvent.click(screen.getByText('비밀번호를 잊으셨나요?'));
+    await waitFor(() => screen.getByPlaceholderText('가입한 이메일 주소'));
+
+    fireEvent.change(screen.getByPlaceholderText('가입한 이메일 주소'), {
+      target: { value: 'test@example.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '재설정 이메일 보내기' }));
+
+    await waitFor(() => {
+      expect(mockSendPasswordResetEmail).toHaveBeenCalledWith(
+        expect.anything(),
+        'test@example.com',
+      );
+      expect(mockToastSuccess).toHaveBeenCalledWith('비밀번호 재설정 이메일을 보냈어요');
     });
   });
 
