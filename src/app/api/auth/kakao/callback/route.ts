@@ -32,8 +32,6 @@ export async function GET(request: Request) {
     const redirectUri = `${appOrigin}/api/auth/kakao/callback`;
     const clientId = process.env.KAKAO_REST_API_KEY;
 
-    await logError('debug', `clientId: ${clientId?.substring(0, 8)}..., redirectUri: ${redirectUri}`);
-
     const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
