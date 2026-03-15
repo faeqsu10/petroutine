@@ -57,6 +57,8 @@ tasks/                # TODO, 교훈 기록
 scripts/              # 시딩 스크립트
 ```
 
+로그인 문제가 다시 생기면 [`docs/auth-login-checklist.md`](/home/faeqsu10/projects/petroutine/docs/auth-login-checklist.md) 순서대로 확인하면 됩니다.
+
 ## 환경 변수
 
 `.env.local` 파일에 Firebase 설정이 필요합니다:

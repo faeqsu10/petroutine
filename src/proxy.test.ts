@@ -45,7 +45,7 @@ vi.mock('next/server', () => {
 // 테스트 대상 임포트 (모킹 등록 이후)
 // ============================================================
 import { NextRequest } from 'next/server';
-import { middleware } from './middleware';
+import { proxy } from './proxy';
 
 // ============================================================
 // 헬퍼
@@ -68,7 +68,7 @@ function makeRequest(
 // ============================================================
 // 테스트
 // ============================================================
-describe('middleware', () => {
+describe('proxy', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRedirect.mockReturnValue({ type: 'redirect' });
@@ -79,7 +79,7 @@ describe('middleware', () => {
   describe('비인증 사용자 (세션 없음)', () => {
     it('보호된 경로 접근 시 /welcome으로 리다이렉트된다', () => {
       const req = makeRequest('/care');
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).toHaveBeenCalledTimes(1);
       const redirectUrl: URL = mockRedirect.mock.calls[0][0];
@@ -88,7 +88,7 @@ describe('middleware', () => {
 
     it('/welcome 접근 시 리다이렉트 없이 통과한다', () => {
       const req = makeRequest('/welcome');
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledTimes(1);
@@ -96,7 +96,7 @@ describe('middleware', () => {
 
     it('/login 접근 시 리다이렉트 없이 통과한다', () => {
       const req = makeRequest('/login');
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledTimes(1);
@@ -104,7 +104,7 @@ describe('middleware', () => {
 
     it('/__/auth/handler 접근 시 리다이렉트 없이 통과한다', () => {
       const req = makeRequest('/__/auth/handler');
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledTimes(1);
@@ -112,7 +112,7 @@ describe('middleware', () => {
 
     it('/__/firebase/init.json 접근 시 리다이렉트 없이 통과한다', () => {
       const req = makeRequest('/__/firebase/init.json');
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledTimes(1);
@@ -123,7 +123,7 @@ describe('middleware', () => {
   describe('인증 사용자 (세션 있음)', () => {
     it('/welcome 접근 시 /로 리다이렉트된다', () => {
       const req = makeRequest('/welcome', { authenticated: true });
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).toHaveBeenCalledTimes(1);
       const redirectUrl: URL = mockRedirect.mock.calls[0][0];
@@ -132,7 +132,7 @@ describe('middleware', () => {
 
     it('/login 접근 시 /로 리다이렉트된다', () => {
       const req = makeRequest('/login', { authenticated: true });
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).toHaveBeenCalledTimes(1);
       const redirectUrl: URL = mockRedirect.mock.calls[0][0];
@@ -141,7 +141,7 @@ describe('middleware', () => {
 
     it('/care 접근 시 리다이렉트 없이 정상 통과한다', () => {
       const req = makeRequest('/care', { authenticated: true });
-      middleware(req);
+      proxy(req);
 
       expect(mockRedirect).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalledTimes(1);
