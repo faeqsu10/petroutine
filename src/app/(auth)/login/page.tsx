@@ -190,27 +190,11 @@ export default function LoginPage() {
         window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY!);
       }
 
-      const response = await new Promise<{ access_token: string }>((resolve, reject) => {
-        window.Kakao.Auth.login({
-          success: resolve,
-          fail: reject,
-        });
+      // 카카오 OAuth 페이지로 리다이렉트 (콜백에서 처리)
+      window.Kakao.Auth.authorize({
+        redirectUri: `${window.location.origin}/api/auth/kakao/callback`,
       });
-
-      const res = await fetch('https://us-central1-petroutine-2b8fd.cloudfunctions.net/kakaoAuth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: response.access_token }),
-      });
-      if (!res.ok) throw new Error('카카오 인증 서버 오류');
-      const { customToken } = await res.json() as { customToken: string };
-
-      await signInWithCustomToken(auth, customToken);
-      const user = auth.currentUser!;
-      const idToken = await user.getIdToken();
-      await createSession(idToken);
-      await upsertUserDoc(user);
-      router.replace('/');
+      return; // 리다이렉트되므로 이후 코드 실행 안 됨
     } catch (error: unknown) {
       console.error('Kakao login error:', error);
       toast.error('카카오 로그인에 실패했습니다. 다시 시도해주세요.');

@@ -1,8 +1,5 @@
 interface KakaoAuth {
-  login(options: {
-    success: (response: { access_token: string }) => void;
-    fail: (error: unknown) => void;
-  }): void;
+  authorize(options: { redirectUri: string }): void;
 }
 
 interface KakaoStatic {
