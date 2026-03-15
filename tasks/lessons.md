@@ -42,3 +42,9 @@
 - **원인**: `signInWithRedirect`로 전환한 뒤 `getRedirectResult()`를 제거해, 복귀 직후 redirect 결과를 명시적으로 소비하지 못함. 그 사이 `onAuthStateChanged` fallback 경로가 먼저 `null` 또는 미완료 상태를 처리하면 세션 쿠키 생성이 건너뛰어져 미들웨어가 다시 로그인 화면으로 보냄.
 - **해결**: 로그인 페이지에서 `getRedirectResult(auth)`를 먼저 처리하고, 결과가 있으면 세션 쿠키 생성 완료 후 `/`로 이동. `onAuthStateChanged`는 새로고침/기존 세션 복구용 fallback으로만 유지.
 - **규칙**: Firebase redirect auth에서는 `getRedirectResult()`를 제거하지 말고, redirect 결과 처리 → 세션 생성 → 라우팅 순서를 보장. 관련 회귀 테스트도 반드시 유지.
+
+### [2026-03-15] Vercel에서 Firebase redirect auth를 쓸 때 auth helper를 same-site로 프록시해야 함
+- **문제**: `Authorized domains`와 Google provider 설정이 정상이어도 Vercel 배포에서 redirect 로그인 후 세션 생성 API까지 도달하지 못함.
+- **원인**: 앱 도메인은 `*.vercel.app`인데 `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`이 `*.firebaseapp.com`이면 redirect helper가 cross-site로 동작한다. 브라우저의 third-party storage 제한 때문에 redirect 결과 복구가 깨질 수 있음.
+- **해결**: `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`을 앱 도메인으로 맞추고, `next.config.ts` rewrites로 `__/auth/*`와 `__/firebase/*`를 Firebase Hosting helper로 프록시.
+- **규칙**: Firebase Hosting이 아닌 호스트(Vercel 등)에서 `signInWithRedirect`를 쓸 때는 `authDomain`만 바꾸지 말고 same-site helper 경로(`__/auth`, `__/firebase`)를 함께 제공.
