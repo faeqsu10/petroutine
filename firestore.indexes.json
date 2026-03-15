@@ -61,6 +61,14 @@
       ]
     },
     {
+      "collectionGroup": "careSchedules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "nextDueDate", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "careLogs",
       "queryScope": "COLLECTION",
       "fields": [

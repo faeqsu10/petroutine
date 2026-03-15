@@ -6,9 +6,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
 import { useCareItems } from '@/hooks/use-care-items';
 import { useUpdateCareItem } from '@/hooks/use-care-items';
-import { ChevronLeft, Bell } from 'lucide-react';
+import { ChevronLeft, Bell, BellOff, CheckCircle2 } from 'lucide-react';
 import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { motion } from 'framer-motion';
+import { requestNotificationPermission } from '@/lib/firebase/messaging';
 
 const container = {
   hidden: { opacity: 0 },
@@ -35,6 +36,29 @@ export default function NotificationsPage() {
   const [globalEnabled, setGlobalEnabled] = useState(true);
   const [notifyTime, setNotifyTime] = useState('09:00');
   const [isSaving, setIsSaving] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+
+  // 브라우저 알림 권한 상태 초기화
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotifPermission('unsupported');
+    } else {
+      setNotifPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleRequestPermission = async () => {
+    setIsRequestingPermission(true);
+    try {
+      await requestNotificationPermission();
+      if ('Notification' in window) {
+        setNotifPermission(Notification.permission);
+      }
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  };
 
   // Firestore에서 알림 전역 설정 불러오기
   useEffect(() => {
@@ -106,15 +130,46 @@ export default function NotificationsPage() {
         <h1 className="text-2xl font-black tracking-tight text-foreground/90">알림 설정</h1>
       </motion.header>
 
-      {/* 안내 문구 */}
+      {/* Push 알림 권한 상태 배너 */}
       <motion.div variants={item} className="bento-item bg-primary/5 glass p-4">
-        <div className="flex items-start gap-3">
-          <Bell className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-          <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-            Push 알림은 준비 중이에요. 설정을 미리 저장해두면 알림 기능이 활성화될 때 자동으로
-            적용됩니다.
-          </p>
-        </div>
+        {notifPermission === 'granted' ? (
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+              알림이 활성화되어 있어요
+            </p>
+          </div>
+        ) : notifPermission === 'denied' ? (
+          <div className="flex items-start gap-3">
+            <BellOff className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+              브라우저 설정에서 알림을 허용해주세요
+            </p>
+          </div>
+        ) : notifPermission === 'unsupported' ? (
+          <div className="flex items-start gap-3">
+            <Bell className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+              이 브라우저는 Push 알림을 지원하지 않아요
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <Bell className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                알림을 허용하면 케어 시간을 놓치지 않아요
+              </p>
+            </div>
+            <button
+              onClick={handleRequestPermission}
+              disabled={isRequestingPermission}
+              className="shrink-0 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white transition-opacity disabled:opacity-50 active:scale-95"
+            >
+              {isRequestingPermission ? '요청 중…' : '알림 권한 허용하기'}
+            </button>
+          </div>
+        )}
       </motion.div>
 
       {/* 전체 알림 */}

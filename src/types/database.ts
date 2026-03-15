@@ -88,12 +88,14 @@ export interface ExpenseCategoryDoc {
 }
 
 export interface NotificationSettingsDoc {
-  enabled: boolean;
-  quietStart: string | null;
-  quietEnd: string | null;
-  advanceHours: number;
-  preferredTime: string;
-  fcmToken: string | null;
-  createdAt: string;
+  globalEnabled: boolean;
+  notifyTime: string; // "HH:mm"
   updatedAt: string;
+}
+
+export interface FcmTokenDoc {
+  token: string;
+  deviceInfo: string;
+  createdAt: string;
+  lastActiveAt: string;
 }
