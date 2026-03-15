@@ -40,6 +40,7 @@ export async function GET(request: Request) {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         client_id: clientId!,
+        client_secret: process.env.KAKAO_CLIENT_SECRET!,
         redirect_uri: redirectUri,
         code,
       }),
