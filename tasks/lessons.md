@@ -54,3 +54,9 @@
 - **원인**: `middleware.ts`의 public path 목록에 `__/auth`, `__/firebase`가 없었고, 루트 `tsconfig.json`이 `functions/`까지 `include`해 Next build가 Cloud Functions 코드를 함께 타입 체크함.
 - **해결**: `middleware.ts`에 Firebase helper 경로 예외 추가, 관련 테스트 추가. 루트 `tsconfig.json`에서 `functions/` 제외.
 - **규칙**: OAuth/helper 내부 경로(`__/auth`, `__/firebase`)는 인증 미들웨어에서 절대 막지 말 것. Next 앱과 별도 런타임(Cloud Functions, scripts)은 루트 TS 빌드 범위에서 명시적으로 제외.
+
+### [2026-03-15] `/__/auth/handler` 직접 접속 오류와 `/__/firebase/init.json` 404는 구분해서 봐야 함
+- **문제**: 배포 후 `/__/auth/handler`는 “missing initial state”를 보여주고, `/__/firebase/init.json`은 404였다.
+- **원인**: `__/auth/handler`는 redirect 로그인 흐름 중에만 열리는 helper라 직접 열면 초기 state가 없어 오류가 나는 게 정상이다. 반면 `__/firebase/init.json`은 앱 도메인에서 same-site로 제공돼야 하는데, Firebase Hosting에 없는 파일로 프록시하고 있어 404가 났다.
+- **해결**: `next.config.ts`에서 `/__/firebase/init.json`을 앱 내부 API(`/api/firebase/init`)로 rewrite하고, 해당 API가 env 기반 Firebase config JSON을 직접 응답하도록 구현.
+- **규칙**: Firebase helper 경로를 수동 점검할 때 `__/auth/handler`는 직접 접속 성공 여부로 판단하지 말고, `__/firebase/init.json`이 200 JSON으로 내려오는지와 실제 로그인 왕복이 되는지를 기준으로 확인.

@@ -22,8 +22,8 @@ const nextConfig: NextConfig = {
         destination: `${firebaseAuthHelperOrigin}/__/auth/:path*`,
       },
       {
-        source: '/__/firebase/:path*',
-        destination: `${firebaseAuthHelperOrigin}/__/firebase/:path*`,
+        source: '/__/firebase/init.json',
+        destination: '/api/firebase/init',
       },
     ];
   },
