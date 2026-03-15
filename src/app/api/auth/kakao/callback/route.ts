@@ -1,5 +1,4 @@
 import { adminAuth } from '@/lib/firebase/admin';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -65,8 +64,8 @@ export async function GET(request: Request) {
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5일
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
 
-    const cookieStore = await cookies();
-    cookieStore.set('__session', sessionCookie, {
+    const response = NextResponse.redirect(`${origin}/`);
+    response.cookies.set('__session', sessionCookie, {
       maxAge: expiresIn / 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -74,7 +73,7 @@ export async function GET(request: Request) {
       sameSite: 'lax',
     });
 
-    return NextResponse.redirect(`${origin}/`);
+    return response;
   } catch (error) {
     console.error('Kakao callback error:', error);
     return NextResponse.redirect(`${origin}/login?error=kakao_failed`);
