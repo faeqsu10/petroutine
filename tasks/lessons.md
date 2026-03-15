@@ -60,3 +60,9 @@
 - **원인**: `__/auth/handler`는 redirect 로그인 흐름 중에만 열리는 helper라 직접 열면 초기 state가 없어 오류가 나는 게 정상이다. 반면 `__/firebase/init.json`은 앱 도메인에서 same-site로 제공돼야 하는데, Firebase Hosting에 없는 파일로 프록시하고 있어 404가 났다.
 - **해결**: `next.config.ts`에서 `/__/firebase/init.json`을 앱 내부 API(`/api/firebase/init`)로 rewrite하고, 해당 API가 env 기반 Firebase config JSON을 직접 응답하도록 구현.
 - **규칙**: Firebase helper 경로를 수동 점검할 때 `__/auth/handler`는 직접 접속 성공 여부로 판단하지 말고, `__/firebase/init.json`이 200 JSON으로 내려오는지와 실제 로그인 왕복이 되는지를 기준으로 확인.
+
+### [2026-03-15] Service Worker는 auth/helper 경로를 캐시하거나 가로채면 안 됨
+- **문제**: OAuth redirect 구성이 맞아도 로그인 복귀 상태가 꼬이거나 오래된 응답이 남아 auth 흐름이 불안정할 수 있음.
+- **원인**: `public/sw.js`가 모든 GET 요청을 네트워크 우선 + 캐시 fallback 대상으로 다루고 있어 `/__/auth/*`, `/__/firebase/*`, `/login` 같은 인증 민감 경로까지 service worker 영향권에 들어감.
+- **해결**: service worker가 `__/`, `/login`, `/signup`, `/welcome`, `/auth/` 경로를 우회하도록 수정하고 캐시 버전을 올림.
+- **규칙**: OAuth redirect, 세션 복구, helper 초기화에 관여하는 경로는 service worker 캐시 대상에서 제외. 인증 이슈 추적 시 DevTools에서 service worker unregister + site data clear도 함께 확인.

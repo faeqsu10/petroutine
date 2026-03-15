@@ -1,4 +1,4 @@
-const CACHE_NAME = 'petroutine-v1';
+const CACHE_NAME = 'petroutine-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -29,7 +29,20 @@ self.addEventListener('activate', (event) => {
 // Fetch: Network first, cache fallback (API 요청은 캐시 안 함)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  if (event.request.url.includes('/api/')) return;
+
+  const url = new URL(event.request.url);
+
+  // Auth/helper 경로는 sessionStorage 및 redirect 상태에 민감하므로 SW 캐시를 우회한다.
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/__/') ||
+    url.pathname.startsWith('/login') ||
+    url.pathname.startsWith('/signup') ||
+    url.pathname.startsWith('/welcome') ||
+    url.pathname.startsWith('/auth/')
+  ) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
