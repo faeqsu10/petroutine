@@ -122,7 +122,10 @@ export default function SettingsPage() {
           환경 설정
         </h2>
         <div className="bento-item divide-y divide-border/40 overflow-hidden bg-card/60 glass">
-          <div className="flex items-center justify-between p-4.5 opacity-50 cursor-not-allowed">
+          <Link
+            href="/settings/notifications"
+            className="flex items-center justify-between p-4.5 transition-all hover:bg-primary/5 active:scale-[0.99]"
+          >
             <div className="flex items-center gap-4">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
                 <Bell className="h-5 w-5" />
@@ -132,8 +135,8 @@ export default function SettingsPage() {
                 <p className="text-xs font-medium text-muted-foreground">케어 리마인더, 서비스 소식</p>
               </div>
             </div>
-            <span className="text-xs font-medium text-muted-foreground/60">(준비 중)</span>
-          </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+          </Link>
         </div>
       </motion.section>
 
