@@ -271,6 +271,16 @@
   - `tasks/lessons.md`에 `__/auth/handler` 직접 접속 오류와 `init.json` 404를 구분하는 규칙 기록
 - **검증**: middleware + login 테스트 15개 통과, `next build` 통과
 
+## Phase 7.6: Service Worker auth 경로 우회
+- **날짜**: 2026-03-15
+- **커밋**: `c76a02a`
+- **작업**: service worker가 OAuth redirect/helper 경로를 간섭하지 않도록 캐시 범위 조정
+- **수정 사항**:
+  - `public/sw.js`에서 `__/`, `/login`, `/signup`, `/welcome`, `/auth/` 경로 우회
+  - 캐시 버전 `petroutine-v2`로 갱신
+  - `tasks/lessons.md`에 auth 경로 SW 우회 규칙 기록
+- **검증**: `next build` 통과
+
 ## Phase 8.5: 버그 수정 + 문서 현행화
 - **날짜**: 2026-03-15
 - **커밋**: `e95a759`, `e71f1e3`, `f27458b` 외 다수
