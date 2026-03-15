@@ -240,6 +240,16 @@
   - `tasks/lessons.md`에 redirect auth 결과 소비 순서 규칙 기록
 - **검증**: 로그인 테스트 7개 통과, 변경 파일 lint 통과
 
+## Phase 7.3: Vercel redirect auth helper same-site 프록시
+- **날짜**: 2026-03-15
+- **커밋**: `ab9283b`
+- **작업**: Vercel 배포에서 Firebase redirect auth가 앱 도메인 기준으로 동작하도록 helper 경로 정리
+- **수정 사항**:
+  - `next.config.ts`에 `__/auth/*`, `__/firebase/*` rewrites 추가
+  - `.env.local.example`을 앱 도메인 기반 `AUTH_DOMAIN` 설명으로 수정
+  - `tasks/lessons.md`에 Vercel + redirect auth 프록시 규칙 기록
+- **검증**: 로그인 테스트 7개 통과, `next build` 통과
+
 ## Phase 8.5: 버그 수정 + 문서 현행화
 - **날짜**: 2026-03-15
 - **커밋**: `e95a759`, `e71f1e3`, `f27458b` 외 다수
