@@ -218,7 +218,7 @@
 
 ## Phase 7.1: Google 로그인 안정화
 - **날짜**: 2026-03-15
-- **커밋**: `fecef18`
+- **커밋**: `a10b03b`
 - **작업**: COOP 환경에서 흔들리던 Google popup 로그인 제거, redirect 기반으로 인증 전략 정리
 - **수정 사항**:
   - 로그인: `signInWithPopup` 제거 → `signInWithRedirect` 단일 경로로 단순화
