@@ -1,8 +1,7 @@
 'use client';
 
 import { auth } from '@/lib/firebase/client';
-import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { GoogleAuthProvider, getRedirectResult, onAuthStateChanged, signInWithRedirect, type User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
@@ -23,22 +22,55 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
-  // 이미 로그인된 상태면 세션 생성 후 홈으로
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const idToken = await user.getIdToken();
-          await createSession(idToken);
-          router.replace('/');
-          return;
-        } catch (e) {
-          console.error('Session error:', e);
-        }
+    let isActive = true;
+    let handled = false;
+    let unsubscribe = () => {};
+
+    const completeLogin = async (user: User) => {
+      if (!isActive || handled) return;
+
+      handled = true;
+      try {
+        const idToken = await user.getIdToken();
+        await createSession(idToken);
+        if (!isActive) return;
+        router.replace('/');
+      } catch (e) {
+        handled = false;
+        console.error('Session error:', e);
+        if (isActive) setIsLoading(false);
       }
-      setIsLoading(false);
-    });
-    return unsubscribe;
+    };
+
+    const initAuth = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          await completeLogin(result.user);
+          return;
+        }
+      } catch (error) {
+        console.error('Redirect result error:', error);
+        toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
+      }
+
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          await completeLogin(user);
+          return;
+        }
+
+        if (isActive) setIsLoading(false);
+      });
+    };
+
+    void initAuth();
+
+    return () => {
+      isActive = false;
+      unsubscribe();
+    };
   }, [router]);
 
   const handleGoogleLogin = async () => {

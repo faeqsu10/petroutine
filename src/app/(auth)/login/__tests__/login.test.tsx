@@ -10,6 +10,7 @@ vi.mock('@/lib/firebase/client', () => ({
 }));
 
 const mockSetCustomParameters = vi.fn();
+const mockGetRedirectResult = vi.fn().mockResolvedValue(null);
 const mockOnAuthStateChanged = vi.fn((_, callback: (user: null) => void) => {
   callback(null);
   return vi.fn();
@@ -19,6 +20,7 @@ vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn(function MockGoogleAuthProvider(this: { setCustomParameters: typeof mockSetCustomParameters }) {
     this.setCustomParameters = mockSetCustomParameters;
   }),
+  getRedirectResult: (...args: unknown[]) => mockGetRedirectResult(...args),
   signInWithRedirect: (...args: unknown[]) => mockSignInWithRedirect(...args),
   onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...(args as [unknown, (user: null) => void])),
 }));
@@ -28,6 +30,7 @@ vi.mock('firebase/auth', () => ({
 // ============================================================
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
+const mockFetch = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
   usePathname: () => '/login',
@@ -75,7 +78,13 @@ import LoginPage from '../page';
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+    mockGetRedirectResult.mockResolvedValue(null);
+    mockOnAuthStateChanged.mockImplementation((_, callback: (user: null) => void) => {
+      callback(null);
+      return vi.fn();
+    });
+    mockFetch.mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', mockFetch);
   });
 
   it('로그인 페이지가 렌더링된다', async () => {
@@ -120,6 +129,24 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(mockSetCustomParameters).toHaveBeenCalledWith({ prompt: 'select_account' });
       expect(mockSignInWithRedirect).toHaveBeenCalled();
+    });
+  });
+
+  it('redirect 로그인 복귀 시 세션 생성 후 홈으로 이동한다', async () => {
+    const redirectUser = {
+      getIdToken: vi.fn().mockResolvedValue('redirect-token'),
+    };
+    mockGetRedirectResult.mockResolvedValue({ user: redirectUser });
+
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'redirect-token' }),
+      });
+      expect(mockReplace).toHaveBeenCalledWith('/');
     });
   });
 });

@@ -36,3 +36,9 @@
 - **원인**: 앱 전체에 COOP 헤더가 적용된 상태에서 `signInWithPopup`이 cross-origin 팝업의 `window.closed`/`window.close()`를 참조함. Firebase SDK 내부 popup polling/cleanup 로직이 브라우저 정책과 충돌.
 - **해결**: 로그인 흐름을 `signInWithRedirect` 기반으로 전환하고, `prompt: 'select_account'`는 유지해 계정 선택 UX를 보장.
 - **규칙**: COOP/보안 헤더를 유지하는 앱에서는 OAuth 기본 전략을 popup이 아니라 redirect로 설계. popup은 인증 전용 경로에서 헤더 예외 처리가 명확할 때만 제한적으로 사용.
+
+### [2026-03-15] Firebase redirect auth는 복귀 결과를 먼저 소비해야 로그인 루프를 막을 수 있음
+- **문제**: Google 로그인 후 인증은 성공했는데 다시 로그인 화면으로 돌아감.
+- **원인**: `signInWithRedirect`로 전환한 뒤 `getRedirectResult()`를 제거해, 복귀 직후 redirect 결과를 명시적으로 소비하지 못함. 그 사이 `onAuthStateChanged` fallback 경로가 먼저 `null` 또는 미완료 상태를 처리하면 세션 쿠키 생성이 건너뛰어져 미들웨어가 다시 로그인 화면으로 보냄.
+- **해결**: 로그인 페이지에서 `getRedirectResult(auth)`를 먼저 처리하고, 결과가 있으면 세션 쿠키 생성 완료 후 `/`로 이동. `onAuthStateChanged`는 새로고침/기존 세션 복구용 fallback으로만 유지.
+- **규칙**: Firebase redirect auth에서는 `getRedirectResult()`를 제거하지 말고, redirect 결과 처리 → 세션 생성 → 라우팅 순서를 보장. 관련 회귀 테스트도 반드시 유지.
