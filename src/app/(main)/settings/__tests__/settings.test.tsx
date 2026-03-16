@@ -36,9 +36,9 @@ vi.mock('next/link', () => ({
 // ============================================================
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, initial, animate, transition, variants, whileHover, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+    div: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
       React.createElement('div', props, children),
-    section: ({ children, initial, animate, transition, variants, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+    section: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
       React.createElement('div', props, children),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
@@ -55,6 +55,7 @@ vi.mock('lucide-react', () => ({
   Plus: () => React.createElement('span', { 'data-testid': 'icon-plus' }),
   Moon: () => React.createElement('span', { 'data-testid': 'icon-moon' }),
   Sun: () => React.createElement('span', { 'data-testid': 'icon-sun' }),
+  BarChart3: () => React.createElement('span', { 'data-testid': 'icon-bar-chart' }),
 }));
 
 vi.mock('@/hooks/use-theme', () => ({
@@ -137,6 +138,12 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
     const addLink = screen.getByText('우리 아이 추가하기').closest('a');
     expect(addLink).toHaveAttribute('href', '/pets/add');
+  });
+
+  it('추천 로그 링크가 표시된다', () => {
+    render(<SettingsPage />);
+    const recommendLogLink = screen.getByText('추천 로그').closest('a');
+    expect(recommendLogLink).toHaveAttribute('href', '/settings/recommendations');
   });
 
   it('로그아웃 버튼이 표시된다', () => {
