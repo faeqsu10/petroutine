@@ -401,3 +401,16 @@
   - `docs/recommendation-catalog.md` / `docs/README.md` / `package.json` — 카탈로그 운영 문서와 시드 실행 명령(`npm run seed:curated-products`) 추가
   - 추천 관련 테스트에 API route/로거/이벤트 호출 검증 추가
 - **검증**: 추천 관련 테스트 21개 통과, 변경 파일 lint 통과, `next build` 통과
+
+## Phase 10.7: 추천 운영 화면 관리자 접근 제어
+- **날짜**: 2026-03-16
+- **커밋**: `ba3d9e4`
+- **작업**: 일반 사용자가 추천 운영 로그를 볼 수 없도록 관리자 전용 접근 제어 추가
+- **수정 사항**:
+  - `src/lib/admin-access.ts` / `src/hooks/use-admin-access.ts` — `ADMIN_EMAILS`, `ADMIN_UIDS` 기반 관리자 allowlist 유틸과 클라이언트 접근 훅 추가
+  - `src/app/api/admin/access/route.ts` — 현재 세션 기준 관리자 여부를 반환하는 API 추가
+  - `src/app/api/recommendation-events/summary/route.ts` — 로그인만이 아니라 관리자 여부까지 확인 후 403 차단
+  - `src/app/(main)/settings/page.tsx` — 관리자에게만 `추천 로그` 링크 노출
+  - `src/app/(main)/settings/recommendations/page.tsx` — 관리자 외 사용자는 접근 불가 메시지 표시
+  - `.env.local.example` — 운영 화면 접근 제어용 `ADMIN_EMAILS`, `ADMIN_UIDS` 예시 추가
+- **검증**: 관리자 접근 제어 관련 테스트 19개 통과, 변경 파일 lint 통과, `next build` 통과
