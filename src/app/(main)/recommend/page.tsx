@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { ExternalLink, Star } from 'lucide-react';
 import { usePets } from '@/hooks/use-pets';
+import { useCuratedProducts } from '@/hooks/use-curated-products';
 import { useCareStore } from '@/stores/care-store';
 import { BOTTOM_NAV_PADDING, PRODUCT_CATEGORIES } from '@/lib/constants';
 import {
-  CURATED_PRODUCTS,
   getDefaultRecommendationSpecies,
   getProductCategoryMeta,
   getSpeciesLabel,
@@ -42,6 +42,11 @@ function formatPrice(price: number): string {
 
 export default function RecommendPage() {
   const { data: pets } = usePets();
+  const {
+    data: curatedProducts,
+    isLoading: productsLoading,
+    isError: productsError,
+  } = useCuratedProducts();
   const selectedPetId = useCareStore((state) => state.selectedPetId);
   const [speciesFilterOverride, setSpeciesFilterOverride] = useState<RecommendationSpeciesFilter | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
@@ -50,7 +55,52 @@ export default function RecommendPage() {
   const defaultSpeciesFilter = getDefaultRecommendationSpecies(pets, selectedPetId);
   const speciesFilter = speciesFilterOverride ?? defaultSpeciesFilter;
 
-  const filtered = CURATED_PRODUCTS.filter((product) => {
+  if (productsLoading) {
+    return (
+      <div className={`space-y-8 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl font-black tracking-tight text-foreground/90">큐레이션 상품</h1>
+          <p className="text-sm text-muted-foreground">
+            반려동물 종류와 카테고리 기준으로 정리한 상품을 둘러보세요
+          </p>
+        </header>
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="bento-item h-48 animate-pulse bg-card/40 glass"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (productsError) {
+    return (
+      <div className={`space-y-6 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl font-black tracking-tight text-foreground/90">큐레이션 상품</h1>
+          <p className="text-sm text-muted-foreground">
+            반려동물 종류와 카테고리 기준으로 정리한 상품을 둘러보세요
+          </p>
+        </header>
+        <div className="bento-item flex flex-col items-center gap-3 bg-card/40 glass py-12 text-center">
+          <p className="text-sm font-medium text-destructive">상품 목록을 불러오지 못했어요</p>
+          <Button
+            variant="outline"
+            className="rounded-2xl"
+            onClick={() => window.location.reload()}
+          >
+            다시 시도하기
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const products = curatedProducts ?? [];
+  const filtered = products.filter((product) => {
     const speciesMatch =
       speciesFilter === 'all' || product.species === 'all' || product.species === speciesFilter;
     const categoryMatch = categoryFilter === null || product.category === categoryFilter;
@@ -115,7 +165,12 @@ export default function RecommendPage() {
         현재 기준: {speciesFilter === 'all' ? '전체 반려동물' : getSpeciesLabel(speciesFilter)}
       </p>
 
-      {filtered.length === 0 ? (
+      {products.length === 0 ? (
+        <div className="bento-item flex flex-col items-center gap-2 bg-card/40 glass py-12 text-center">
+          <p className="text-3xl opacity-20">🛍️</p>
+          <p className="text-sm font-medium text-muted-foreground">아직 등록된 큐레이션 상품이 없어요</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="bento-item flex flex-col items-center gap-2 bg-card/40 glass py-12 text-center">
           <p className="text-3xl opacity-20">🛍️</p>
           <p className="text-sm font-medium text-muted-foreground">해당 조건의 상품이 없어요</p>

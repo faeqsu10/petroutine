@@ -91,6 +91,12 @@ service cloud.firestore {
       allow write: if false; // Admin SDK (서버)에서만 쓰기
     }
 
+    // Curated Products — 인증 사용자는 읽기만 가능, 쓰기는 Admin/seed 전용
+    match /curatedProducts/{productId} {
+      allow read: if isAuth();
+      allow write: if false;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

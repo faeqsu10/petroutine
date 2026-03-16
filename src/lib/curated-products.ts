@@ -1,5 +1,5 @@
-import type { Pet } from '@/types';
-import { PRODUCT_CATEGORIES } from '@/lib/constants';
+import type { Pet } from '../types';
+import { PRODUCT_CATEGORIES } from './constants';
 
 export type RecommendationSpeciesFilter = 'all' | 'dog' | 'cat';
 export type CuratedProductCategory = keyof typeof PRODUCT_CATEGORIES;
@@ -14,9 +14,11 @@ export interface CuratedProduct {
   description: string;
   rating: number;
   affiliateUrl: string | null;
+  isActive: boolean;
+  sortOrder: number;
 }
 
-export const CURATED_PRODUCTS: CuratedProduct[] = [
+export const DEFAULT_CURATED_PRODUCTS: CuratedProduct[] = [
   {
     id: 'dog-food-royal-canin',
     name: '로얄캐닌 미니 어덜트',
@@ -27,6 +29,8 @@ export const CURATED_PRODUCTS: CuratedProduct[] = [
     description: '소형견이 먹기 편한 알갱이와 균형 잡힌 영양 설계를 가진 기본 사료예요.',
     rating: 4.8,
     affiliateUrl: 'https://example.com/products/royal-canin-mini-adult',
+    isActive: true,
+    sortOrder: 10,
   },
   {
     id: 'cat-food-orijen',
@@ -38,6 +42,8 @@ export const CURATED_PRODUCTS: CuratedProduct[] = [
     description: '고단백 레시피 중심으로 고양이와 키튼에게 맞춘 프리미엄 건사료예요.',
     rating: 4.9,
     affiliateUrl: 'https://example.com/products/orijen-cat-kitten',
+    isActive: true,
+    sortOrder: 20,
   },
   {
     id: 'dog-treat-harim',
@@ -49,6 +55,8 @@ export const CURATED_PRODUCTS: CuratedProduct[] = [
     description: '한입 크기 단백질 간식 위주로 구성한 기본 간식 세트예요.',
     rating: 4.5,
     affiliateUrl: null,
+    isActive: true,
+    sortOrder: 30,
   },
   {
     id: 'cat-treat-churu',
@@ -60,6 +68,8 @@ export const CURATED_PRODUCTS: CuratedProduct[] = [
     description: '급여가 쉽고 기호성이 높은 액상형 간식이에요.',
     rating: 4.7,
     affiliateUrl: null,
+    isActive: true,
+    sortOrder: 40,
   },
   {
     id: 'all-supply-water-fountain',
@@ -71,6 +81,8 @@ export const CURATED_PRODUCTS: CuratedProduct[] = [
     description: '공용으로 쓰기 좋은 기본 급수기예요. 물 순환 구조라 첫 입문용으로 무난해요.',
     rating: 4.6,
     affiliateUrl: 'https://example.com/products/pet-water-fountain',
+    isActive: true,
+    sortOrder: 50,
   },
   {
     id: 'cat-supply-scratcher',
@@ -82,6 +94,8 @@ export const CURATED_PRODUCTS: CuratedProduct[] = [
     description: '스크래처와 숨숨집 역할을 같이 하는 다단형 타워예요.',
     rating: 4.4,
     affiliateUrl: null,
+    isActive: true,
+    sortOrder: 60,
   },
   {
     id: 'cat-hygiene-wipes',
@@ -93,6 +107,8 @@ export const CURATED_PRODUCTS: CuratedProduct[] = [
     description: '얼굴과 발 주변을 가볍게 닦기 좋은 저자극 위생 티슈예요.',
     rating: 4.3,
     affiliateUrl: null,
+    isActive: true,
+    sortOrder: 70,
   },
 ];
 
