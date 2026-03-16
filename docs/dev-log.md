@@ -375,3 +375,16 @@
   - 필터 조합에 따라 실제 빈 상태가 나오도록 더미 상품 조합 재구성
   - `src/app/(main)/recommend/__tests__/recommend.test.tsx` / `src/lib/__tests__/curated-products.test.ts` — 기본 필터, 빈 상태, 상세 시트, CTA 상태, 수동 필터 유지 회귀 테스트 추가
 - **검증**: 추천 관련 테스트 13개 통과, 변경 파일 lint 통과, `next build` 통과
+
+## Phase 10.5: 추천 카탈로그 실데이터화
+- **날짜**: 2026-03-16
+- **커밋**: `31f2c02`
+- **작업**: 더미 큐레이션 탭을 Firestore 카탈로그 기반으로 전환하고 실제 시드 데이터를 주입
+- **수정 사항**:
+  - `src/hooks/use-curated-products.ts` — Firestore `curatedProducts` 컬렉션 조회 훅 추가
+  - `src/app/(main)/recommend/page.tsx` — 로컬 상수 대신 조회 훅을 사용하고, 로딩/에러/카탈로그 비어 있음 상태 추가
+  - `src/lib/curated-products.ts` — 더미 카탈로그를 기본 시드 데이터 소스로 승격 (`isActive`, `sortOrder` 포함)
+  - `scripts/seed-curated-products.ts` — `curatedProducts` 문서를 업서트하는 시드 스크립트 추가
+  - `firestore.rules` — 인증 사용자의 `curatedProducts` 읽기 허용, 쓰기는 Admin/시드 전용으로 제한
+  - 시드 실행 결과: 큐레이션 상품 7개 업서트 완료
+- **검증**: 추천 관련 테스트 16개 통과, 변경 파일 lint 통과, `next build` 통과
