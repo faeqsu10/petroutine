@@ -3,6 +3,7 @@
 import { auth } from '@/lib/firebase/client';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useAdminAccess } from '@/hooks/use-admin-access';
 import { usePets } from '@/hooks/use-pets';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -31,6 +32,7 @@ const item = {
 export default function SettingsPage() {
   const router = useRouter();
   const { data: pets, isError: petsError } = usePets();
+  const { data: adminAccess } = useAdminAccess();
   const { theme, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
@@ -162,28 +164,30 @@ export default function SettingsPage() {
         </div>
       </motion.section>
 
-      <motion.section variants={item} className="space-y-3">
-        <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
-          운영
-        </h2>
-        <div className="bento-item divide-y divide-border/40 overflow-hidden bg-card/60 glass">
-          <Link
-            href="/settings/recommendations"
-            className="flex items-center justify-between p-4.5 transition-all hover:bg-primary/5 active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
-                <BarChart3 className="h-5 w-5" />
+      {adminAccess?.isAdmin && (
+        <motion.section variants={item} className="space-y-3">
+          <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+            운영
+          </h2>
+          <div className="bento-item divide-y divide-border/40 overflow-hidden bg-card/60 glass">
+            <Link
+              href="/settings/recommendations"
+              className="flex items-center justify-between p-4.5 transition-all hover:bg-primary/5 active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-foreground/80">추천 로그</p>
+                  <p className="text-xs font-medium text-muted-foreground">상품 반응과 CTA 클릭 현황</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-foreground/80">추천 로그</p>
-                <p className="text-xs font-medium text-muted-foreground">상품 반응과 CTA 클릭 현황</p>
-              </div>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
-          </Link>
-        </div>
-      </motion.section>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+            </Link>
+          </div>
+        </motion.section>
+      )}
 
       {/* 계정 */}
       <motion.section variants={item} className="space-y-3">

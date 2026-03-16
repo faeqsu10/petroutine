@@ -62,6 +62,11 @@ vi.mock('@/hooks/use-theme', () => ({
   useTheme: vi.fn(() => ({ theme: 'light', toggleTheme: vi.fn() })),
 }));
 
+const mockUseAdminAccess = vi.fn();
+vi.mock('@/hooks/use-admin-access', () => ({
+  useAdminAccess: (...args: unknown[]) => mockUseAdminAccess(...args),
+}));
+
 // ============================================================
 // shadcn 컴포넌트 모킹
 // ============================================================
@@ -112,6 +117,7 @@ describe('SettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(usePets).mockReturnValue({ data: mockPets } as ReturnType<typeof usePets>);
+    mockUseAdminAccess.mockReturnValue({ data: { isAdmin: true } });
   });
 
   it('설정 페이지 제목이 표시된다', () => {
@@ -144,6 +150,14 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
     const recommendLogLink = screen.getByText('추천 로그').closest('a');
     expect(recommendLogLink).toHaveAttribute('href', '/settings/recommendations');
+  });
+
+  it('관리자가 아니면 추천 로그 링크를 숨긴다', () => {
+    mockUseAdminAccess.mockReturnValue({ data: { isAdmin: false } });
+
+    render(<SettingsPage />);
+
+    expect(screen.queryByText('추천 로그')).not.toBeInTheDocument();
   });
 
   it('로그아웃 버튼이 표시된다', () => {

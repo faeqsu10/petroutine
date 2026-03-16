@@ -1,4 +1,5 @@
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
+import { isAllowedAdmin } from '@/lib/admin-access';
 import {
   buildRecommendationAnalyticsSummary,
   type RecommendationEventRecord,
@@ -15,7 +16,10 @@ export async function GET() {
   }
 
   try {
-    await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    if (!isAllowedAdmin({ uid: decoded.uid, email: decoded.email ?? null })) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+    }
   } catch {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }

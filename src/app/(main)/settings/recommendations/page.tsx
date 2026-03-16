@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Eye, MousePointerClick, Sparkles } from 'lucide-react';
+import { useAdminAccess } from '@/hooks/use-admin-access';
 import { useRecommendationAnalytics } from '@/hooks/use-recommendation-analytics';
 import { BOTTOM_NAV_PADDING } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,30 @@ function SummaryCard({
 }
 
 export default function RecommendationSettingsPage() {
+  const { data: adminAccess, isLoading: adminLoading } = useAdminAccess();
   const { data, isLoading, isError } = useRecommendationAnalytics();
+
+  if (adminLoading) {
+    return (
+      <div className={`space-y-6 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
+        <div className="h-10 w-40 animate-pulse rounded-2xl bg-card/60" />
+      </div>
+    );
+  }
+
+  if (!adminAccess?.isAdmin) {
+    return (
+      <div className={`space-y-6 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
+        <Link href="/settings" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" />
+          설정으로 돌아가기
+        </Link>
+        <div className="bento-item flex flex-col items-center gap-3 bg-card/60 glass py-12 text-center">
+          <p className="text-sm font-medium text-muted-foreground">운영 로그는 관리자만 볼 수 있어요</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

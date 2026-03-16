@@ -36,8 +36,10 @@ import { GET } from '../route';
 describe('GET /api/recommendation-events/summary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.ADMIN_EMAILS = 'admin@example.com';
+    process.env.ADMIN_UIDS = 'admin-uid';
     mockCookiesGet.mockReturnValue({ value: 'session-cookie' });
-    mockVerifySessionCookie.mockResolvedValue({ uid: 'user-123' });
+    mockVerifySessionCookie.mockResolvedValue({ uid: 'user-123', email: 'admin@example.com' });
     mockGet.mockResolvedValue({
       docs: [
         {
@@ -92,5 +94,16 @@ describe('GET /api/recommendation-events/summary', () => {
     const response = await GET();
 
     expect(response.status).toBe(401);
+  });
+
+  it('관리자가 아니면 403을 반환한다', async () => {
+    mockVerifySessionCookie.mockResolvedValue({
+      uid: 'user-123',
+      email: 'user@example.com',
+    });
+
+    const response = await GET();
+
+    expect(response.status).toBe(403);
   });
 });

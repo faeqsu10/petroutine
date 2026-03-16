@@ -26,11 +26,20 @@ vi.mock('@/hooks/use-recommendation-analytics', () => ({
   useRecommendationAnalytics: (...args: unknown[]) => mockUseRecommendationAnalytics(...args),
 }));
 
+const mockUseAdminAccess = vi.fn();
+vi.mock('@/hooks/use-admin-access', () => ({
+  useAdminAccess: (...args: unknown[]) => mockUseAdminAccess(...args),
+}));
+
 import RecommendationSettingsPage from '../page';
 
 describe('RecommendationSettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseAdminAccess.mockReturnValue({
+      data: { isAdmin: true },
+      isLoading: false,
+    });
     mockUseRecommendationAnalytics.mockReturnValue({
       data: {
         totalDetailOpens: 12,
@@ -70,5 +79,16 @@ describe('RecommendationSettingsPage', () => {
     expect(screen.getAllByText('오리젠 캣 & 키튼').length).toBeGreaterThan(0);
     expect(screen.getByText('cat')).toBeInTheDocument();
     expect(screen.getByText('food')).toBeInTheDocument();
+  });
+
+  it('관리자가 아니면 접근 불가 안내를 보여준다', () => {
+    mockUseAdminAccess.mockReturnValue({
+      data: { isAdmin: false },
+      isLoading: false,
+    });
+
+    render(<RecommendationSettingsPage />);
+
+    expect(screen.getByText('운영 로그는 관리자만 볼 수 있어요')).toBeInTheDocument();
   });
 });
