@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "mkdir -p coverage/.tmp && vitest run --coverage"
+    "test:coverage": "mkdir -p coverage/.tmp && vitest run --coverage",
+    "seed:curated-products": "npx tsx scripts/seed-curated-products.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

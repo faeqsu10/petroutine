@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ExternalLink, Star } from 'lucide-react';
 import { usePets } from '@/hooks/use-pets';
 import { useCuratedProducts } from '@/hooks/use-curated-products';
+import { logClientRecommendationEvent } from '@/lib/client-recommendation-logger';
 import { useCareStore } from '@/stores/care-store';
 import { BOTTOM_NAV_PADDING, PRODUCT_CATEGORIES } from '@/lib/constants';
 import {
@@ -107,6 +108,26 @@ export default function RecommendPage() {
     return speciesMatch && categoryMatch;
   });
 
+  const currentCategoryFilter = categoryFilter ?? null;
+
+  const trackRecommendationEvent = (product: CuratedProduct, eventType: 'open_detail' | 'click_cta') => {
+    void logClientRecommendationEvent({
+      eventType,
+      productId: product.id,
+      productName: product.name,
+      productCategory: product.category,
+      productSpecies: product.species,
+      currentSpeciesFilter: speciesFilter,
+      currentCategoryFilter,
+      hasAffiliateUrl: Boolean(product.affiliateUrl),
+    });
+  };
+
+  const handleOpenProduct = (product: CuratedProduct) => {
+    trackRecommendationEvent(product, 'open_detail');
+    setSelectedProduct(product);
+  };
+
   return (
     <div className={`space-y-8 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
       <header className="flex flex-col gap-1">
@@ -181,7 +202,7 @@ export default function RecommendPage() {
             <button
               key={product.id}
               type="button"
-              onClick={() => setSelectedProduct(product)}
+              onClick={() => handleOpenProduct(product)}
               className="bento-item flex flex-col gap-3 bg-card/40 glass p-4 text-left transition-all hover:bg-card/60 active:scale-[0.98]"
             >
               <div className="flex h-20 w-full items-center justify-center rounded-xl bg-secondary text-3xl">
@@ -278,6 +299,7 @@ export default function RecommendPage() {
                     href={selectedProduct.affiliateUrl}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() => trackRecommendationEvent(selectedProduct, 'click_cta')}
                   >
                     구매 링크 열기
                     <ExternalLink className="h-4 w-4" />

@@ -97,6 +97,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Recommendation Events — 서버 로깅 전용
+    match /recommendationEvents/{eventId} {
+      allow read, write: if false;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

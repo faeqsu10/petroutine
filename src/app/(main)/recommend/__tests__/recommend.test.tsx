@@ -117,10 +117,12 @@ const {
   mockUsePets,
   mockUseCareStore,
   mockUseCuratedProducts,
+  mockLogClientRecommendationEvent,
 } = vi.hoisted(() => ({
   mockUsePets: vi.fn(),
   mockUseCareStore: vi.fn(),
   mockUseCuratedProducts: vi.fn(),
+  mockLogClientRecommendationEvent: vi.fn(),
 }));
 
 vi.mock('@/hooks/use-pets', () => ({
@@ -129,6 +131,10 @@ vi.mock('@/hooks/use-pets', () => ({
 
 vi.mock('@/hooks/use-curated-products', () => ({
   useCuratedProducts: (...args: unknown[]) => mockUseCuratedProducts(...args),
+}));
+
+vi.mock('@/lib/client-recommendation-logger', () => ({
+  logClientRecommendationEvent: (...args: unknown[]) => mockLogClientRecommendationEvent(...args),
 }));
 
 vi.mock('@/stores/care-store', () => ({
@@ -271,6 +277,13 @@ describe('RecommendPage', () => {
     expect(screen.getByTestId('sheet-root')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '오리젠 캣 & 키튼' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /구매 링크 열기/i })).toBeInTheDocument();
+    expect(mockLogClientRecommendationEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'open_detail',
+        productId: 'cat-food-orijen',
+        currentSpeciesFilter: 'cat',
+      }),
+    );
   });
 
   it('링크가 있는 상품은 외부 이동 CTA를 보여준다', () => {
@@ -280,6 +293,13 @@ describe('RecommendPage', () => {
     const link = screen.getByRole('link', { name: /구매 링크 열기/i });
     expect(link).toHaveAttribute('href', 'https://example.com/products/orijen-cat-kitten');
     expect(link).toHaveAttribute('target', '_blank');
+    fireEvent.click(link);
+    expect(mockLogClientRecommendationEvent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        eventType: 'click_cta',
+        productId: 'cat-food-orijen',
+      }),
+    );
   });
 
   it('링크가 없는 상품은 비활성 CTA를 보여준다', () => {
