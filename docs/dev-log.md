@@ -388,3 +388,15 @@
   - `firestore.rules` — 인증 사용자의 `curatedProducts` 읽기 허용, 쓰기는 Admin/시드 전용으로 제한
   - 시드 실행 결과: 큐레이션 상품 7개 업서트 완료
 - **검증**: 추천 관련 테스트 16개 통과, 변경 파일 lint 통과, `next build` 통과
+
+## Phase 10.6: 추천 클릭 로그 + 카탈로그 운영 기반
+- **날짜**: 2026-03-16
+- **작업**: 제휴사 없이도 추천 탭 운영 상태를 볼 수 있도록 클릭 로그와 운영 문서를 추가
+- **수정 사항**:
+  - `src/app/api/recommendation-events/route.ts` — 추천 상세 열기/CTA 클릭 이벤트 수집 API 추가
+  - `src/lib/recommendation-event-logger.ts` / `src/lib/client-recommendation-logger.ts` — 서버/클라이언트 추천 이벤트 로거 추가
+  - `src/app/(main)/recommend/page.tsx` — 상품 상세 열기와 구매 CTA 클릭 시 이벤트 로깅 연동
+  - `firestore.rules` — `recommendationEvents`는 서버 전용 쓰기/읽기 차단으로 제한
+  - `docs/recommendation-catalog.md` / `docs/README.md` / `package.json` — 카탈로그 운영 문서와 시드 실행 명령(`npm run seed:curated-products`) 추가
+  - 추천 관련 테스트에 API route/로거/이벤트 호출 검증 추가
+- **검증**: 추천 관련 테스트 21개 통과, 변경 파일 lint 통과, `next build` 통과
