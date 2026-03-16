@@ -363,3 +363,15 @@
   - 카카오 앱 설정에서 client_secret이 활성화된 상태였으나 토큰 교환 요청에 누락 → `KOE320` 에러
   - Next.js API 라우트에서 `cookies().set()` + `NextResponse.redirect()` 조합 시 쿠키 미전달 → `response.cookies.set()` 방식으로 전환
 - **검증**: 카카오 로그인 왕복 성공, 빌드 성공
+
+## Phase 10.4: 추천 탭 1차 완성
+- **날짜**: 2026-03-16
+- **커밋**: `b14e13b`
+- **작업**: 더미 데이터 기반 추천 탭을 placeholder에서 완결된 큐레이션 상품 흐름으로 정리
+- **수정 사항**:
+  - `src/app/(main)/recommend/page.tsx` — `추천 상품` → `큐레이션 상품` 카피 정리, 현재 펫 기준 기본 필터 적용
+  - `src/lib/curated-products.ts` — 더미 카탈로그와 기본 종 필터 계산 로직 분리
+  - 상품 카드 클릭 시 하단 상세 시트 오픈, 링크 유무에 따라 외부 이동 CTA/`링크 준비 중` 상태 분기
+  - 필터 조합에 따라 실제 빈 상태가 나오도록 더미 상품 조합 재구성
+  - `src/app/(main)/recommend/__tests__/recommend.test.tsx` / `src/lib/__tests__/curated-products.test.ts` — 기본 필터, 빈 상태, 상세 시트, CTA 상태, 수동 필터 유지 회귀 테스트 추가
+- **검증**: 추천 관련 테스트 13개 통과, 변경 파일 lint 통과, `next build` 통과
