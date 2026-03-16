@@ -1,37 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import { Star } from 'lucide-react';
-import { toast } from 'sonner';
+import { ExternalLink, Star } from 'lucide-react';
+import { usePets } from '@/hooks/use-pets';
+import { useCareStore } from '@/stores/care-store';
 import { BOTTOM_NAV_PADDING, PRODUCT_CATEGORIES } from '@/lib/constants';
+import {
+  CURATED_PRODUCTS,
+  getDefaultRecommendationSpecies,
+  getProductCategoryMeta,
+  getSpeciesLabel,
+  type CuratedProduct,
+  type RecommendationSpeciesFilter,
+} from '@/lib/curated-products';
 import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
-type Species = 'all' | 'dog' | 'cat';
 type Category = keyof typeof PRODUCT_CATEGORIES;
 
-interface Product {
-  id: string;
-  name: string;
-  category: Category;
-  species: 'dog' | 'cat' | 'all';
-  price: number;
-  image: null;
-  description: string;
-  rating: number;
-}
-
-const DUMMY_PRODUCTS: Product[] = [
-  { id: '1', name: '로얄캐닌 미니 어덜트', category: 'food', species: 'dog', price: 45000, image: null, description: '소형견용 프리미엄 사료', rating: 4.8 },
-  { id: '2', name: '오리젠 캣 & 키튼', category: 'food', species: 'cat', price: 52000, image: null, description: '고양이용 그레인프리 사료', rating: 4.9 },
-  { id: '3', name: '하림 강아지 간식 세트', category: 'treat', species: 'dog', price: 12000, image: null, description: '국내산 닭가슴살 간식', rating: 4.5 },
-  { id: '4', name: '츄르 참치맛 20개입', category: 'treat', species: 'cat', price: 15000, image: null, description: '고양이가 좋아하는 액상 간식', rating: 4.7 },
-  { id: '5', name: '펫 자동 급수기', category: 'supply', species: 'all', price: 25000, image: null, description: '2L 자동 순환 급수기', rating: 4.6 },
-  { id: '6', name: '고양이 스크래처 타워', category: 'supply', species: 'cat', price: 35000, image: null, description: '다단 캣타워 겸 스크래처', rating: 4.4 },
-  { id: '7', name: '강아지 샴푸 저자극', category: 'hygiene', species: 'dog', price: 18000, image: null, description: '민감한 피부용 천연 샴푸', rating: 4.3 },
-  { id: '8', name: '펫 물티슈 80매', category: 'hygiene', species: 'all', price: 5000, image: null, description: '무향 저자극 물티슈', rating: 4.6 },
-];
-
-const SPECIES_TABS: { value: Species; label: string }[] = [
+const SPECIES_TABS: { value: RecommendationSpeciesFilter; label: string }[] = [
   { value: 'all', label: '전체' },
   { value: 'dog', label: '강아지' },
   { value: 'cat', label: '고양이' },
@@ -46,33 +41,41 @@ function formatPrice(price: number): string {
 }
 
 export default function RecommendPage() {
-  const [speciesFilter, setSpeciesFilter] = useState<Species>('all');
+  const { data: pets } = usePets();
+  const selectedPetId = useCareStore((state) => state.selectedPetId);
+  const [speciesFilterOverride, setSpeciesFilterOverride] = useState<RecommendationSpeciesFilter | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<CuratedProduct | null>(null);
 
-  const filtered = DUMMY_PRODUCTS.filter((p) => {
-    const speciesMatch = speciesFilter === 'all' || p.species === 'all' || p.species === speciesFilter;
-    const categoryMatch = categoryFilter === null || p.category === categoryFilter;
+  const defaultSpeciesFilter = getDefaultRecommendationSpecies(pets, selectedPetId);
+  const speciesFilter = speciesFilterOverride ?? defaultSpeciesFilter;
+
+  const filtered = CURATED_PRODUCTS.filter((product) => {
+    const speciesMatch =
+      speciesFilter === 'all' || product.species === 'all' || product.species === speciesFilter;
+    const categoryMatch = categoryFilter === null || product.category === categoryFilter;
     return speciesMatch && categoryMatch;
   });
 
   return (
     <div className={`space-y-8 px-5 ${BOTTOM_NAV_PADDING} pt-10`}>
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black tracking-tight text-foreground/90">추천 상품</h1>
-        <p className="text-sm text-muted-foreground">우리 아이를 위한 엄선된 상품을 만나보세요</p>
+        <h1 className="text-2xl font-black tracking-tight text-foreground/90">큐레이션 상품</h1>
+        <p className="text-sm text-muted-foreground">
+          반려동물 종류와 카테고리 기준으로 정리한 상품을 둘러보세요
+        </p>
       </header>
 
-      {/* 반려동물 종류 필터 탭 */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {SPECIES_TABS.map(({ value, label }) => (
           <button
             key={value}
-            onClick={() => setSpeciesFilter(value)}
+            onClick={() => setSpeciesFilterOverride(value)}
             className={cn(
               'shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all',
               speciesFilter === value
                 ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+                : 'bg-card/40 text-muted-foreground glass hover:bg-card/60',
             )}
           >
             {label}
@@ -80,7 +83,6 @@ export default function RecommendPage() {
         ))}
       </div>
 
-      {/* 카테고리 필터 */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         <button
           onClick={() => setCategoryFilter(null)}
@@ -88,7 +90,7 @@ export default function RecommendPage() {
             'shrink-0 rounded-2xl px-4 py-2 text-xs font-bold transition-all',
             categoryFilter === null
               ? 'bg-foreground text-background shadow'
-              : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+              : 'bg-card/40 text-muted-foreground glass hover:bg-card/60',
           )}
         >
           전체
@@ -101,7 +103,7 @@ export default function RecommendPage() {
               'shrink-0 rounded-2xl px-4 py-2 text-xs font-bold transition-all',
               categoryFilter === value
                 ? 'bg-foreground text-background shadow'
-                : 'bg-card/40 text-muted-foreground glass hover:bg-card/60'
+                : 'bg-card/40 text-muted-foreground glass hover:bg-card/60',
             )}
           >
             {label}
@@ -109,7 +111,10 @@ export default function RecommendPage() {
         ))}
       </div>
 
-      {/* 상품 카드 그리드 */}
+      <p className="text-xs font-medium text-muted-foreground">
+        현재 기준: {speciesFilter === 'all' ? '전체 반려동물' : getSpeciesLabel(speciesFilter)}
+      </p>
+
       {filtered.length === 0 ? (
         <div className="bento-item flex flex-col items-center gap-2 bg-card/40 glass py-12 text-center">
           <p className="text-3xl opacity-20">🛍️</p>
@@ -121,20 +126,24 @@ export default function RecommendPage() {
             <button
               key={product.id}
               type="button"
-              onClick={() => toast.info('제휴 연동 준비 중이에요')}
+              onClick={() => setSelectedProduct(product)}
               className="bento-item flex flex-col gap-3 bg-card/40 glass p-4 text-left transition-all hover:bg-card/60 active:scale-[0.98]"
             >
-              {/* 이미지 플레이스홀더 */}
               <div className="flex h-20 w-full items-center justify-center rounded-xl bg-secondary text-3xl">
-                {PRODUCT_CATEGORIES[product.category].split(' ')[0]}
+                {getProductCategoryMeta(product.category).emoji}
               </div>
 
-              {/* 준비 중 배지 */}
-              <span className="self-start rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                준비 중
+              <span
+                className={cn(
+                  'self-start rounded-full px-2 py-0.5 text-[10px] font-bold',
+                  product.affiliateUrl
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {product.affiliateUrl ? '링크 제공' : '링크 준비 중'}
               </span>
 
-              {/* 상품 정보 */}
               <div className="flex flex-col gap-1">
                 <p className="text-xs font-black leading-snug text-foreground/90 line-clamp-2">
                   {product.name}
@@ -142,7 +151,6 @@ export default function RecommendPage() {
                 <p className="text-[11px] text-muted-foreground line-clamp-1">{product.description}</p>
               </div>
 
-              {/* 별점 + 가격 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-0.5">
                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -154,6 +162,81 @@ export default function RecommendPage() {
           ))}
         </div>
       )}
+
+      <Sheet open={Boolean(selectedProduct)} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+        {selectedProduct && (
+          <SheetContent side="bottom" className="rounded-t-3xl border-none px-0 pb-0 pt-0" showCloseButton={false}>
+            <SheetHeader className="gap-4 border-b border-border/60 px-5 pb-4 pt-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-2">
+                  <span className="inline-flex w-fit rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
+                    {getProductCategoryMeta(selectedProduct.category).label}
+                  </span>
+                  <SheetTitle className="text-lg font-black tracking-tight">
+                    {selectedProduct.name}
+                  </SheetTitle>
+                </div>
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-secondary text-2xl">
+                  {getProductCategoryMeta(selectedProduct.category).emoji}
+                </div>
+              </div>
+              <SheetDescription className="text-sm leading-relaxed">
+                {selectedProduct.description}
+              </SheetDescription>
+            </SheetHeader>
+
+            <div className="space-y-5 px-5 py-5">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-card/50 p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                    대상
+                  </p>
+                  <p className="mt-2 text-sm font-bold text-foreground/90">
+                    {getSpeciesLabel(selectedProduct.species)}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-card/50 p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                    가격
+                  </p>
+                  <p className="mt-2 text-sm font-black text-primary">
+                    {formatPrice(selectedProduct.price)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-card/50 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  평점
+                </p>
+                <div className="mt-2 flex items-center gap-1.5">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-sm font-bold text-foreground/80">{selectedProduct.rating}</span>
+                </div>
+              </div>
+            </div>
+
+            <SheetFooter className="border-t border-border/60 px-5 pb-6 pt-4">
+              {selectedProduct.affiliateUrl ? (
+                <Button asChild className="h-12 w-full rounded-2xl text-sm font-bold">
+                  <a
+                    href={selectedProduct.affiliateUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    구매 링크 열기
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              ) : (
+                <Button disabled className="h-12 w-full rounded-2xl text-sm font-bold">
+                  링크 준비 중
+                </Button>
+              )}
+            </SheetFooter>
+          </SheetContent>
+        )}
+      </Sheet>
     </div>
   );
 }
